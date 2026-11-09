@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bearingsetu · Blueprint theme</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0a1a36}
+a{color:#ffb44d}a:hover{color:#ffd08a}
+.b{font-family:"IBM Plex Sans",system-ui,sans-serif;color:#e8f0ff;background-color:#0a1a36;background-image:linear-gradient(rgba(110,160,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(110,160,255,.06) 1px,transparent 1px),linear-gradient(rgba(110,160,255,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(110,160,255,.12) 1px,transparent 1px);background-size:24px 24px,24px 24px,120px 120px,120px 120px;line-height:1.5}
+.b *{box-sizing:border-box}
+.b h1,.b h2,.b h3,.b h4,.b p{margin:0}
+.b a{color:inherit;text-decoration:none}
+.b button,.b input,.b select{font:inherit;color:inherit}
+.wrap{max-width:1320px;margin:0 auto;padding:0 32px}
+.util{border-bottom:1px solid #1f3a6b;background:#081530}
+.util .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-top:8px;padding-bottom:8px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.06em;color:#9db3d9}
+.util b{color:#ff9e1b;font-weight:500}
+.hdr{background:rgba(10,26,54,.96);border-bottom:1px solid #2a4a80;position:sticky;top:0;z-index:20}
+.hdr .wrap{display:flex;align-items:center;gap:20px;height:72px}
+.b a.logo{display:flex;align-items:center;gap:10px;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:26px;letter-spacing:.06em;flex:none}
+.logo em{font-style:normal;color:#ff9e1b}
+.logo svg{width:34px;height:34px}
+.cmd{flex:1;display:flex;align-items:center;gap:10px;height:46px;border:1px solid #2f5596;background:#0c2147;padding:0 8px 0 14px;max-width:560px}
+.cmd svg{width:18px;height:18px;stroke:#9db3d9;fill:none;stroke-width:1.8;flex:none}
+.cmd label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.cmd input{flex:1;min-width:0;background:transparent;border:0;height:44px;font-family:"IBM Plex Mono",monospace;font-size:14px;color:#e8f0ff}
+.cmd input::placeholder{color:#7f97c2}
+.kbd{font-family:"IBM Plex Mono",monospace;font-size:11px;border:1px solid #2f5596;padding:3px 7px;color:#9db3d9}
+.hr{display:flex;align-items:center;gap:8px;margin-left:auto}
+.b .hbtn{display:inline-flex;align-items:center;gap:8px;min-height:44px;min-width:44px;justify-content:center;padding:0 14px;border:1px solid #2f5596;background:transparent;font-family:"IBM Plex Mono",monospace;font-size:12.5px;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
+.b .hbtn:hover{border-color:#ff9e1b}
+.hbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.b .hbtn.or{background:#ff9e1b;border-color:#ff9e1b;color:#0a1a36;font-weight:600}
+.acct{display:flex;flex-direction:column;line-height:1.25;font-family:"IBM Plex Mono",monospace;font-size:11px;color:#9db3d9;padding:0 12px;border-left:1px solid #2a4a80}
+.acct strong{color:#e8f0ff;font-weight:500;font-size:12.5px}
+.cnt{background:#ff9e1b;color:#0a1a36;padding:1px 6px;font-weight:600}
+.only-m{display:none}
+.tabs{border-bottom:1px solid #2a4a80;background:rgba(8,21,48,.92)}
+.tabs .wrap{display:flex;gap:4px;overflow-x:auto;white-space:nowrap}
+.b .tabs a{display:inline-flex;align-items:center;gap:6px;min-height:46px;padding:0 14px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;letter-spacing:.05em;color:#c4d4f0;border-bottom:2px solid transparent}
+.tabs a span{color:#ff9e1b}
+.b .tabs a.on{color:#fff;border-bottom-color:#ff9e1b}
+.b .tabs a:hover{color:#fff}
+.hero{padding:64px 0 56px}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:center}
+.sheet{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.14em;color:#ff9e1b}
+.hero h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:800;font-size:112px;line-height:.9;text-transform:uppercase;margin-top:18px}
+.hero h1 span{color:#ff9e1b}
+.lead{font-size:18px;color:#c4d4f0;max-width:560px;margin-top:24px}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:32px}
+.b a.btn{display:inline-flex;align-items:center;gap:10px;min-height:50px;padding:0 22px;font-family:"IBM Plex Mono",monospace;font-size:13.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:1px solid #ff9e1b}
+.b a.btn.fill{background:#ff9e1b;color:#0a1a36}
+.b a.btn.line{color:#ff9e1b}
+.b a.btn:hover{filter:brightness(1.1)}
+.caps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 24px;margin:36px 0 0;list-style:none;padding:0;font-family:"IBM Plex Mono",monospace;font-size:13px;color:#c4d4f0}
+.caps li::before{content:"[✓] ";color:#49d17d}
+.panel{position:relative;background:rgba(14,34,70,.94);border:1px solid #2a4a80}
+.panel::before,.panel::after{content:"";position:absolute;width:14px;height:14px;pointer-events:none}
+.panel::before{top:-1px;left:-1px;border-top:2px solid #ff9e1b;border-left:2px solid #ff9e1b}
+.panel::after{bottom:-1px;right:-1px;border-bottom:2px solid #ff9e1b;border-right:2px solid #ff9e1b}
+.draw{padding:16px}
+.draw svg{width:100%;height:auto;display:block}
+.ph{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid #2a4a80;font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;color:#9db3d9;text-transform:uppercase}
+.ph strong{color:#e8f0ff;font-weight:600}
+.look{padding:8px 0 56px}
+.look .wrap{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:24px}
+.pbody{padding:22px 18px}
+.fg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.fl label{display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;color:#9db3d9;margin-bottom:6px;text-transform:uppercase}
+.fl input,.fl select{width:100%;height:46px;background:#0a1a36;border:1px solid #2f5596;padding:0 12px;font-family:"IBM Plex Mono",monospace;font-size:15px;color:#e8f0ff}
+.fl input::placeholder{color:#7f97c2}
+.run{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:18px}
+.run p{font-family:"IBM Plex Mono",monospace;font-size:12px;color:#9db3d9}
+.rbtn{min-height:46px;padding:0 22px;background:#ff9e1b;border:0;color:#0a1a36;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13px;letter-spacing:.06em;cursor:pointer}
+.ex{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.ex button{min-height:44px;padding:0 10px;border:1px dashed #2f5596;background:none;font-family:"IBM Plex Mono",monospace;font-size:12px;color:#c4d4f0;cursor:pointer}
+.eq{margin-top:14px;padding:12px 14px;border:1px solid #2f5596;background:#0a1a36;font-family:"IBM Plex Mono",monospace;font-size:13px;color:#c4d4f0;line-height:1.7}
+.eq b{color:#49d17d;font-weight:500}
+.res{padding-bottom:64px}
+.tbl{overflow-x:auto}
+.b table{width:100%;border-collapse:collapse;min-width:1040px;font-family:"IBM Plex Mono",monospace;font-size:13.5px}
+.b th{text-align:left;font-weight:500;font-size:11px;letter-spacing:.1em;color:#9db3d9;text-transform:uppercase;padding:12px 14px;border-bottom:1px solid #2a4a80;background:#0c2147;white-space:nowrap}
+.b td{padding:8px 14px;border-bottom:1px solid #1f3a6b;white-space:nowrap;color:#dbe6fb}
+.b tr:hover td{background:rgba(255,158,27,.05)}
+.b td.pn{color:#fff;font-weight:600}
+.b .r{text-align:right}
+.ok{color:#49d17d}
+.wt{color:#ff9e1b}
+.qty{width:72px;height:40px;background:#0a1a36;border:1px solid #2f5596;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:14px;color:#fff}
+.addb{width:44px;height:44px;border:1px solid #ff9e1b;background:transparent;color:#ff9e1b;cursor:pointer;display:inline-grid;place-items:center;padding:0}
+.addb svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none}
+.tfoot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 18px;font-family:"IBM Plex Mono",monospace;font-size:12px;color:#9db3d9}
+.chipf{display:flex;gap:8px;flex-wrap:wrap}
+.chipf span{border:1px solid #2f5596;padding:4px 10px;font-size:11.5px;color:#c4d4f0;text-transform:none;letter-spacing:.02em}
+.ord{padding-bottom:64px}
+.ord .wrap{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.pad{background:#0a1a36;border:1px solid #2f5596;padding:14px 16px;font-family:"IBM Plex Mono",monospace;font-size:14px;line-height:1.9;color:#e8f0ff;white-space:pre;overflow-x:auto}
+.pad i{font-style:normal;color:#49d17d}
+.parse{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;font-family:"IBM Plex Mono",monospace;font-size:13px}
+.dz{border:1.5px dashed #ff9e1b;padding:30px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.dz svg{width:36px;height:36px;stroke:#ff9e1b;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.dz h3{font-family:"IBM Plex Mono",monospace;font-size:15px;letter-spacing:.08em;font-weight:600}
+.dz p{color:#c4d4f0;font-size:14px;max-width:380px}
+.prog{margin-top:16px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:#c4d4f0}
+.bar{height:6px;background:#1f3a6b;margin-top:8px}
+.bar i{display:block;height:100%;background:#49d17d}
+.sec{padding-bottom:64px}
+.sec-h{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.sh{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:40px;text-transform:uppercase;letter-spacing:.01em;line-height:1}
+.sec-h p{font-family:"IBM Plex Mono",monospace;font-size:12px;color:#9db3d9}
+.kp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.kc{padding:20px 18px;display:flex;flex-direction:column;gap:8px}
+.k{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;color:#9db3d9;text-transform:uppercase}
+.v{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:38px;line-height:1}
+.d{font-size:13.5px;color:#c4d4f0}
+.kc .bar i{background:#ff9e1b}
+.b a.tlink{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:#ff9e1b;margin-top:auto;display:inline-flex;align-items:center;min-height:44px}
+.dlg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.b a.dli{display:flex;align-items:center;gap:14px;padding:18px;min-height:84px}
+.dli svg{width:30px;height:30px;stroke:#ff9e1b;fill:none;stroke-width:1.5;flex:none;stroke-linecap:round;stroke-linejoin:round}
+.dli strong{display:block;font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.06em;font-weight:600}
+.dli span{font-size:12.5px;color:#9db3d9;font-family:"IBM Plex Mono",monospace}
+.indg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid #2a4a80;border-left:1px solid #2a4a80}
+.indg div{border-right:1px solid #2a4a80;border-bottom:1px solid #2a4a80;padding:18px;font-family:"IBM Plex Mono",monospace;font-size:13px;color:#c4d4f0;background:rgba(10,26,54,.7)}
+.indg span{color:#ff9e1b;display:block;font-size:11px;margin-bottom:4px}
+.ft{border-top:1px solid #2a4a80;background:#081530;padding:48px 0 0}
+.fg2{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(4,minmax(0,1fr));gap:28px}
+.fg2 h4{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;color:#ff9e1b;font-weight:500;margin-bottom:14px}
+.fg2 ul{list-style:none;padding:0;margin:0;display:grid;gap:10px;font-size:14px;color:#c4d4f0}
+.b .fg2 a:hover{color:#fff}
+.about{font-size:14px;color:#9db3d9;margin-top:12px;max-width:320px}
+.tb{display:grid;grid-template-columns:2fr 2fr 1fr 1fr;border:1px solid #2a4a80;margin-top:40px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:#9db3d9}
+.tb div{padding:12px 14px;border-right:1px solid #2a4a80}
+.tb div:last-child{border-right:0}
+.tb strong{display:block;color:#e8f0ff;font-weight:500;font-size:12.5px;margin-top:2px}
+.fnote{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:#7f97c2;padding:18px 0 28px}
+@media (max-width:1100px){
+.hide-t{display:none}
+.only-m{display:inline-flex}
+.hero .wrap{grid-template-columns:minmax(0,1fr)}
+.hero h1{font-size:88px}
+.look .wrap,.ord .wrap{grid-template-columns:minmax(0,1fr)}
+.kp,.dlg,.indg{grid-template-columns:repeat(2,minmax(0,1fr))}
+.fg2{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:640px){
+.wrap{padding:0 16px}
+.util .wrap{font-size:10.5px}
+.util .rt{display:none}
+.hdr .wrap{flex-wrap:wrap;height:auto;padding-top:10px;padding-bottom:10px;gap:10px}
+.cmd{order:3;flex:1 1 100%;max-width:none}
+.kbd{display:none}
+.hero{padding:40px 0}
+.hero h1{font-size:64px}
+.lead{font-size:16px}
+.caps{grid-template-columns:minmax(0,1fr)}
+.fg{grid-template-columns:repeat(2,minmax(0,1fr))}
+.sh{font-size:32px}
+.kp,.dlg,.indg,.fg2,.tb{grid-template-columns:minmax(0,1fr)}
+.tb div{border-right:0;border-bottom:1px solid #2a4a80}
+.pad{font-size:12.5px}
+}
+</style>
+</head>
+<body>
+<div class="b">
+
+<div class="util"><div class="wrap"><span><b>GST</b> INVOICE · <b>NET-30</b> CREDIT · DISPATCH <b>&lt; 24 H</b> · PAN-INDIA</span><span class="rt">HELPLINE 1800-XXX-XXXX · MON–SAT 09:00–19:00</span></div></div>
+
+<header class="hdr">
+<div class="wrap">
+<a class="logo" href="#" aria-label="Bearingsetu home">
+<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="none" stroke="#cfe0ff" stroke-width="8" stroke-dasharray="9 8.28"></circle><g fill="none" stroke="#cfe0ff" stroke-width="2.5"><circle cx="50" cy="50" r="36"></circle><circle cx="50" cy="50" r="17"></circle><circle cx="50" cy="50" r="10"></circle></g><g fill="none" stroke="#ff9e1b" stroke-width="2.5"><circle cx="73.5" cy="50" r="5"></circle><circle cx="66.62" cy="66.62" r="5"></circle><circle cx="50" cy="73.5" r="5"></circle><circle cx="33.38" cy="66.62" r="5"></circle><circle cx="26.5" cy="50" r="5"></circle><circle cx="33.38" cy="33.38" r="5"></circle><circle cx="50" cy="26.5" r="5"></circle><circle cx="66.62" cy="33.38" r="5"></circle></g></svg>
+<span>BEARING<em>SETU</em></span>
+</a>
+<div class="cmd"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg><label for="b-q">Search parts</label><input id="b-q" type="search" placeholder="6205-2RS, 22210 E, UCP 205, B-48…"><span class="kbd">⌘K</span></div>
+<div class="hr">
+<a class="hbtn hide-t" href="#">QUICK ORDER</a>
+<a class="hbtn hide-t" href="#">RFQ <span class="cnt">2</span></a>
+<div class="acct hide-t"><strong>ACME TEXTILES</strong>Credit ₹4.20 L avail.</div>
+<a class="hbtn or" href="#" aria-label="Cart, 14 lines"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.4 11h11.2L21 7H6.2"></path><circle cx="9" cy="19.5" r="1.5"></circle><circle cx="17" cy="19.5" r="1.5"></circle></svg>CART · 14</a>
+<button class="hbtn only-m" type="button" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
+</div>
+</div>
+</header>
+
+<nav class="tabs" aria-label="Categories"><div class="wrap">
+<a class="on" href="#"><span>01</span>BALL</a><a href="#"><span>02</span>CYLINDRICAL</a><a href="#"><span>03</span>TAPER</a><a href="#"><span>04</span>SPHERICAL</a><a href="#"><span>05</span>HOUSED UNITS</a><a href="#"><span>06</span>V-BELTS</a><a href="#"><span>07</span>PULLEYS</a><a href="#"><span>08</span>OIL SEALS</a><a href="#"><span>09</span>LUBRICANTS</a>
+</div></nav>
+
+<section class="hero">
+<div class="wrap">
+<div>
+<p class="sheet">SHEET 01 — REV A — B2B CATALOGUE</p>
+<h1>Spec it.<br>Source it.<br><span>Ship it.</span></h1>
+<p class="lead">The industrial parts catalogue built for maintenance engineers and purchase teams. Search by dimension, cross-reference any brand, and order at your contract price.</p>
+<div class="cta"><a class="btn fill" href="#">Open catalogue →</a><a class="btn line" href="#">Upload BOM</a></div>
+<ul class="caps"><li>d × D × B dimension search</li><li>Cross-brand interchange</li><li>Datasheets and CAD files</li><li>Contract and tier pricing</li></ul>
+</div>
+<div class="panel">
+<div class="ph"><span>DRG · <strong>6205-2RS</strong></span><span>REV A · UNITS mm</span></div>
+<div class="draw">
+<svg viewBox="0 0 560 420" role="img" aria-label="Technical drawing of bearing 6205-2RS: bore 25 mm, outer diameter 52 mm, width 15 mm">
+<defs>
+<pattern id="bhatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#9fc0ff" stroke-width="1.2"></line></pattern>
+<marker id="bar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1 L10 5 L0 9 Z" fill="#ff9e1b"></path></marker>
+</defs>
+<g fill="none" stroke="#7f97c2" stroke-width="1" stroke-dasharray="14 4 2 4"><path d="M30 190H290M160 62V318M360 190H520"></path></g>
+<g fill="none" stroke="#cfe0ff" stroke-width="1.6"><circle cx="160" cy="190" r="110"></circle><circle cx="160" cy="190" r="92"></circle><circle cx="160" cy="190" r="70"></circle><circle cx="160" cy="190" r="53"></circle></g>
+<g fill="#0e2246" stroke="#cfe0ff" stroke-width="1.6"><circle cx="241" cy="190" r="10"></circle><circle cx="222.05" cy="242.07" r="10"></circle><circle cx="174.07" cy="269.77" r="10"></circle><circle cx="119.5" cy="260.15" r="10"></circle><circle cx="83.88" cy="217.7" r="10"></circle><circle cx="83.88" cy="162.3" r="10"></circle><circle cx="119.5" cy="119.85" r="10"></circle><circle cx="174.07" cy="110.23" r="10"></circle><circle cx="222.05" cy="137.93" r="10"></circle></g>
+<g stroke="#cfe0ff" stroke-width="1.6"><rect x="380" y="80" width="63" height="18" fill="url(#bhatch)"></rect><rect x="380" y="120" width="63" height="17" fill="url(#bhatch)"></rect><rect x="380" y="243" width="63" height="17" fill="url(#bhatch)"></rect><rect x="380" y="282" width="63" height="18" fill="url(#bhatch)"></rect><circle cx="411.5" cy="109" r="10" fill="#0e2246"></circle><circle cx="411.5" cy="271" r="10" fill="#0e2246"></circle></g>
+<g fill="#ff9e1b"><rect x="382" y="98" width="3" height="22"></rect><rect x="438" y="98" width="3" height="22"></rect><rect x="382" y="260" width="3" height="22"></rect><rect x="438" y="260" width="3" height="22"></rect></g>
+<g fill="none" stroke="#ff9e1b" stroke-width="1.2">
+<path d="M380 76V46M443 76V46M447 80H508M447 300H508M447 137H476M447 243H476"></path>
+<path d="M380 54H443" marker-start="url(#bar)" marker-end="url(#bar)"></path>
+<path d="M500 80V300" marker-start="url(#bar)" marker-end="url(#bar)"></path>
+<path d="M468 137V243" marker-start="url(#bar)" marker-end="url(#bar)"></path>
+<path d="M107 200H213" marker-start="url(#bar)" marker-end="url(#bar)"></path>
+</g>
+<g font-family="IBM Plex Mono, monospace" font-size="13" fill="#ff9e1b">
+<text x="411.5" y="42" text-anchor="middle">B 15</text>
+<text x="520" y="194" text-anchor="middle" transform="rotate(-90 520 194)">Ø D 52</text>
+<text x="486" y="194" text-anchor="middle" transform="rotate(-90 486 194)">Ø d 25</text>
+<text x="160" y="220" text-anchor="middle">Ø d 25</text>
+</g>
+<g font-family="IBM Plex Mono, monospace" font-size="11" fill="#9db3d9" letter-spacing="2"><text x="160" y="346" text-anchor="middle">FRONT VIEW</text><text x="411.5" y="346" text-anchor="middle">SECTION A–A</text></g>
+<g font-family="IBM Plex Mono, monospace">
+<rect x="300" y="362" width="250" height="50" fill="#0a1a36" stroke="#2f5596"></rect>
+<path d="M390 362V412M460 362V412M505 362V412" stroke="#2f5596"></path>
+<g font-size="8" fill="#7f97c2" letter-spacing="1"><text x="306" y="375">PART</text><text x="396" y="375">TYPE</text><text x="466" y="375">SCALE</text><text x="511" y="375">SHEET</text></g>
+<g font-size="11" fill="#e8f0ff"><text x="306" y="398">6205-2RS</text><text x="396" y="398">DGBB-2RS</text><text x="466" y="398">4:1</text><text x="511" y="398">01</text></g>
+<text x="20" y="404" font-size="10" fill="#7f97c2" letter-spacing="1">BEARINGSETU · DRG BS-6205-2RS</text>
+</g>
+</svg>
+</div>
+</div>
+</div>
+</section>
+
+<section class="look">
+<div class="wrap">
+<div class="panel">
+<div class="ph"><strong>Dimension lookup</strong><span>MM · ISO 15</span></div>
+<form class="pbody" action="#">
+<div class="fg">
+<div class="fl"><label for="b-d">Bore d</label><input id="b-d" type="text" inputmode="decimal" value="25"></div>
+<div class="fl"><label for="b-od">Outer D</label><input id="b-od" type="text" inputmode="decimal" value="52"></div>
+<div class="fl"><label for="b-w">Width B</label><input id="b-w" type="text" inputmode="decimal" value="15"></div>
+<div class="fl"><label for="b-tol">Tolerance</label><select id="b-tol"><option>± 0.0</option><option selected>± 1.5</option><option>± 3.0</option></select></div>
+<div class="fl"><label for="b-ty">Type</label><select id="b-ty"><option>Any</option><option>Ball</option><option>Cylindrical</option><option>Taper</option></select></div>
+<div class="fl"><label for="b-se">Seal</label><select id="b-se"><option>Any</option><option>Open</option><option>ZZ</option><option>2RS</option></select></div>
+<div class="fl"><label for="b-cl">Clearance</label><select id="b-cl"><option>Any</option><option>CN</option><option>C3</option></select></div>
+<div class="fl"><label for="b-st">Stock</label><select id="b-st"><option>In stock</option><option>All</option></select></div>
+</div>
+<div class="run"><p>&gt; 6 matches · 4 warehouses</p><button class="rbtn" type="button">RUN LOOKUP →</button></div>
+</form>
+</div>
+<div class="panel">
+<div class="ph"><strong>Interchange</strong><span>ANY BRAND → STOCK</span></div>
+<form class="pbody" action="#">
+<div class="fl"><label for="b-x">Part number from any brand</label><input id="b-x" type="text" placeholder="e.g. 6205DDU"></div>
+<div class="ex"><button type="button">NSK 6205DDU</button><button type="button">FAG 6205-2RSR</button><button type="button">SKF 6205-2RSH</button></div>
+<div class="eq">→ Equivalent: <b>6205-2RS</b> · sealed both sides<br>→ 3 brands in stock · from ₹229 / pc</div>
+</form>
+</div>
+</div>
+</section>
+
+<section class="res">
+<div class="wrap">
+<div class="panel">
+<div class="ph"><span><strong>Results</strong> · d 25 · D 52 · B 15 ± 1.5 · 6 matches</span><div class="chipf"><span>In stock ✕</span><span>Sort: price ↑</span><span>Export CSV</span></div></div>
+<div class="tbl">
+<table>
+<thead><tr><th>Part no.</th><th>Type</th><th>d × D × B (mm)</th><th class="r">Cr kN</th><th class="r">n max rpm</th><th>Stock · depot</th><th class="r">1–9</th><th class="r">10–49</th><th class="r">50+</th><th>Qty</th><th><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Add</span></th></tr></thead>
+<tbody>
+<tr><td class="pn">6205</td><td>Ball · open</td><td>25 × 52 × 15</td><td class="r">14.8</td><td class="r">18,000</td><td class="ok">6,240 · BLR</td><td class="r">₹189</td><td class="r">₹176</td><td class="r">₹162</td><td><label style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)" for="q1">Quantity 6205</label><input id="q1" class="qty" type="text" value="0"></td><td><button class="addb" type="button" aria-label="Add 6205 to cart"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button></td></tr>
+<tr><td class="pn">6205-ZZ</td><td>Ball · shielded</td><td>25 × 52 × 15</td><td class="r">14.8</td><td class="r">18,000</td><td class="ok">3,980 · PUNE</td><td class="r">₹212</td><td class="r">₹198</td><td class="r">₹184</td><td><label style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)" for="q2">Quantity 6205-ZZ</label><input id="q2" class="qty" type="text" value="0"></td><td><button class="addb" type="button" aria-label="Add 6205-ZZ to cart"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button></td></tr>
+<tr><td class="pn">6205-2RS</td><td>Ball · sealed</td><td>25 × 52 × 15</td><td class="r">14.8</td><td class="r">12,000</td><td class="ok">4,820 · BLR</td><td class="r">₹229</td><td class="r">₹214</td><td class="r">₹199</td><td><label style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)" for="q3">Quantity 6205-2RS</label><input id="q3" class="qty" type="text" value="200"></td><td><button class="addb" type="button" aria-label="Add 6205-2RS to cart"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button></td></tr>
+<tr><td class="pn">6205-2RS/C3</td><td>Ball · sealed · C3</td><td>25 × 52 × 15</td><td class="r">14.8</td><td class="r">12,000</td><td class="ok">1,150 · DEL</td><td class="r">₹248</td><td class="r">₹231</td><td class="r">₹216</td><td><label style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)" for="q4">Quantity 6205-2RS/C3</label><input id="q4" class="qty" type="text" value="0"></td><td><button class="addb" type="button" aria-label="Add 6205-2RS/C3 to cart"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button></td></tr>
+<tr><td class="pn">NU 205</td><td>Cylindrical roller</td><td>25 × 52 × 15</td><td class="r">28.6</td><td class="r">15,000</td><td class="ok">420 · PUNE</td><td class="r">₹690</td><td class="r">₹648</td><td class="r">₹612</td><td><label style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)" for="q5">Quantity NU 205</label><input id="q5" class="qty" type="text" value="0"></td><td><button class="addb" type="button" aria-label="Add NU 205 to cart"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button></td></tr>
+<tr><td class="pn">30205</td><td>Taper roller</td><td>25 × 52 × 16.25</td><td class="r">32.5</td><td class="r">8,500</td><td class="wt">0 · 5 DAYS</td><td class="r">₹385</td><td class="r">₹362</td><td class="r">₹340</td><td><label style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)" for="q6">Quantity 30205</label><input id="q6" class="qty" type="text" value="0"></td><td><button class="addb" type="button" aria-label="Add 30205 to cart"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button></td></tr>
+</tbody>
+</table>
+</div>
+<div class="tfoot"><span>Prices per piece, ex-GST. Your contract tier: B (−4%).</span><span>Datasheet · CAD · Compare (3)</span></div>
+</div>
+</div>
+</section>
+
+<section class="ord">
+<div class="wrap">
+<div class="panel">
+<div class="ph"><strong>Quick order pad</strong><span>PART · QTY</span></div>
+<div class="pbody">
+<div class="pad">6205-2RS        200   <i>✓</i>
+22210 E           12   <i>✓</i>
+UCP 205           40   <i>✓</i>
+B-48              75   <i>✓</i>
+TC 35x52x7       500   <i>✓</i></div>
+<div class="parse"><span><span class="ok">5 / 5 recognised</span> · ₹1,13,590 + GST</span><button class="rbtn" type="button">ADD 5 LINES TO CART</button></div>
+</div>
+</div>
+<div class="panel">
+<div class="ph"><strong>BOM upload</strong><span>QUOTE IN 2 WORKING HRS</span></div>
+<div class="pbody">
+<div class="dz"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"></path><path d="M4 16v4h16v-4"></path></svg><h3>DROP BOM — .XLSX / .CSV / .PDF</h3><p>We map every part number, flag equivalents and return a priced quote.</p><button class="rbtn" type="button">SELECT FILE</button></div>
+<div class="prog">plant-pm-kit-nov.xlsx · 48 lines · 46 matched · 2 need review<div class="bar"><i style="width:96%"></i></div></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="sec">
+<div class="wrap">
+<div class="sec-h"><h2 class="sh">Your plant account</h2><p>ACME TEXTILES PVT LTD · SURAT · GSTIN 24XXXXX0000X1ZX</p></div>
+<div class="kp">
+<div class="panel kc"><p class="k">Credit line</p><p class="v">₹4.20 L</p><p class="d">available of ₹5.00 L · net 30</p><div class="bar"><i style="width:84%"></i></div></div>
+<div class="panel kc"><p class="k">Open RFQs</p><p class="v">2</p><p class="d">1 quote ready to accept</p><a class="tlink" href="#">Review quote →</a></div>
+<div class="panel kc"><p class="k">In transit</p><p class="v">3</p><p class="d">orders · e-way bills generated</p><a class="tlink" href="#">Track →</a></div>
+<div class="panel kc"><p class="k">Reorder</p><p class="v">PM kit</p><p class="d">18 lines · ₹62,400 · last ordered 12 Oct</p><a class="tlink" href="#">Reorder in one click →</a></div>
+</div>
+</div>
+</section>
+
+<section class="sec">
+<div class="wrap">
+<div class="sec-h"><h2 class="sh">Technical downloads</h2><p>FREE FOR ACCOUNT HOLDERS</p></div>
+<div class="dlg">
+<a class="panel dli" href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"></path><path d="M15 3v4h4M9 13h7M9 17h5"></path></svg><span><strong>CATALOGUE 2026</strong>PDF · full range</span></a>
+<a class="panel dli" href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"></path><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"></path></svg><span><strong>CAD MODELS</strong>STEP · DXF</span></a>
+<a class="panel dli" href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z"></path><path d="M4 9h16M9 9v11"></path></svg><span><strong>DATASHEETS</strong>PDF per part</span></a>
+<a class="panel dli" href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h11l-3-3M17 17H6l3 3"></path></svg><span><strong>INTERCHANGE</strong>XLSX · all brands</span></a>
+</div>
+</div>
+</section>
+
+<section class="sec">
+<div class="wrap">
+<div class="sec-h"><h2 class="sh">Industries served</h2><p>KITS AND CONTRACT PRICING BY SECTOR</p></div>
+<div class="indg">
+<div><span>IND-01</span>Automotive &amp; tractors</div><div><span>IND-02</span>Textile mills</div><div><span>IND-03</span>Cement &amp; mining</div><div><span>IND-04</span>Agriculture</div><div><span>IND-05</span>Pumps &amp; motors</div><div><span>IND-06</span>Sugar &amp; paper</div><div><span>IND-07</span>Steel</div><div><span>IND-08</span>Food processing</div>
+</div>
+</div>
+</section>
+
+<footer class="ft">
+<div class="wrap">
+<div class="fg2">
+<div><a class="logo" href="#"><span>BEARING<em>SETU</em></span></a><p class="about">Bearings, belts, seals and lubricants for Indian industry. Genuine stock, contract pricing, GST invoices.</p></div>
+<div><h4>CATALOGUE</h4><ul><li><a href="#">Ball bearings</a></li><li><a href="#">Roller bearings</a></li><li><a href="#">Housed units</a></li><li><a href="#">V-belts &amp; pulleys</a></li><li><a href="#">Oil seals</a></li></ul></div>
+<div><h4>ORDERING</h4><ul><li><a href="#">Quick order</a></li><li><a href="#">BOM upload</a></li><li><a href="#">Request for quote</a></li><li><a href="#">Credit terms</a></li></ul></div>
+<div><h4>ENGINEERING</h4><ul><li><a href="#">Dimension lookup</a></li><li><a href="#">Interchange</a></li><li><a href="#">Datasheets</a></li><li><a href="#">CAD files</a></li></ul></div>
+<div><h4>COMPANY</h4><ul><li><a href="#">About</a></li><li><a href="#">Sell on Bearingsetu</a></li><li><a href="#">Careers</a></li><li><a href="#">Contact</a></li></ul></div>
+</div>
+<div class="tb"><div>DRAWN BY<strong>BEARINGSETU</strong></div><div>TITLE<strong>SOURCE · SUPPLY · GROW</strong></div><div>SHEET<strong>01 / 01</strong></div><div>YEAR<strong>© 2026</strong></div></div>
+<p class="fnote">THEME PREVIEW — products, prices, stock, account data and terms shown are sample content for layout only.</p>
+</div>
+</footer>
+</div>
+<a id="bs-back" href="../index.html" style="position:fixed;left:16px;bottom:16px;z-index:9999;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:999px;background:rgba(17,17,17,.9);color:#fff;font:600 14px/1 system-ui,-apple-system,sans-serif;text-decoration:none;box-shadow:0 6px 20px rgba(0,0,0,.25)">&#8592; All themes</a>
+<script>if(window.self!==window.top){var b=document.getElementById('bs-back');if(b)b.remove();}</script>
+</body>
+</html>

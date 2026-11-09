@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bearingsetu · Website Theme Explorer</title>
+<meta name="description" content="Four website design directions for Bearingsetu, a B2B store for bearings, V-belts, seals and industrial supplies. Preview each one on desktop, tablet and mobile.">
+<meta property="og:title" content="Bearingsetu · Website Theme Explorer">
+<meta property="og:description" content="Four design directions for the Bearingsetu B2B store. Pick a theme and preview it on desktop, tablet or mobile.">
+<meta property="og:image" content="https://naaaakuu.github.io/bearing-setu-sample-website/assets/logo.png">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef0f4;--panel:#fff;--ink:#14161b;--muted:#596070;--line:#dde2ea;--navy:#16255c;--orange:#f29a0e;--orange-ink:#9a5300}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p{margin:0}
+button{font:inherit;color:inherit}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.top{background:#fff;border-bottom:1px solid var(--line)}
+.top-in{max-width:1600px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:20px}
+.logo{height:80px;width:auto;flex:none}
+.ttl h1{font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--navy)}
+.ttl p{font-size:14px;color:var(--muted);margin-top:2px;max-width:640px}
+.badge{margin-left:auto;font-size:12px;font-weight:600;color:var(--orange-ink);background:#fff4e2;border:1px solid #f3d29c;border-radius:999px;padding:6px 12px;white-space:nowrap}
+.app{max-width:1600px;margin:0 auto;padding:20px 24px;display:grid;grid-template-columns:300px minmax(0,1fr);grid-template-areas:"picker viewer" "details viewer";grid-template-rows:auto 1fr;gap:20px;align-items:start}
+.picker{grid-area:picker}
+.viewer{grid-area:viewer;min-width:0}
+.details{grid-area:details}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.cards{display:grid;gap:10px}
+.tcard{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"num nm" "num ds" "sw sw";column-gap:12px;row-gap:2px;text-align:left;background:#fff;border:2px solid transparent;border-radius:16px;padding:14px 16px;cursor:pointer;box-shadow:0 1px 3px rgba(16,24,40,.07);transition:border-color .15s,box-shadow .15s}
+.tcard:hover{box-shadow:0 4px 16px rgba(16,24,40,.12)}
+.tcard[aria-pressed="true"]{border-color:var(--navy);box-shadow:0 6px 18px rgba(22,37,92,.18)}
+.tcard:focus-visible,.seg button:focus-visible,.act:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.num{grid-area:num;font-size:12px;font-weight:700;color:var(--orange-ink);padding-top:4px}
+.nm{grid-area:nm;font-size:17px;font-weight:700;letter-spacing:-.01em}
+.ds{grid-area:ds;font-size:13px;color:var(--muted)}
+.sw{grid-area:sw;display:flex;gap:6px;margin-top:10px}
+.sw i{width:22px;height:22px;border-radius:50%;border:1px solid rgba(0,0,0,.14);display:block}
+.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.seg{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:12px;padding:4px;gap:2px}
+.seg button{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border:0;border-radius:9px;background:transparent;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer}
+.seg button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.meta{font-size:13px;color:var(--muted)}
+.acts{margin-left:auto;display:flex;gap:8px}
+.act{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;cursor:pointer;white-space:nowrap}
+.act:hover{border-color:var(--navy)}
+.act.pri{background:var(--navy);border-color:var(--navy);color:#fff}
+.stage{background-color:#dfe3ea;background-image:radial-gradient(rgba(22,37,92,.09) 1px,transparent 1px);background-size:18px 18px;border-radius:20px;padding:24px 16px;display:flex;justify-content:center;align-items:flex-start;min-height:420px}
+.frame{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 22px 50px rgba(16,24,40,.2)}
+.chrome{display:flex;align-items:center;gap:7px;height:36px;padding:0 14px;background:#f3f4f6;border-bottom:1px solid #e3e6eb}
+.chrome i{width:11px;height:11px;border-radius:50%;background:#d6d9df}
+.chrome i:nth-child(1){background:#ff5f57}
+.chrome i:nth-child(2){background:#febc2e}
+.chrome i:nth-child(3){background:#28c840}
+.chrome span{margin-left:14px;flex:1;max-width:420px;height:24px;border-radius:7px;background:#fff;border:1px solid #e3e6eb;font-size:12px;color:var(--muted);display:flex;align-items:center;padding:0 10px;white-space:nowrap;overflow:hidden}
+.screen{position:relative;overflow:hidden;background:#fff}
+.screen iframe{position:absolute;top:0;left:0;border:0;transform-origin:0 0;display:block;background:#fff}
+.frame.tablet,.frame.mobile{background:#121418;padding:12px;border-radius:34px}
+.frame.mobile{padding:10px;border-radius:46px}
+.frame.tablet .chrome,.frame.mobile .chrome{display:none}
+.frame.tablet .screen{border-radius:22px}
+.frame.mobile .screen{border-radius:36px}
+.details{background:#fff;border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(16,24,40,.07)}
+.details h2{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.concept{font-size:15px;color:#363b46;margin-top:6px}
+.details dl{margin:16px 0 18px;display:grid;gap:12px}
+.details dt{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.details dd{margin:3px 0 0;font-size:14px}
+.pal{display:flex;flex-wrap:wrap;gap:6px}
+.pal span{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-family:ui-monospace,Menlo,monospace;color:#363b46;background:#f4f5f8;border-radius:999px;padding:3px 9px 3px 3px}
+.pal i{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.14);display:block}
+.feat{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.feat li{font-size:14px;padding-left:20px;position:relative}
+.feat li::before{content:"";position:absolute;left:2px;top:7px;width:9px;height:9px;border-radius:50%;background:var(--orange)}
+.matrix{max-width:1600px;margin:0 auto;padding:4px 24px 32px}
+.mx{background:#fff;border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(16,24,40,.07)}
+.mx h2{font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--navy)}
+.mx>p{font-size:14px;color:var(--muted);margin-top:4px;max-width:760px}
+.tblw{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:center}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+td.y{color:var(--navy);font-size:16px}
+td.h{color:var(--navy);font-size:16px}
+td.n{color:#9aa1ae}
+.legend{font-size:13px;color:var(--muted);margin-top:12px}
+.foot{text-align:center;font-size:13px;color:var(--muted);padding:0 24px 40px}
+@media (max-width:980px){
+.app{grid-template-columns:minmax(0,1fr);grid-template-areas:"picker" "viewer" "details"}
+.cards{grid-auto-flow:column;grid-auto-columns:minmax(210px,1fr);overflow-x:auto;padding:2px 2px 10px;scroll-snap-type:x mandatory}
+.tcard{scroll-snap-align:start}
+}
+@media (max-width:640px){
+.top-in{padding:8px 16px;gap:12px}
+.logo{height:60px}
+.ttl h1{font-size:18px}
+.ttl p{font-size:13px}
+.badge{display:none}
+.app{padding:14px 16px;gap:14px}
+.seg{width:100%}
+.seg button{flex:1;justify-content:center;padding:0 8px}
+.meta{display:none}
+.acts{margin-left:0;width:100%}
+.act{flex:1}
+.stage{padding:16px 8px;border-radius:16px}
+.matrix{padding:0 16px 28px}
+.mx{padding:18px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+<div class="top-in">
+<img class="logo" src="assets/logo.png" alt="Bearingsetu — Your Industrial Supply Partner" width="771" height="504">
+<div class="ttl">
+<h1>Website theme explorer</h1>
+<p>Four design directions for the Bearingsetu B2B store. Pick a theme, then preview it on desktop, tablet or mobile.</p>
+</div>
+<span class="badge">Sample site · Nov 2026</span>
+</div>
+</header>
+
+<main class="app">
+<nav class="picker" aria-label="Themes">
+<p class="lbl">Themes</p>
+<div class="cards">
+<button class="tcard" type="button" data-theme="precision" aria-pressed="true"><span class="num">01</span><span class="nm">Precision</span><span class="ds">Apple-style minimal</span><span class="sw" aria-hidden="true"><i style="background:#ffffff"></i><i style="background:#f5f5f7"></i><i style="background:#1d1d1f"></i><i style="background:#1f4fd1"></i><i style="background:#f29a0e"></i></span></button>
+<button class="tcard" type="button" data-theme="maison" aria-pressed="false"><span class="num">02</span><span class="nm">Maison</span><span class="ds">Luxury bearing monogram</span><span class="sw" aria-hidden="true"><i style="background:#6b4225"></i><i style="background:#241811"></i><i style="background:#d9bd86"></i><i style="background:#f1e9dc"></i><i style="background:#faf7f1"></i></span></button>
+<button class="tcard" type="button" data-theme="blueprint" aria-pressed="false"><span class="num">03</span><span class="nm">Blueprint</span><span class="ds">Engineering catalogue</span><span class="sw" aria-hidden="true"><i style="background:#0a1a36"></i><i style="background:#12305e"></i><i style="background:#cfe0ff"></i><i style="background:#ff9e1b"></i><i style="background:#49d17d"></i></span></button>
+<button class="tcard" type="button" data-theme="bold" aria-pressed="false"><span class="num">04</span><span class="nm">Setu Bold</span><span class="ds">Neo-brutalist, loud and friendly</span><span class="sw" aria-hidden="true"><i style="background:#fff6e6"></i><i style="background:#111111"></i><i style="background:#ff9f1c"></i><i style="background:#2f45ff"></i><i style="background:#c8f03c"></i></span></button>
+</div>
+</nav>
+
+<section class="viewer" aria-label="Preview">
+<div class="bar">
+<div class="seg" role="group" aria-label="Device size">
+<button type="button" data-device="desktop" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"></rect><path d="M8 20h8M12 16v4"></path></svg>Desktop</button>
+<button type="button" data-device="tablet" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2"></rect><path d="M11 18.5h2"></path></svg>Tablet</button>
+<button type="button" data-device="mobile" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2"></rect><path d="M11 18.5h2"></path></svg>Mobile</button>
+</div>
+<span class="meta" id="meta" aria-live="polite"></span>
+<div class="acts">
+<button class="act" type="button" id="copy">Copy link</button>
+<a class="act pri" id="open" href="themes/precision.html" target="_blank" rel="noopener">Open full page ↗</a>
+</div>
+</div>
+<div class="stage" id="stage">
+<div class="frame desktop" id="frame">
+<div class="chrome" aria-hidden="true"><i></i><i></i><i></i><span>bearingsetu.com</span></div>
+<div class="screen" id="screen"><iframe id="view" title="Theme preview" src="themes/precision.html"></iframe></div>
+</div>
+</div>
+</section>
+
+<aside class="details" aria-label="About this theme">
+<p class="lbl">About this theme</p>
+<h2 id="d-name">Precision</h2>
+<p class="concept" id="d-concept"></p>
+<dl>
+<div><dt>Best for</dt><dd id="d-best"></dd></div>
+<div><dt>Typography</dt><dd id="d-type"></dd></div>
+<div><dt>Palette</dt><dd><div class="pal" id="d-pal"></div></dd></div>
+</dl>
+<p class="lbl">Signature B2B features</p>
+<ul class="feat" id="d-feat"></ul>
+</aside>
+</main>
+
+<section class="matrix">
+<div class="mx">
+<h2>What each theme puts up front</h2>
+<p>Any of these B2B building blocks can go into any theme. The table shows what each direction features in its preview, so you can compare the emphasis, not just the colours.</p>
+<div class="tblw"><table id="mtable"></table></div>
+<p class="legend">● featured up front · ○ included · – not shown in this preview (easy to add)</p>
+</div>
+</section>
+
+<footer class="foot"><p>Bearingsetu · Source · Supply · Grow. Theme previews are static mock-ups; products, prices, stock and terms shown are sample content.</p></footer>
+
+<script>
+(function () {
+  var THEMES = {
+    precision: {
+      name: "Precision", file: "themes/precision.html",
+      concept: "Calm white space, large product renders and a single blue action colour. Buying bearings should feel as easy as buying a phone.",
+      best: "A trusted, modern brand for purchase teams of every size.",
+      type: "Inter throughout, with tight tracking on large headlines.",
+      pal: [["#ffffff", "White"], ["#f5f5f7", "Mist"], ["#1d1d1f", "Ink"], ["#1f4fd1", "Action blue"], ["#f29a0e", "Setu orange"]],
+      feat: ["Size finder: bore × outer × width", "Quick order, BOM upload and request-a-quote cards", "Tier prices and same-day stock on every product card", "GST invoice, 30-day credit and 24-hour dispatch promises"]
+    },
+    maison: {
+      name: "Maison", file: "themes/maison.html",
+      concept: "A couture house for bearings: a monogram canvas of bearings, gears and the BS initials, in espresso, cognac and gold, with Bodoni serif headlines.",
+      best: "Premium positioning and key accounts; standing out among catalogue-style competitors.",
+      type: "Bodoni Moda for display, Jost in spaced capitals for labels.",
+      pal: [["#6b4225", "Cognac"], ["#241811", "Espresso"], ["#d9bd86", "Gold"], ["#f1e9dc", "Sand"], ["#faf7f1", "Ivory"]],
+      feat: ["Private quotation and personal concierge", "Bespoke sourcing form with BOM attachment", "Trade account by application, with credit terms", "Curated collections by industry"]
+    },
+    blueprint: {
+      name: "Blueprint", file: "themes/blueprint.html",
+      concept: "A dark blueprint grid, technical drawings with real dimensions, and dense data tables. Built for engineers who know their part numbers.",
+      best: "Maintenance engineers, power users and repeat buyers who want speed and data.",
+      type: "Barlow Condensed headlines, IBM Plex Mono for data, IBM Plex Sans for text.",
+      pal: [["#0a1a36", "Blueprint"], ["#12305e", "Panel"], ["#cfe0ff", "Line"], ["#ff9e1b", "Signal orange"], ["#49d17d", "In stock"]],
+      feat: ["Dimension lookup with tolerance, seal and clearance", "Cross-brand interchange search", "Results table: load ratings, stock by depot, tier prices", "Plant account: credit line, open RFQs, one-click reorder"]
+    },
+    bold: {
+      name: "Setu Bold", file: "themes/bold.html",
+      concept: "Loud, friendly and fast: thick outlines, sticker badges and a spinning bearing, in orange, cobalt and lime. Feels like a new-age Indian startup.",
+      best: "MSMEs and first-time online buyers; approachable and WhatsApp-first.",
+      type: "Bricolage Grotesque, heavy weights for headlines.",
+      pal: [["#fff6e6", "Paper"], ["#111111", "Ink"], ["#ff9f1c", "Orange"], ["#2f45ff", "Cobalt"], ["#c8f03c", "Lime"]],
+      feat: ["Big search with one-tap example parts", "Bulk price drops with tier chips and quantity steppers", "BOM upload, including a photo of a handwritten list", "WhatsApp ordering and 45-day credit"]
+    }
+  };
+  var ORDER = ["precision", "maison", "blueprint", "bold"];
+  var MATRIX = [
+    ["Search by part number", "h", "y", "h", "h"],
+    ["Search by size (bore × OD × width)", "h", "n", "h", "y"],
+    ["Cross-brand equivalents", "y", "y", "h", "y"],
+    ["Volume / tier pricing", "y", "n", "h", "h"],
+    ["Live stock and dispatch time", "y", "n", "h", "y"],
+    ["Quick order and BOM upload", "h", "y", "h", "h"],
+    ["Request for quote", "h", "h", "y", "y"],
+    ["GST invoice and credit terms", "h", "y", "y", "h"],
+    ["Business account dashboard", "y", "y", "h", "n"],
+    ["Datasheets and CAD downloads", "y", "y", "h", "n"],
+    ["WhatsApp / personal concierge", "n", "h", "n", "h"],
+    ["Industries served", "y", "h", "y", "y"]
+  ];
+  var SYMBOL = { h: ["●", "featured"], y: ["○", "included"], n: ["–", "not shown"] };
+  var DEVICES = { desktop: { w: 1440, h: 900 }, tablet: { w: 820, h: 1180 }, mobile: { w: 390, h: 844 } };
+
+  var stage = document.getElementById("stage");
+  var frame = document.getElementById("frame");
+  var screenEl = document.getElementById("screen");
+  var view = document.getElementById("view");
+  var state = { theme: "precision", device: window.innerWidth < 700 ? "mobile" : "desktop" };
+
+  function readHash() {
+    var parts = decodeURIComponent(location.hash.slice(1)).split("/");
+    if (THEMES[parts[0]]) state.theme = parts[0];
+    if (DEVICES[parts[1]]) state.device = parts[1];
+  }
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function buildMatrix() {
+    var t = document.getElementById("mtable");
+    var thead = el("thead"), tr = el("tr");
+    tr.appendChild(el("th", null, "Feature"));
+    ORDER.forEach(function (k) { tr.appendChild(el("th", null, THEMES[k].name)); });
+    thead.appendChild(tr);
+    t.appendChild(thead);
+    var tbody = el("tbody");
+    MATRIX.forEach(function (row) {
+      var r = el("tr");
+      r.appendChild(el("td", null, row[0]));
+      for (var i = 1; i < row.length; i++) {
+        var s = SYMBOL[row[i]];
+        var td = el("td", row[i]);
+        var vis = el("span", null, s[0]); vis.setAttribute("aria-hidden", "true");
+        td.appendChild(vis);
+        td.appendChild(el("span", "sr", s[1]));
+        r.appendChild(td);
+      }
+      tbody.appendChild(r);
+    });
+    t.appendChild(tbody);
+  }
+
+  function fillDetails() {
+    var t = THEMES[state.theme];
+    document.getElementById("d-name").textContent = t.name;
+    document.getElementById("d-concept").textContent = t.concept;
+    document.getElementById("d-best").textContent = t.best;
+    document.getElementById("d-type").textContent = t.type;
+    var pal = document.getElementById("d-pal");
+    pal.textContent = "";
+    t.pal.forEach(function (p) {
+      var s = el("span"); var i = el("i"); i.style.background = p[0];
+      s.appendChild(i); s.appendChild(document.createTextNode(p[1] + " " + p[0]));
+      pal.appendChild(s);
+    });
+    var ul = document.getElementById("d-feat");
+    ul.textContent = "";
+    t.feat.forEach(function (f) { ul.appendChild(el("li", null, f)); });
+  }
+
+  function fit() {
+    var d = DEVICES[state.device];
+    var cs = getComputedStyle(stage);
+    var bezel = state.device === "desktop" ? 0 : (state.device === "tablet" ? 24 : 20);
+    var avail = stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - bezel;
+    var s = Math.min(1, avail / d.w);
+    var h = d.h;
+    if (state.device === "tablet") s = Math.min(s, Math.max(0.35, (window.innerHeight - 140) / (d.h + bezel)));
+    if (state.device === "desktop") h = Math.round(Math.max(620, Math.min(1100, (window.innerHeight - 190) / s)));
+    screenEl.style.width = Math.round(d.w * s) + "px";
+    screenEl.style.height = Math.round(h * s) + "px";
+    view.style.width = d.w + "px";
+    view.style.height = h + "px";
+    view.style.transform = "scale(" + s + ")";
+    document.getElementById("meta").textContent = THEMES[state.theme].name + " · " + d.w + " px wide · shown at " + Math.round(s * 100) + "%";
+  }
+
+  function render(updateHash) {
+    var t = THEMES[state.theme];
+    if (view.getAttribute("src") !== t.file) view.setAttribute("src", t.file);
+    document.querySelectorAll(".tcard").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.theme === state.theme)); });
+    document.querySelectorAll(".seg button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.device === state.device)); });
+    frame.className = "frame " + state.device;
+    document.getElementById("open").href = t.file;
+    document.title = t.name + " · Bearingsetu Theme Explorer";
+    fillDetails();
+    if (updateHash) history.replaceState(null, "", "#" + state.theme + "/" + state.device);
+    fit();
+  }
+
+  document.querySelectorAll(".tcard").forEach(function (b) {
+    b.addEventListener("click", function () { state.theme = b.dataset.theme; render(true); });
+  });
+  document.querySelectorAll(".seg button").forEach(function (b) {
+    b.addEventListener("click", function () { state.device = b.dataset.device; render(true); });
+  });
+  document.getElementById("copy").addEventListener("click", function () {
+    var btn = this, url = location.href.split("#")[0] + "#" + state.theme + "/" + state.device;
+    function done() { btn.textContent = "Link copied"; setTimeout(function () { btn.textContent = "Copy link"; }, 1800); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, function () { window.prompt("Copy this link:", url); });
+    else window.prompt("Copy this link:", url);
+  });
+  window.addEventListener("resize", fit);
+  window.addEventListener("hashchange", function () { readHash(); render(false); });
+
+  readHash();
+  buildMatrix();
+  render(false);
+})();
+</script>
+</body>
+</html>

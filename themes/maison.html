@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bearingsetu · Maison theme</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..700&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#faf7f1}
+a{color:#6b4225}a:hover{color:#3a2619}
+.m{font-family:Jost,"Helvetica Neue",Arial,sans-serif;color:#1f1610;background:#faf7f1;line-height:1.6;font-weight:400}
+.m *{box-sizing:border-box}
+.m h1,.m h2,.m h3,.m h4,.m p{margin:0}
+.m a{color:inherit;text-decoration:none}
+.m button,.m input{font:inherit}
+.cap{text-transform:uppercase;letter-spacing:.22em;font-size:12px;font-weight:500}
+.wrap{max-width:1240px;margin:0 auto;padding:0 40px}
+.ann{background:#241811;color:#d9bd86;text-align:center;padding:11px 20px;font-size:11px;letter-spacing:.2em;text-transform:uppercase}
+.hd{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:18px 32px;max-width:1440px;margin:0 auto}
+.hd-l,.hd-r{display:flex;align-items:center;gap:4px}
+.hd-r{justify-content:flex-end}
+.hb{display:inline-flex;align-items:center;gap:10px;min-height:44px;min-width:44px;justify-content:center;padding:0 10px;background:none;border:0;color:#1f1610;font-size:12px;letter-spacing:.18em;text-transform:uppercase;cursor:pointer}
+.hb svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
+.m a.wm{text-align:center;display:block}
+.wm strong{display:block;font-family:"Bodoni Moda",Didot,serif;font-weight:500;font-size:30px;letter-spacing:.34em;margin-right:-.34em;line-height:1.1}
+.wm span{display:block;font-size:10px;letter-spacing:.42em;margin-right:-.42em;color:#7a5a3c;margin-top:5px}
+.cats{border-top:1px solid #e6dccb;border-bottom:1px solid #e6dccb;display:flex;justify-content:center;gap:40px;padding:0 24px;overflow-x:auto;white-space:nowrap}
+.m .cats a{display:inline-flex;align-items:center;min-height:48px;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+.m .cats a:hover{color:#6b4225}
+.hero{position:relative;background:#6b4225;color:#f6efe2;text-align:center;padding:72px 24px 92px;overflow:hidden}
+.bgpat{position:absolute;top:0;left:0;width:100%;height:100%;opacity:.5;pointer-events:none}
+.bgpat.faint{opacity:.1}
+.hero-in{position:relative}
+.medal{width:440px;max-width:88%;height:auto;display:block;margin:0 auto;filter:drop-shadow(0 30px 40px rgba(0,0,0,.4))}
+.hero h1{font-family:"Bodoni Moda",Didot,serif;font-style:italic;font-weight:400;font-size:92px;line-height:1;margin-top:44px;letter-spacing:-.01em}
+.hero .cap{margin-top:22px;color:#f1e3c8}
+.ctas{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:38px}
+.m a.b1,.m a.b2,.m a.b3{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 34px;font-size:12px;letter-spacing:.22em;text-transform:uppercase;font-weight:500}
+.m a.b1{background:#f6efe2;color:#241811}
+.m a.b1:hover{background:#fff}
+.m a.b2{border:1px solid #f6efe2;color:#f6efe2}
+.m a.b2:hover{background:rgba(246,239,226,.12)}
+.m a.b3{background:#241811;color:#f6efe2;margin-top:40px}
+.intro{padding:120px 0;text-align:center}
+.lbl{color:#7a5a3c}
+.intro h2{font-family:"Bodoni Moda",Didot,serif;font-weight:400;font-size:44px;line-height:1.28;max-width:960px;margin:22px auto 0}
+.body{font-size:17px;color:#4a3a2e;font-weight:300}
+.intro .body{max-width:640px;margin:28px auto 0}
+.m a.ul{display:inline-block;margin-top:30px;border-bottom:1px solid currentColor;padding:12px 0 4px;font-size:12px;letter-spacing:.22em;text-transform:uppercase;font-weight:500}
+.col{background:#f1e9dc;padding:110px 0}
+.col-h{text-align:center}
+.col-h h2{font-family:"Bodoni Moda",Didot,serif;font-weight:400;font-size:60px;line-height:1.1}
+.col-h .cap{margin-top:14px;color:#7a5a3c}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;margin-top:64px}
+.pc{text-align:center}
+.vit{background:#faf7f1;aspect-ratio:4/5;display:grid;place-items:center;position:relative}
+.vit svg{width:64%;height:auto}
+.badge{position:absolute;top:18px;left:18px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#6b4225}
+.pc .cap{margin-top:24px;color:#7a5a3c;font-size:11px}
+.pc h3{font-family:"Bodoni Moda",Didot,serif;font-weight:500;font-size:28px;margin-top:6px}
+.sp{font-size:13px;color:#5c4a3c;letter-spacing:.06em;margin-top:4px}
+.pr{font-size:15px;margin-top:10px}
+.pc .ul{margin-top:8px}
+.mani{position:relative;background:#241811;color:#f6efe2;padding:130px 0;overflow:hidden}
+.mani-in{position:relative;text-align:center}
+.mani h2{font-family:"Bodoni Moda",Didot,serif;font-style:italic;font-weight:400;font-size:68px;line-height:1.1}
+.pil{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:56px;margin-top:80px;text-align:center}
+.num{font-family:"Bodoni Moda",Didot,serif;color:#d9bd86;font-size:30px}
+.pil h3{font-size:13px;letter-spacing:.24em;text-transform:uppercase;font-weight:500;margin-top:14px;color:#f1e3c8}
+.pil p{color:#cdbfa9;font-size:16px;font-weight:300;margin:12px auto 0;max-width:320px}
+.besp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));min-height:680px}
+.besp-l{position:relative;background:#6b4225;display:grid;place-items:center;overflow:hidden;padding:60px}
+.seal{position:relative;width:340px;max-width:80%;height:auto;filter:drop-shadow(0 24px 30px rgba(0,0,0,.35))}
+.besp-r{background:#faf7f1;padding:90px 80px;display:flex;flex-direction:column;justify-content:center}
+.besp-r h2{font-family:"Bodoni Moda",Didot,serif;font-weight:400;font-size:46px;line-height:1.15;margin-top:18px}
+.besp-r .body{margin-top:20px;max-width:500px}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 28px;margin-top:36px;max-width:560px}
+.f label{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#5c4a3c;font-weight:500}
+.f input{width:100%;border:0;border-bottom:1px solid #a8957b;background:transparent;height:46px;font-size:16px;color:#1f1610;padding:0}
+.full{grid-column:1 / -1}
+.attach{display:flex;align-items:center;gap:12px;min-height:52px;border:1px dashed #a8957b;padding:0 18px;font-size:13px;color:#4a3a2e;background:transparent;width:100%;cursor:pointer;letter-spacing:.04em}
+.attach svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.sub-b{grid-column:1 / -1;justify-self:start;min-height:52px;padding:0 36px;background:#241811;color:#f6efe2;border:0;font-size:12px;letter-spacing:.22em;text-transform:uppercase;cursor:pointer}
+.note{font-size:13px;color:#6b5a4c;margin-top:18px}
+.houses{padding:120px 0}
+.houses h2{font-family:"Bodoni Moda",Didot,serif;font-weight:400;font-size:56px;text-align:center;line-height:1.1}
+.houses .cap{text-align:center;color:#7a5a3c;margin-top:14px}
+.hl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:80px;margin:56px 0 0;list-style:none;padding:0}
+.hl li{display:flex;align-items:center;gap:24px;border-bottom:1px solid #e6dccb;padding:16px 0}
+.rn{font-family:"Bodoni Moda",Didot,serif;color:#8a6a3c;width:40px;font-size:18px}
+.nm{font-family:"Bodoni Moda",Didot,serif;font-size:26px;flex:1}
+.m .hl a{display:inline-flex;align-items:center;min-height:44px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#6b4225}
+.trade{background:#f1e9dc;padding:100px 0;text-align:center}
+.trade .cap{color:#7a5a3c}
+.trade h2{font-family:"Bodoni Moda",Didot,serif;font-weight:400;font-size:50px;margin-top:14px;line-height:1.15}
+.tl{display:flex;justify-content:center;flex-wrap:wrap;gap:14px 40px;margin:30px 0 0;list-style:none;padding:0;font-size:15px;color:#4a3a2e}
+.tl li::before{content:"✦";color:#8a6a3c;margin-right:10px;font-size:11px}
+.ft{position:relative;background:#241811;color:#cdbfa9;padding:80px 0 40px;overflow:hidden}
+.ft .wrap{position:relative}
+.nl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px;align-items:end;padding-bottom:56px;border-bottom:1px solid rgba(217,189,134,.25)}
+.nl h3{font-family:"Bodoni Moda",Didot,serif;font-weight:400;font-size:34px;color:#f6efe2}
+.nl p{font-size:15px;font-weight:300;margin-top:8px}
+.nl-f{display:flex;border-bottom:1px solid #d9bd86;position:relative}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.nl-f input{flex:1;min-width:0;background:transparent;border:0;color:#f6efe2;height:52px;font-size:15px}
+.nl-f input::placeholder{color:#a8977f}
+.nl-f button{background:none;border:0;color:#d9bd86;font-size:12px;letter-spacing:.22em;text-transform:uppercase;cursor:pointer;min-height:52px;padding:0 4px}
+.fcols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:32px;padding:56px 0}
+.fcols h4{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#d9bd86;font-weight:500;margin-bottom:18px}
+.fcols ul{list-style:none;margin:0;padding:0;display:grid;gap:12px;font-size:14px;font-weight:300}
+.m .fcols a:hover{color:#f6efe2}
+.bigwm{font-family:"Bodoni Moda",Didot,serif;color:#d9bd86;text-align:center;font-size:96px;letter-spacing:.28em;margin-right:-.28em;line-height:1;padding:24px 0 44px;font-weight:400}
+.fb{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:12px;color:#a8977f;border-top:1px solid rgba(217,189,134,.25);padding-top:24px}
+@media (max-width:1000px){
+.wrap{padding:0 24px}
+.hd{padding:10px 12px}
+.hide-t{display:none}
+.cats{justify-content:flex-start;gap:28px}
+.hero h1{font-size:64px}
+.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.pil{grid-template-columns:minmax(0,1fr);gap:44px}
+.besp{grid-template-columns:minmax(0,1fr)}
+.besp-l{min-height:420px}
+.besp-r{padding:64px 32px}
+.hl{grid-template-columns:minmax(0,1fr)}
+.nl{grid-template-columns:minmax(0,1fr)}
+.fcols{grid-template-columns:repeat(2,minmax(0,1fr))}
+.bigwm{font-size:56px}
+}
+@media (max-width:640px){
+.wrap{padding:0 20px}
+.hd{padding:8px 4px}
+.hb{padding:0 6px}
+.wm strong{font-size:19px;letter-spacing:.22em;margin-right:-.22em}
+.wm span{font-size:8px;letter-spacing:.28em;margin-right:-.28em}
+.ann{font-size:10px;letter-spacing:.12em}
+.hero{padding:48px 20px 64px}
+.hero h1{font-size:48px;margin-top:32px}
+.intro,.col,.houses,.trade{padding:72px 0}
+.intro h2{font-size:28px}
+.col-h h2,.houses h2{font-size:40px}
+.grid{gap:14px;margin-top:40px}
+.pc h3{font-size:21px}
+.sp{font-size:11px;letter-spacing:.02em}
+.badge{top:10px;left:10px;font-size:9px}
+.mani{padding:80px 0}
+.mani h2{font-size:42px}
+.besp-l{min-height:360px}
+.besp-r{padding:56px 20px}
+.besp-r h2{font-size:34px}
+.form{grid-template-columns:minmax(0,1fr)}
+.nm{font-size:22px}
+.trade h2{font-size:36px}
+.fcols{gap:24px}
+.bigwm{font-size:28px;letter-spacing:.16em;margin-right:-.16em}
+}
+</style>
+</head>
+<body>
+<div class="m">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<defs>
+<linearGradient id="mgold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6e4b4"></stop><stop offset=".3" stop-color="#cda552"></stop><stop offset=".55" stop-color="#8a6a2c"></stop><stop offset=".8" stop-color="#ecd395"></stop><stop offset="1" stop-color="#a9853e"></stop></linearGradient>
+<linearGradient id="mgold2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#efd9a0"></stop><stop offset=".45" stop-color="#a4823d"></stop><stop offset=".75" stop-color="#e6c983"></stop><stop offset="1" stop-color="#7d5f26"></stop></linearGradient>
+<linearGradient id="mst" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fafbfc"></stop><stop offset=".35" stop-color="#c5cad1"></stop><stop offset=".6" stop-color="#8c939d"></stop><stop offset=".8" stop-color="#e1e5ea"></stop><stop offset="1" stop-color="#99a0aa"></stop></linearGradient>
+<linearGradient id="mst2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2f4f6"></stop><stop offset=".4" stop-color="#979ea8"></stop><stop offset=".7" stop-color="#dbdfe4"></stop><stop offset="1" stop-color="#7c838e"></stop></linearGradient>
+<radialGradient id="mball" cx=".36" cy=".32" r=".75"><stop offset="0" stop-color="#ffffff"></stop><stop offset=".25" stop-color="#dde1e6"></stop><stop offset=".7" stop-color="#6c737d"></stop><stop offset="1" stop-color="#2f343b"></stop></radialGradient>
+<radialGradient id="mgroove" cx=".5" cy=".5" r=".5"><stop offset=".6" stop-color="#140d09"></stop><stop offset="1" stop-color="#3a2619"></stop></radialGradient>
+<linearGradient id="mbronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a6150"></stop><stop offset=".5" stop-color="#3e2e22"></stop><stop offset="1" stop-color="#2a1e16"></stop></linearGradient>
+<linearGradient id="mleather" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5532"></stop><stop offset=".5" stop-color="#5c3520"></stop><stop offset="1" stop-color="#3b2214"></stop></linearGradient>
+<linearGradient id="mrub" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a4544"></stop><stop offset=".5" stop-color="#151212"></stop><stop offset="1" stop-color="#2f2a29"></stop></linearGradient>
+<pattern id="mono" width="160" height="160" patternUnits="userSpaceOnUse">
+<circle cx="40" cy="40" r="17" fill="none" stroke="#e2c792" stroke-width="1.6"></circle>
+<circle cx="40" cy="40" r="7.5" fill="none" stroke="#e2c792" stroke-width="1.6"></circle>
+<g fill="#e2c792"><circle cx="52.3" cy="40" r="2.4"></circle><circle cx="48.7" cy="48.7" r="2.4"></circle><circle cx="40" cy="52.3" r="2.4"></circle><circle cx="31.3" cy="48.7" r="2.4"></circle><circle cx="27.7" cy="40" r="2.4"></circle><circle cx="31.3" cy="31.3" r="2.4"></circle><circle cx="40" cy="27.7" r="2.4"></circle><circle cx="48.7" cy="31.3" r="2.4"></circle>
+<path d="M120 20 C121.6 35 125 38.4 140 40 C125 41.6 121.6 45 120 60 C118.4 45 115 41.6 100 40 C115 38.4 118.4 35 120 20 Z"></path>
+<circle cx="40" cy="120" r="2.4"></circle></g>
+<circle cx="40" cy="120" r="14" fill="none" stroke="#e2c792" stroke-width="5" stroke-dasharray="3.2 2.3"></circle>
+<circle cx="40" cy="120" r="7.5" fill="none" stroke="#e2c792" stroke-width="1.4"></circle>
+<text x="120" y="131" text-anchor="middle" font-family="Bodoni Moda, Didot, serif" font-style="italic" font-size="32" fill="#e2c792">BS</text>
+</pattern>
+</defs>
+</svg>
+
+<p class="ann">Complimentary dispatch on trade orders above ₹25,000 · Private quotations within the hour</p>
+
+<header>
+<div class="hd">
+<div class="hd-l">
+<button class="hb" type="button" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M3 8h18M3 16h18"></path></svg><span class="hide-t">Menu</span></button>
+<button class="hb" type="button" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg><span class="hide-t">Search</span></button>
+</div>
+<a class="wm" href="#" aria-label="Bearingsetu home"><strong>BEARINGSETU</strong><span>MAISON DE PRÉCISION</span></a>
+<div class="hd-r">
+<a class="hb hide-t" href="#">Trade account</a>
+<a class="hb hide-t" href="#">Concierge</a>
+<button class="hb" type="button" aria-label="Quotation, 0 items"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1 13H6L5 8z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg><span class="hide-t">Quotation (0)</span></button>
+</div>
+</div>
+<nav class="cats" aria-label="Collections">
+<a href="#">The Ball Bearing</a><a href="#">Roller Collection</a><a href="#">Housed Units</a><a href="#">Belts</a><a href="#">Seals</a><a href="#">Lubricants</a><a href="#">Bespoke Sourcing</a>
+</nav>
+</header>
+
+<section class="hero">
+<svg class="bgpat" aria-hidden="true"><rect width="100%" height="100%" fill="url(#mono)"></rect></svg>
+<div class="hero-in">
+<svg class="medal" viewBox="0 0 400 400" role="img" aria-label="Gold-finished ball bearing medallion">
+<defs><path id="mring" d="M28 200 A172 172 0 1 1 372 200 A172 172 0 1 1 28 200"></path></defs>
+<circle cx="200" cy="200" r="197" fill="#241811" stroke="#d9bd86" stroke-width="1.5"></circle>
+<circle cx="200" cy="200" r="186" fill="none" stroke="#d9bd86" stroke-opacity=".5" stroke-width=".8"></circle>
+<circle cx="200" cy="200" r="156" fill="none" stroke="#d9bd86" stroke-opacity=".5" stroke-width=".8"></circle>
+<text font-family="Jost, sans-serif" font-size="14" letter-spacing="5" fill="#d9bd86"><textPath href="#mring">SOURCE · SUPPLY · GROW · SOURCE · SUPPLY · GROW · SOURCE · SUPPLY · GROW ·</textPath></text>
+<path fill="url(#mgold)" fill-rule="evenodd" d="M60 200a140 140 0 1 0 280 0a140 140 0 1 0-280 0zM88 200a112 112 0 1 0 224 0a112 112 0 1 0-224 0z"></path>
+<path fill="url(#mgroove)" fill-rule="evenodd" d="M88 200a112 112 0 1 0 224 0a112 112 0 1 0-224 0zM118 200a82 82 0 1 0 164 0a82 82 0 1 0-164 0z"></path>
+<g fill="url(#mball)"><circle cx="297" cy="200" r="13"></circle><circle cx="278.47" cy="257.02" r="13"></circle><circle cx="229.97" cy="292.25" r="13"></circle><circle cx="170.03" cy="292.25" r="13"></circle><circle cx="121.53" cy="257.02" r="13"></circle><circle cx="103" cy="200" r="13"></circle><circle cx="121.53" cy="142.98" r="13"></circle><circle cx="170.03" cy="107.75" r="13"></circle><circle cx="229.97" cy="107.75" r="13"></circle><circle cx="278.47" cy="142.98" r="13"></circle></g>
+<path fill="url(#mgold2)" fill-rule="evenodd" d="M118 200a82 82 0 1 0 164 0a82 82 0 1 0-164 0zM144 200a56 56 0 1 0 112 0a56 56 0 1 0-112 0z"></path>
+<text x="200" y="215" text-anchor="middle" font-family="Bodoni Moda, Didot, serif" font-style="italic" font-size="42" fill="#d9bd86">BS</text>
+</svg>
+<h1>The Art of Rotation</h1>
+<p class="cap">Precision bearings, curated for Indian industry</p>
+<div class="ctas"><a class="b1" href="#">Discover the collection</a><a class="b2" href="#">Request a private quotation</a></div>
+</div>
+</section>
+
+<section class="intro">
+<div class="wrap">
+<p class="cap lbl">N° 01 — La Maison</p>
+<h2>Every bearing begins as a promise: to turn true, to carry the load, to outlast the shift.</h2>
+<p class="body">We source each one from authorised mills, verify its provenance, and deliver it to your floor with the care of a jeweller. Trade clients receive GST invoices, credit terms, and a concierge who knows their machines by name.</p>
+<a class="ul" href="#">Discover the Maison</a>
+</div>
+</section>
+
+<section class="col">
+<div class="wrap">
+<div class="col-h"><h2>Les Collections</h2><p class="cap">Six signatures for the working floor</p></div>
+<div class="grid">
+<article class="pc">
+<div class="vit"><span class="badge">Signature</span>
+<svg viewBox="0 0 200 210" aria-hidden="true"><ellipse cx="100" cy="203" rx="62" ry="6" fill="#000" fill-opacity=".1"></ellipse><path fill="url(#mst)" fill-rule="evenodd" d="M4 100a96 96 0 1 0 192 0a96 96 0 1 0-192 0zM22 100a78 78 0 1 0 156 0a78 78 0 1 0-156 0z"></path><path fill="url(#mgold)" fill-rule="evenodd" d="M22 100a78 78 0 1 0 156 0a78 78 0 1 0-156 0zM44 100a56 56 0 1 0 112 0a56 56 0 1 0-112 0z"></path><circle cx="100" cy="100" r="73" fill="none" stroke="#5c4420" stroke-opacity=".35" stroke-width="1"></circle><path fill="url(#mst2)" fill-rule="evenodd" d="M44 100a56 56 0 1 0 112 0a56 56 0 1 0-112 0zM62 100a38 38 0 1 0 76 0a38 38 0 1 0-76 0z"></path></svg>
+</div>
+<p class="cap">Deep Groove</p><h3>6205-2RS</h3><p class="sp">Sealed · 25 × 52 × 15 mm</p><p class="pr">From ₹229</p><a class="ul" href="#">Discover</a>
+</article>
+<article class="pc">
+<div class="vit"><span class="badge">Heavy duty</span>
+<svg viewBox="0 0 200 210" aria-hidden="true"><ellipse cx="100" cy="203" rx="62" ry="6" fill="#000" fill-opacity=".1"></ellipse><path fill="url(#mst)" fill-rule="evenodd" d="M4 100a96 96 0 1 0 192 0a96 96 0 1 0-192 0zM20 100a80 80 0 1 0 160 0a80 80 0 1 0-160 0z"></path><circle cx="100" cy="100" r="68" fill="none" stroke="url(#mgold)" stroke-width="22"></circle><g fill="url(#mst2)"><rect x="95" y="21" width="10" height="22" rx="5"></rect><rect x="95" y="21" width="10" height="22" rx="5" transform="rotate(22.5 100 100)"></rect><rect x="95" y="21" width="10" height="22" rx="5" transform="rotate(45 100 100)"></rect><rect x="95" y="21" width="10" height="22" rx="5" transform="rotate(67.5 100 100)"></rect><rect x="95" y="21" width="10" height="22" rx="5" transform="rotate(90 100 100)"></rect><rect x="95" y="21" width="10" height="22" rx="5" transform="rotate(112.5 100 100)"></rect><rect x="95" y="21" width="10" height="22" rx="5" transform="rotate(135 100 100)"></rect><rect x="95" y="21" width="10" height="22" rx="5" transform="rotate(157.5 100 100)"></rect><rect x="95" y="21" width="10" height="22" rx="5" transform="rotate(180 100 100)"></rect><rect x="95" y="21" width="10" height="22" rx="5" transform="rotate(202.5 100 100)"></rect><rect x="95" y="21" width="10" height="22" rx="5" transform="rotate(225 100 100)"></rect><rect x="95" y="21" width="10" height="22" rx="5" transform="rotate(247.5 100 100)"></rect><rect x="95" y="21" width="10" height="22" rx="5" transform="rotate(270 100 100)"></rect><rect x="95" y="21" width="10" height="22" rx="5" transform="rotate(292.5 100 100)"></rect><rect x="95" y="21" width="10" height="22" rx="5" transform="rotate(315 100 100)"></rect><rect x="95" y="21" width="10" height="22" rx="5" transform="rotate(337.5 100 100)"></rect></g><path fill="url(#mst2)" fill-rule="evenodd" d="M44 100a56 56 0 1 0 112 0a56 56 0 1 0-112 0zM64 100a36 36 0 1 0 72 0a36 36 0 1 0-72 0z"></path></svg>
+</div>
+<p class="cap">Spherical Roller</p><h3>22210 E</h3><p class="sp">Brass cage · 50 × 90 × 23 mm</p><p class="pr">From ₹2,450</p><a class="ul" href="#">Discover</a>
+</article>
+<article class="pc">
+<div class="vit"><span class="badge">Ready to mount</span>
+<svg viewBox="0 0 200 180" aria-hidden="true"><ellipse cx="100" cy="166" rx="86" ry="6" fill="#000" fill-opacity=".12"></ellipse><rect x="14" y="128" width="172" height="26" rx="4" fill="url(#mbronze)"></rect><ellipse cx="38" cy="141" rx="8" ry="5" fill="#d9bd86"></ellipse><ellipse cx="162" cy="141" rx="8" ry="5" fill="#d9bd86"></ellipse><path d="M46 130 L62 96 L138 96 L154 130 Z" fill="url(#mbronze)"></path><circle cx="100" cy="82" r="62" fill="url(#mbronze)"></circle><circle cx="100" cy="82" r="58" fill="none" stroke="#d9bd86" stroke-opacity=".6" stroke-width="1"></circle><path fill="url(#mst)" fill-rule="evenodd" d="M58 82a42 42 0 1 0 84 0a42 42 0 1 0-84 0zM78 82a22 22 0 1 0 44 0a22 22 0 1 0-44 0z"></path><rect x="95" y="12" width="10" height="12" rx="2" fill="url(#mgold)"></rect></svg>
+</div>
+<p class="cap">Housed Unit</p><h3>UCP 205</h3><p class="sp">Pillow block · 25 mm bore</p><p class="pr">From ₹520</p><a class="ul" href="#">Discover</a>
+</article>
+<article class="pc">
+<div class="vit"><span class="badge">The belt</span>
+<svg viewBox="0 0 200 200" aria-hidden="true"><ellipse cx="100" cy="186" rx="70" ry="6" fill="#000" fill-opacity=".1"></ellipse><rect x="20" y="60" width="160" height="80" rx="40" fill="none" stroke="url(#mleather)" stroke-width="18"></rect><rect x="25" y="65" width="150" height="70" rx="35" fill="none" stroke="#e2c792" stroke-width=".9" stroke-dasharray="3 3"></rect><rect x="15" y="55" width="170" height="90" rx="45" fill="none" stroke="#e2c792" stroke-width=".9" stroke-dasharray="3 3"></rect><rect x="84" y="50" width="32" height="20" rx="2" fill="url(#mgold)"></rect><text x="100" y="64" text-anchor="middle" font-family="Jost, sans-serif" font-size="9" letter-spacing="1" fill="#3a2619">B·48</text></svg>
+</div>
+<p class="cap">Classical V-Belt</p><h3>B-48</h3><p class="sp">B section · 17 × 11 mm</p><p class="pr">From ₹176</p><a class="ul" href="#">Discover</a>
+</article>
+<article class="pc">
+<div class="vit"><span class="badge">Essential</span>
+<svg viewBox="0 0 200 210" aria-hidden="true"><ellipse cx="100" cy="203" rx="62" ry="6" fill="#000" fill-opacity=".1"></ellipse><path fill="url(#mrub)" fill-rule="evenodd" d="M8 100a92 92 0 1 0 184 0a92 92 0 1 0-184 0zM48 100a52 52 0 1 0 104 0a52 52 0 1 0-104 0z"></path><circle cx="100" cy="100" r="90" fill="none" stroke="url(#mgold)" stroke-width="3"></circle><circle cx="100" cy="100" r="61" fill="none" stroke="#d9bd86" stroke-width="4" stroke-dasharray="2 2.2"></circle><circle cx="100" cy="100" r="53" fill="none" stroke="#000" stroke-opacity=".6" stroke-width="2"></circle></svg>
+</div>
+<p class="cap">Oil Seal</p><h3>TC 35 × 52 × 7</h3><p class="sp">Double lip · nitrile</p><p class="pr">From ₹38</p><a class="ul" href="#">Discover</a>
+</article>
+<article class="pc">
+<div class="vit"><span class="badge">Care</span>
+<svg viewBox="0 0 200 210" aria-hidden="true"><ellipse cx="100" cy="196" rx="66" ry="6" fill="#000" fill-opacity=".12"></ellipse><ellipse cx="100" cy="176" rx="56" ry="14" fill="#1a110c"></ellipse><rect x="44" y="56" width="112" height="120" fill="#2a1d14"></rect><rect x="44" y="96" width="112" height="44" fill="#f3ece0"></rect><rect x="44" y="92" width="112" height="3" fill="url(#mgold)"></rect><rect x="44" y="141" width="112" height="3" fill="url(#mgold)"></rect><text x="100" y="126" text-anchor="middle" font-family="Bodoni Moda, Didot, serif" font-size="24" fill="#2a1d14">EP2</text><ellipse cx="100" cy="56" rx="56" ry="14" fill="url(#mgold)"></ellipse><ellipse cx="100" cy="56" rx="44" ry="10" fill="none" stroke="#7d5f26" stroke-width="1"></ellipse></svg>
+</div>
+<p class="cap">Lubricant</p><h3>Grease EP2</h3><p class="sp">Lithium complex · 1 kg tin</p><p class="pr">From ₹420</p><a class="ul" href="#">Discover</a>
+</article>
+</div>
+</div>
+</section>
+
+<section class="mani">
+<svg class="bgpat faint" aria-hidden="true"><rect width="100%" height="100%" fill="url(#mono)"></rect></svg>
+<div class="wrap mani-in">
+<h2>Engineered to turn.<br>Curated to last.</h2>
+<div class="pil">
+<div><p class="num">I</p><h3>Provenance, certified</h3><p>Every bearing traced to its mill, with batch details printed on your invoice.</p></div>
+<div><p class="num">II</p><h3>Trade terms</h3><p>Credit of 30 to 60 days for verified businesses. GST invoices as standard.</p></div>
+<div><p class="num">III</p><h3>A personal concierge</h3><p>A dedicated account manager, on call and on WhatsApp, for every trade client.</p></div>
+</div>
+</div>
+</section>
+
+<section class="besp">
+<div class="besp-l">
+<svg class="bgpat" aria-hidden="true"><rect width="100%" height="100%" fill="url(#mono)"></rect></svg>
+<svg class="seal" viewBox="0 0 300 300" role="img" aria-label="Atelier de Sourcing seal">
+<defs><path id="mring2" d="M46 150 A104 104 0 1 1 254 150 A104 104 0 1 1 46 150"></path></defs>
+<circle cx="150" cy="150" r="146" fill="#241811" stroke="#d9bd86" stroke-width="1.5"></circle>
+<circle cx="150" cy="150" r="132" fill="none" stroke="#d9bd86" stroke-opacity=".6" stroke-width=".8"></circle>
+<circle cx="150" cy="150" r="86" fill="none" stroke="#d9bd86" stroke-opacity=".6" stroke-width=".8"></circle>
+<text font-family="Jost, sans-serif" font-size="12" letter-spacing="3.6" fill="#d9bd86"><textPath href="#mring2">ATELIER DE SOURCING · BEARINGSETU · SOURCE · SUPPLY · GROW ·</textPath></text>
+<text x="150" y="172" text-anchor="middle" font-family="Bodoni Moda, Didot, serif" font-style="italic" font-size="68" fill="url(#mgold)">BS</text>
+</svg>
+</div>
+<div class="besp-r">
+<p class="cap lbl">Bespoke Sourcing</p>
+<h2>Send us your list.<br>Receive a curated quotation.</h2>
+<p class="body">Share your bill of materials. Our sourcing atelier returns brands, equivalents, prices and delivery dates, composed for your plant.</p>
+<form class="form" action="#">
+<div class="f"><label for="m-co">Company</label><input id="m-co" type="text" autocomplete="organization"></div>
+<div class="f"><label for="m-gst">GSTIN</label><input id="m-gst" type="text"></div>
+<div class="f full"><label for="m-em">Email or mobile</label><input id="m-em" type="text" autocomplete="email"></div>
+<button class="attach full" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11l-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"></path></svg>Attach bill of materials (.xlsx, .csv, .pdf)</button>
+<button class="sub-b" type="button">Request quotation</button>
+</form>
+<p class="note">Replies within the hour, 9 am to 7 pm, Monday to Saturday.</p>
+</div>
+</section>
+
+<section class="houses">
+<div class="wrap">
+<h2>For the Houses of Industry</h2>
+<p class="cap">Curated selections by sector</p>
+<ul class="hl">
+<li><span class="rn">I</span><span class="nm">Automotive &amp; Tractors</span><a href="#">Discover</a></li>
+<li><span class="rn">II</span><span class="nm">Textile Mills</span><a href="#">Discover</a></li>
+<li><span class="rn">III</span><span class="nm">Cement &amp; Mining</span><a href="#">Discover</a></li>
+<li><span class="rn">IV</span><span class="nm">Agriculture</span><a href="#">Discover</a></li>
+<li><span class="rn">V</span><span class="nm">Pumps &amp; Motors</span><a href="#">Discover</a></li>
+<li><span class="rn">VI</span><span class="nm">Sugar &amp; Paper</span><a href="#">Discover</a></li>
+<li><span class="rn">VII</span><span class="nm">Steel</span><a href="#">Discover</a></li>
+<li><span class="rn">VIII</span><span class="nm">Food Processing</span><a href="#">Discover</a></li>
+</ul>
+</div>
+</section>
+
+<section class="trade">
+<div class="wrap">
+<p class="cap">By invitation and application</p>
+<h2>The Trade Account</h2>
+<ul class="tl"><li>Contract pricing</li><li>A line of credit</li><li>Order history and one-touch reorder</li><li>Multiple buyers with approvals</li></ul>
+<a class="b3" href="#">Apply for a trade account</a>
+</div>
+</section>
+
+<footer class="ft">
+<svg class="bgpat faint" aria-hidden="true"><rect width="100%" height="100%" fill="url(#mono)"></rect></svg>
+<div class="wrap">
+<div class="nl">
+<div><h3>The Price Journal</h3><p>Monthly prices, new arrivals and sourcing notes, for trade clients.</p></div>
+<form class="nl-f" action="#"><label class="sr" for="m-nl">Email address</label><input id="m-nl" type="email" placeholder="Your email address"><button type="button">Subscribe</button></form>
+</div>
+<div class="fcols">
+<div><h4>Client Services</h4><ul><li><a href="#">Contact the concierge</a></li><li><a href="#">Track an order</a></li><li><a href="#">Returns</a></li><li><a href="#">FAQs</a></li></ul></div>
+<div><h4>The Maison</h4><ul><li><a href="#">Our story</a></li><li><a href="#">Provenance</a></li><li><a href="#">Careers</a></li></ul></div>
+<div><h4>Trade</h4><ul><li><a href="#">Trade account</a></li><li><a href="#">Credit terms</a></li><li><a href="#">Bulk quotations</a></li><li><a href="#">Catalogue &amp; datasheets</a></li></ul></div>
+<div><h4>Legal</h4><ul><li><a href="#">Terms of sale</a></li><li><a href="#">Privacy</a></li><li><a href="#">GST details</a></li></ul></div>
+</div>
+<p class="bigwm">BEARINGSETU</p>
+<div class="fb"><span>© 2026 Bearingsetu · Source · Supply · Grow</span><span>Theme preview — products, prices and terms are sample content.</span></div>
+</div>
+</footer>
+</div>
+<a id="bs-back" href="../index.html" style="position:fixed;left:16px;bottom:16px;z-index:9999;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:999px;background:rgba(17,17,17,.9);color:#fff;font:600 14px/1 system-ui,-apple-system,sans-serif;text-decoration:none;box-shadow:0 6px 20px rgba(0,0,0,.25)">&#8592; All themes</a>
+<script>if(window.self!==window.top){var b=document.getElementById('bs-back');if(b)b.remove();}</script>
+</body>
+</html>
