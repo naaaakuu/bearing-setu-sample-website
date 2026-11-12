@@ -1,29 +1,72 @@
-# Bearingsetu · Sample Website Themes
+# Bearingsetu · Online store (Precision design)
 
-Four design directions for the Bearingsetu B2B store (bearings, V-belts, seals and other industrial supplies).
+A complete sample e-commerce website for Bearingsetu: bearings, belts and pulleys, seals, lubrication, power transmission, linear motion and mounting tools for Indian industry. Apple-style "Precision" design: calm white space, real photography, one blue action colour.
 
 **Live site:** https://naaaakuu.github.io/bearing-setu-sample-website/
 
-Open the link, pick a theme, and switch between **Desktop**, **Tablet** and **Mobile** to see how it looks on each.
-Links to a specific view can be shared, for example `…/#maison/mobile`.
+> Sample store. Products, prices, stock, reviews, orders and account data are sample content. No payment is taken and no order is placed. Cart, orders, saved lists and quotes are stored in the visitor's browser (localStorage) only.
 
-| # | Theme | Direction |
-|---|-------|-----------|
-| 01 | Precision | Apple-style minimal: white space, big product renders, one blue action colour |
-| 02 | Maison | Luxury house: bearing monogram canvas, espresso, cognac and gold, Bodoni serif |
-| 03 | Blueprint | Engineering catalogue: blueprint grid, technical drawings, dense data tables |
-| 04 | Setu Bold | Neo-brutalist startup: thick outlines, stickers, orange, cobalt and lime |
+## Pages
 
-## What's in the repo
+| Page | What it does |
+|------|--------------|
+| `index.html` | Home: hero, category strip, live size finder with a drawn section view, bestsellers, category tiles, live quick-order demo, industries, brands |
+| `shop.html` | Catalogue with search, filters (type, brand, bore/OD/width, seal, clearance, stock, price), sort, grid/list and compare |
+| `product.html?id=…` | Product page: gallery with technical drawing, tier prices, variant picker (brand, seal, clearance), delivery estimate by pincode, equivalents, bought-together, reviews |
+| `cart.html` | Bag with tier pricing, save for later, coupon, free-dispatch meter, printable quotation |
+| `checkout.html` | Contact, delivery and payment steps, GSTIN check, CGST/SGST vs IGST, confirmation and printable invoice |
+| `quick-order.html` | Paste a parts list, upload a BOM (CSV or Excel), or request a quote |
+| `business.html` | Business account: tier pricing, 30-day credit, application form |
+| `account.html` | Sample business dashboard: orders and reorder, invoices, saved lists, quotes, team |
+| `support.html` | Order tracking, returns, FAQs, genuine-parts guide, call-back request |
+| `tools.html` | Part number decoder, interchange finder, belt length and grease calculators, inch/mm converter |
+| `about.html`, `policies.html`, `sitemap.html`, `404.html` | Company, policies and image credits, site map, not-found page |
+
+## How it is built
+
+Plain HTML, CSS and JavaScript. No framework and no runtime dependencies (SheetJS loads from cdnjs only when someone uploads an Excel file).
 
 ```
-index.html            Theme explorer (theme picker + device preview + feature comparison)
-themes/*.html         One static page per theme, each fully responsive
-assets/logo.png       Bearingsetu logo
-assets/favicon.svg    Gear-and-bearing mark
+assets/css/site.css        Design system: tokens, components, header, footer
+assets/css/<page>.css      Page styles
+assets/js/catalog.js       Product catalogue (categories, brands, products, reviews)
+assets/js/images.js        Photo manifest with credits
+assets/js/site.js          Shared logic: search, cart, saved list, mega menu, drawer, toasts
+assets/js/pages/<page>.js  Page logic
+assets/img/p, assets/img/s Product and scene photos (WebP)
+assets/fonts               Geist and Geist Mono (SIL Open Font License)
+assets/icons.svg           Phosphor icons (MIT)
+partials/                  Shared head, header and footer
+tools/build.mjs            Copies the partials into every page
 ```
 
-The site is published with GitHub Pages (deploy from the `main` branch). Every push to `main` triggers the
-`pages-build-deployment` GitHub Action and redeploys the site automatically.
+The header, footer and `<head>` basics live in `partials/`. After editing a partial, run:
 
-> These are static mock-ups. Products, prices, stock levels, account data and terms are sample content for layout only.
+```bash
+node tools/build.mjs
+```
+
+It fills the `<!-- @header -->` style markers in every page. Pages stay plain HTML that GitHub Pages serves as they are.
+
+To preview locally:
+
+```bash
+python3 -m http.server 4173
+```
+
+Then open http://localhost:4173.
+
+## Editing products
+
+Products live in `assets/js/catalog.js`. Each product has a part number, brand, category, dimensions, price (ex-GST), tier prices, stock, dispatch days and an image key from `assets/js/images.js`. The shop, search, product pages, quick order and tools all read from this one file.
+
+## Before going live
+
+- Replace sample prices, stock and reviews with real data.
+- Add real contact details (phone, WhatsApp) to the support page and footer.
+- Connect checkout to a payment gateway and order system.
+- Photos are openly licensed (see `policies.html#credits`); swap in your own product photography when ready.
+
+## Deploying
+
+GitHub Pages deploys from the `main` branch. Every push to `main` redeploys the site.
