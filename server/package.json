@@ -1,0 +1,13 @@
+{
+  "name": "bearingsetu-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bearingsetu API and admin panel server. Zero dependencies, Node 22+.",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node index.mjs",
+    "init": "node cli.mjs init",
+    "test": "node --test \"test/*.test.mjs\""
+  }
+}

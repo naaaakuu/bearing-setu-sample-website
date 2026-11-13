@@ -1,0 +1,4 @@
+# Private data and secrets: never commit these.
+data/
+.env
+*.log
