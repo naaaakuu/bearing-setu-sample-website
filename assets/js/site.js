@@ -37,8 +37,16 @@
   }
   function params() { return new URLSearchParams(location.search); }
   function plural(n, one, many) { return n + " " + (n === 1 ? one : many || one + "s"); }
+  // Own-property lookup, so ids such as "constructor" or "__proto__" never match Object.prototype.
+  function own(o, k) { return o != null && k != null && Object.prototype.hasOwnProperty.call(o, k); }
+  // Keyboard-focusable, visible elements inside a container.
+  var FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+  function focusables(container) {
+    return container ? $$(FOCUSABLE, container).filter(function (el) { return el.offsetParent !== null || getComputedStyle(el).position === "fixed"; }) : [];
+  }
 
   BS.$ = $; BS.$$ = $$; BS.esc = esc; BS.inr = inr; BS.icon = icon; BS.debounce = debounce; BS.params = params; BS.plural = plural;
+  BS.own = own; BS.focusables = focusables;
   BS.reduceMotion = reduceMotion;
   BS.GST = 0.18;
   BS.FREE_SHIP = 5000;
@@ -64,24 +72,53 @@
   // Lists read from storage are always arrays, whatever an old or edited value holds.
   store.list = function (k) { var v = store.get(k, []); return Array.isArray(v) ? v.filter(function (x) { return x != null; }) : []; };
   BS.store = store;
+  // false when the browser blocks site storage: the bag and saved data then last only until the page changes.
+  BS.storageOK = (function () {
+    try { localStorage.setItem("bs.__t", "1"); localStorage.removeItem("bs.__t"); return true; } catch (e) { return false; }
+  })();
 
   function emit(name, detail) { doc.dispatchEvent(new CustomEvent("bs:" + name, { detail: detail })); }
   BS.emit = emit;
   BS.on = function (name, fn) { doc.addEventListener("bs:" + name, function (e) { fn(e.detail); }); };
 
   /* --------------------------------------------------------------- catalogue */
-  var byId = {};
+  // Null-prototype maps: a URL id such as "toString" or "__proto__" finds nothing.
+  var byId = Object.create(null);
   CAT.products.forEach(function (p) { byId[p.id] = p; });
-  var brandById = {};
+  var brandById = Object.create(null);
   CAT.brands.forEach(function (b) { brandById[b.id] = b; });
-  var catById = {};
+  var catById = Object.create(null);
   CAT.categories.forEach(function (c) { catById[c.id] = c; });
 
   BS.catalog = CAT;
   BS.products = CAT.products;
-  BS.byId = function (id) { return byId[id]; };
-  BS.brand = function (id) { return brandById[id] || { id: id, name: String(id || "").toUpperCase() }; };
-  BS.cat = function (id) { return catById[id]; };
+  BS.byId = function (id) { return id == null ? undefined : byId[id]; };
+  BS.brand = function (id) { return (id != null && brandById[id]) || { id: id, name: String(id || "").toUpperCase() }; };
+  BS.cat = function (id) { return id == null ? undefined : catById[id]; };
+
+  /* Header sections. A category (or a group view such as shop.html?cat=bearings) maps to the
+     data-nav key of the header link that should be highlighted. */
+  BS.GROUPS = {
+    bearings: { name: "Bearings", cats: ["ball-bearings", "roller-bearings", "housed-units"] },
+    transmission: { name: "Transmission", cats: ["belts-pulleys", "power-transmission", "linear-motion"] }
+  };
+  var NAV_KEY = Object.create(null);
+  [["bearings", BS.GROUPS.bearings.cats], ["transmission", BS.GROUPS.transmission.cats], ["seals", ["seals"]], ["lubrication", ["lubrication"]], ["tools", ["mounting-tools"]]].forEach(function (g) {
+    NAV_KEY[g[0]] = g[0];
+    g[1].forEach(function (c) { NAV_KEY[c] = g[0]; });
+  });
+  BS.navKey = function (cat) { return (cat != null && NAV_KEY[cat]) || "store"; };
+  // Moves the header highlight. aria-current="page" only when the link points at this exact URL,
+  // otherwise "true" (the section you are in). A falsy or unknown key clears it.
+  BS.setNav = function (key) {
+    var here = location.pathname.replace(/^.*\//, "") + location.search;
+    $$("#gnav [data-nav]").forEach(function (a) {
+      if (key && a.getAttribute("data-nav") === key) {
+        var href = a.getAttribute("href") || "";
+        a.setAttribute("aria-current", href === here || (href === "index.html" && here === "") ? "page" : "true");
+      } else a.removeAttribute("aria-current");
+    });
+  };
   BS.sub = function (catId, subId) {
     var c = catById[catId];
     if (!c) return null;
@@ -134,6 +171,9 @@
   // opts.silent stores the value without telling pages to re-render (used for the delivery pincode).
   BS.setPref = function (k, v, opts) { var p = BS.prefs(); p[k] = v; store.set("prefs", p); if (!(opts && opts.silent)) emit("prefs", p); };
   BS.withGst = function (n) { return Math.round(n * (1 + BS.GST) * 100) / 100; };
+  // An ex-GST amount as the visitor prefers to see it, and the matching label.
+  BS.prefPrice = function (n) { return BS.prefs().gst === "inc" ? BS.withGst(n) : n; };
+  BS.taxNote = function () { return BS.prefs().gst === "inc" ? "incl. GST" : "+ GST"; };
   // Price markup that follows the GST preference.
   BS.priceHTML = function (amount, p, opts) {
     opts = opts || {};
@@ -153,7 +193,7 @@
   var FLAG = { bestseller: ["Bestseller", ""], "new": ["New", ""], "price-drop": ["Lower price", "flag--blue"], bulk: ["Bulk favourite", "flag--green"] };
   BS.flag = function (p) {
     var t = (p.tags || [])[0];
-    if (!t || !FLAG[t]) return "";
+    if (!t || !own(FLAG, t)) return "";
     return '<p class="flag ' + FLAG[t][1] + '">' + FLAG[t][0] + "</p>";
   };
   BS.subtitle = function (p) {
@@ -173,6 +213,125 @@
     out += '</span><span class="sr-only">Rated ' + rating + " out of 5</span>";
     if (count != null) out += "<span>" + rating.toFixed(1) + (count ? " (" + count + ")" : "") + "</span>";
     return out + "</span>";
+  };
+
+  /* --------------------------------------------------------- business rules */
+  // One seller identity for every quotation and invoice, wherever it is opened.
+  BS.SELLER = {
+    name: "Bearingsetu",
+    lines: ["Bhosari MIDC", "Pune 411026, Maharashtra"],
+    city: "Pune", pin: "411026",
+    gstin: "27AAACB0000A1Z5",
+    state: "Maharashtra", code: "27", stateLabel: "Maharashtra (27)",
+    email: "orders@bearingsetu.com", support: "support@bearingsetu.com"
+  };
+  // The sample verified business account shown on account.html and used for 30-day credit.
+  BS.ACCOUNT = {
+    company: "Kaveri Spinning Mills Pvt Ltd", short: "Kaveri Spinning Mills", city: "Coimbatore", state: "Tamil Nadu", code: "33",
+    gstin: "33AAFCK4821M1Z7", buyer: "Lakshmi Narayanan", first: "Lakshmi", role: "Maintenance Purchase",
+    verified: true, limit: 200000, used: 53680, avail: 146320
+  };
+  function cleanGstin(g) { return String(g == null ? "" : g).replace(/\s+/g, "").toUpperCase(); }
+  // 30-day credit is for verified business accounts only: the sample account, or an application
+  // saved on this device whose status is "Verified" for the same GSTIN.
+  BS.creditOK = function (gstin) {
+    var g = cleanGstin(gstin);
+    if (!g) return false;
+    if (g === BS.ACCOUNT.gstin) return true;
+    var app = store.get("bizApplication", null);
+    return !!(app && typeof app === "object" && typeof app.status === "string" && app.status.trim().toLowerCase() === "verified" && cleanGstin(app.gstin) === g);
+  };
+
+  /* Amount in words, Indian system: "Rupees Eight hundred ninety-two and eight paise only". */
+  var ONES = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+  var TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+  function w99(n) { return n < 20 ? ONES[n] : TENS[Math.floor(n / 10)] + (n % 10 ? "-" + ONES[n % 10] : ""); }
+  function w999(n) { var h = Math.floor(n / 100), r = n % 100; return (h ? ONES[h] + " hundred" + (r ? " " : "") : "") + (r ? w99(r) : ""); }
+  function words(n) {
+    if (!n) return "zero";
+    var out = [], cr = Math.floor(n / 1e7); n %= 1e7;
+    var lk = Math.floor(n / 1e5); n %= 1e5;
+    var th = Math.floor(n / 1000); n %= 1000;
+    if (cr) out.push(words(cr) + " crore");
+    if (lk) out.push(w99(lk) + " lakh");
+    if (th) out.push(w99(th) + " thousand");
+    if (n) out.push(w999(n));
+    return out.join(" ");
+  }
+  BS.inWords = function (x) {
+    x = Math.abs(Number(x) || 0);
+    if (!isFinite(x) || x > 1e12) x = 0;
+    var rs = Math.floor(x + 1e-9), ps = Math.round((x - rs) * 100);
+    if (ps >= 100) { rs += 1; ps = 0; }
+    var s = words(rs);
+    return "Rupees " + s.charAt(0).toUpperCase() + s.slice(1) + (ps ? " and " + words(ps) + " paise" : "") + " only";
+  };
+
+  /* Dispatch and delivery dates. Working days are Monday to Saturday; every order ships from Pune.
+     Delivery zones follow the table on policies.html#shipping. */
+  function isWorking(d) { return d.getDay() !== 0; }
+  function startOf(d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+  function sameDay(a, b) { return startOf(a).getTime() === startOf(b).getTime(); }
+  function at(d, h, m) { var x = new Date(d); x.setHours(h, m || 0, 0, 0); return x; }
+  function addWorking(d, n) {
+    var x = startOf(d);
+    while (n > 0) { x.setDate(x.getDate() + 1); if (isWorking(x)) n--; }
+    return x;
+  }
+  BS.isWorking = isWorking;
+  BS.addWorking = addWorking;
+  BS.sameDay = sameDay;
+
+  var METRO = { "11": "Delhi", "56": "Bengaluru", "60": "Chennai", "50": "Hyderabad", "70": "Kolkata" };
+  BS.transitDays = function (pin) {
+    var s = String(pin == null ? "" : pin).replace(/\s+/g, "");
+    if (!/^[1-9]\d{5}$/.test(s)) return null;
+    var t = s.slice(0, 2);
+    if (t === "41") return { days: 1, max: 1, zone: "pune", label: "Pune region" };
+    if (t === "40" || t === "42" || t === "43" || t === "44") return { days: 2, max: 2, zone: "maharashtra", label: "Mumbai and the rest of Maharashtra" };
+    if (own(METRO, t)) return { days: 2, max: 2, zone: "metro", label: METRO[t], city: METRO[t] };
+    return { days: 4, max: 5, zone: "india", label: "Rest of India" };
+  };
+
+  // Dispatch and delivery dates for a set of lines ({p, qty} or {id, qty}). Order by 4 pm on a
+  // working day and in-stock parts leave the same day. With a pincode, standard delivery uses
+  // the zone's transit days; without one it spans every zone (1 to 5 working days).
+  BS.schedule = function (lines, now, pin) {
+    now = now ? new Date(now) : new Date();
+    if (isNaN(now.getTime())) now = new Date();
+    var cutoff = at(now, 16, 0);
+    var beforeCutoff = isWorking(now) && now < cutoff;
+    var base = beforeCutoff ? startOf(now) : addWorking(now, 1);
+    var lead = 0, waiting = 0;
+    (lines || []).forEach(function (l) {
+      var p = l && (l.p || byId[l.id]);
+      if (!p) return;
+      var qty = parseInt(l.qty, 10) || 1;
+      var days = p.stock >= qty ? (p.ship || 0) : Math.max(p.ship || 0, 7);
+      if (days > 0) waiting++;
+      lead = Math.max(lead, days);
+    });
+    var dispatch = lead ? addWorking(base, lead) : base;
+    var open = at(now, 9, 30), close = at(now, 19, 0);
+    var ready;
+    if (!lead && isWorking(now) && now < open) ready = new Date(open.getTime() + 4 * 3600e3);
+    else if (!lead && isWorking(now) && now.getTime() + 4 * 3600e3 <= close.getTime()) {
+      ready = new Date(now.getTime() + 4 * 3600e3);
+      ready.setMinutes(Math.ceil(ready.getMinutes() / 30) * 30, 0, 0);
+    } else { ready = lead ? new Date(dispatch) : addWorking(now, 1); ready.setHours(13, 30, 0, 0); }
+    var zone = BS.transitDays(pin);
+    var from = zone ? zone.days : 1, to = zone ? zone.max : 5;
+    return {
+      now: now, cutoff: cutoff, beforeCutoff: beforeCutoff, lead: lead, waiting: waiting, dispatch: dispatch,
+      sameDay: sameDay(dispatch, now),
+      packedBy: at(dispatch, 16, 0),
+      dispatchBy: at(dispatch, 18, 0),
+      pin: zone ? String(pin).replace(/\s+/g, "") : "",
+      zone: zone,
+      standard: { from: addWorking(dispatch, from), to: addWorking(dispatch, to), days: from, max: to, known: !!zone },
+      express: { on: addWorking(dispatch, 1), useful: !zone || zone.days > 1 },
+      pickup: { ready: ready }
+    };
   };
 
   /* --------------------------------------------------------------- search */
@@ -214,7 +373,8 @@
         else if (it.pn.indexOf(nq) === 0) score = Math.max(score, 86 - Math.min(20, it.pn.length - nq.length));
         else if (nq.length >= 3 && it.pn.indexOf(nq) > 0) score = Math.max(score, 55);
         it.eq.forEach(function (e) {
-          if (e.n === nq || e.full === nq) { score = Math.max(score, 84); via = e.raw; }
+          // Name the equivalent only when it is what matched, not when the part's own number did.
+          if (e.n === nq || e.full === nq) { if (score < 84) { score = 84; via = e.raw; } }
           else if (nq.length >= 4 && (e.n.indexOf(nq) === 0 || e.full.indexOf(nq) === 0)) { if (score < 60) { score = 60; via = e.raw; } }
         });
       }
@@ -294,13 +454,16 @@
       store.set("cart", lines);
       emit("cart", { type: "add", id: id, qty: qty });
     },
-    set: function (id, qty) {
+    // pos: optional position for a line that is not in the bag yet (used by Undo).
+    set: function (id, qty, pos) {
       qty = parseInt(qty, 10) || 0;
       var lines = readCart();
       if (qty <= 0) lines = lines.filter(function (x) { return x.id !== id; });
       else {
         var l = lines.filter(function (x) { return x.id === id; })[0];
-        if (l) l.qty = qty; else lines.push({ id: id, qty: qty });
+        if (l) l.qty = qty;
+        else if (pos >= 0 && pos < lines.length) lines.splice(pos, 0, { id: id, qty: qty });
+        else lines.push({ id: id, qty: qty });
       }
       store.set("cart", lines);
       emit("cart", { type: "set", id: id, qty: qty });
@@ -376,7 +539,7 @@
   BS.toast = function (msg, opts) {
     opts = opts || {};
     var box = $("[data-toasts]");
-    if (!box) return;
+    if (!box) return { close: function () {}, el: null };
     var t = doc.createElement("div");
     // opts.cls "toast--info" gives notices and limits a neutral icon instead of the green tick.
     t.className = "toast" + (opts.cls ? " " + opts.cls : "");
@@ -387,21 +550,44 @@
     t.innerHTML = icon(opts.icon || "check-circle") + '<span class="toast__msg">' + msg + "</span>" + act;
     box.appendChild(t);
     if (opts.onAction) $(".toast__act", t).addEventListener("click", function () { opts.onAction(); leave(); });
-    var timer = setTimeout(leave, opts.ms || 4200);
+    // A toast with an action stays at least 10 seconds, and waits while it is pointed at or focused.
+    var ms = Math.max(opts.ms || 4200, act ? 10000 : 0);
+    var remaining = ms, started = Date.now(), hovered = false, focused = false, done = false;
+    var timer = setTimeout(leave, ms);
+    function pause() { if (timer) { clearTimeout(timer); timer = 0; remaining -= Date.now() - started; } }
+    function resume() {
+      if (done || hovered || focused || timer) return;
+      started = Date.now();
+      timer = setTimeout(leave, Math.max(remaining, 3000));
+    }
+    t.addEventListener("mouseenter", function () { hovered = true; pause(); });
+    t.addEventListener("mouseleave", function () { hovered = false; resume(); });
+    t.addEventListener("focusin", function () { focused = true; pause(); });
+    t.addEventListener("focusout", function (e) { if (!t.contains(e.relatedTarget)) { focused = false; resume(); } });
     function leave() {
+      if (done) return;
+      done = true;
       clearTimeout(timer);
       t.classList.add("is-leaving");
       setTimeout(function () { t.remove(); }, 320);
     }
-    return { close: leave };
+    t._bsLeave = leave;
+    return { close: leave, el: t };
+  };
+  // Dismiss every toast on screen (the bag drawer does this when it opens).
+  BS.closeToasts = function () {
+    $$("[data-toasts] .toast").forEach(function (t) { if (t._bsLeave) t._bsLeave(); else t.remove(); });
   };
 
   /* --------------------------------------------------------------- overlays */
   var lastFocus = null;
-  function trap(container, e) {
+  // extra: focusable elements outside the container that belong to the same stop list (a toggle button).
+  function trap(container, e, extra) {
     if (e.key !== "Tab") return;
-    var f = $$('a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])', container).filter(function (el) { return el.offsetParent !== null; });
+    var f = (extra || []).concat(focusables(container));
     if (!f.length) return;
+    // Focus that has slipped outside (or to <body>) comes back to the first or last stop.
+    if (f.indexOf(doc.activeElement) === -1) { (e.shiftKey ? f[f.length - 1] : f[0]).focus(); e.preventDefault(); return; }
     var first = f[0], last = f[f.length - 1];
     if (e.shiftKey && doc.activeElement === first) { last.focus(); e.preventDefault(); }
     else if (!e.shiftKey && doc.activeElement === last) { first.focus(); e.preventDefault(); }
@@ -424,7 +610,10 @@
     scrim = scrim || $("[data-cart-scrim]");
     if (!drawer) { location.href = "cart.html"; return; }
     closeSearch(); closeMega(); closeMenu();
-    lastFocus = doc.activeElement;
+    // An "added to your bag" toast would sit over the drawer's buttons on phones.
+    BS.closeToasts();
+    lastFocus = doc.activeElement && doc.activeElement.closest && doc.activeElement.closest("#mmenu") ? $("[data-open-menu]") : doc.activeElement;
+    undo = null;
     renderDrawer();
     drawer.hidden = false;
     requestAnimationFrame(function () {
@@ -440,55 +629,125 @@
     drawer.classList.remove("is-open");
     scrim.classList.remove("is-on");
     lock(false, "cart");
+    undo = null;
     setTimeout(function () { if (!drawer.classList.contains("is-open")) drawer.hidden = true; }, 500);
     if (lastFocus && lastFocus.focus) lastFocus.focus();
   }
   BS.openCart = openCart;
   BS.closeCart = closeCart;
 
+  // Progress to free dispatch. The threshold is before GST, so say so when prices show GST.
   function shipMeter(t) {
     if (!t.lines.length) return "";
     var pct = Math.min(100, Math.round((t.sub / BS.FREE_SHIP) * 100));
-    var msg = t.gap > 0 ? "Add " + inr(Math.ceil(t.gap)) + " more for free dispatch." : "Your order ships free.";
+    var msg = t.gap > 0 ? "Add " + inr(Math.ceil(t.gap)) + " more" + (BS.prefs().gst === "inc" ? " (before GST)" : "") + " for free dispatch." : "Your order ships free.";
     return '<div class="stack" style="--stack:8px"><p class="small">' + msg + '</p><div class="progress' + (t.gap > 0 ? "" : " is-done") + '" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="Progress to free dispatch"><span style="width:' + pct + '%"></span></div></div>';
   }
   BS.shipMeter = shipMeter;
 
+  /* The drawer follows the GST preference. When only quantities or prices change it updates the
+     lines in place, so keyboard focus stays on the control that was used. After Remove it shows
+     an inline Undo row inside the dialog, where keyboard and screen-reader users can reach it. */
+  var undo = null, undone = null, focusUndo = false;
+  function nameOf(p) { return BS.brand(p.brand).name + " " + p.pn; }
+  function lineEl(root, id) { return $$("[data-line]", root).filter(function (el) { return el.getAttribute("data-line") === id; })[0] || null; }
+  function linePrice(l, inc) {
+    var g = inc ? BS.withGst : Number;
+    return inr(g(l.total)) + "<small>" + l.qty + " × " + inr(g(l.unit)) + (inc ? " incl. GST" : " + GST") + "</small>";
+  }
+  function lineTier(l, inc) {
+    var g = inc ? BS.withGst : Number, u = esc(BS.unitLabel(l.p)), nt = BS.nextTier(l.p, l.qty);
+    return l.unit < l.p.price ? "Tier price " + inr(g(l.unit)) + " / " + u + " applied" : nt ? "Buy " + nt.qty + "+ for " + inr(g(nt.price)) + " / " + u : "";
+  }
+  function drawerLineHTML(l, inc) {
+    var name = nameOf(l.p), tier = lineTier(l, inc);
+    return '<div class="line" data-line="' + esc(l.id) + '">' +
+      '<a class="line__img" href="' + BS.url(l.p) + '" tabindex="-1" aria-hidden="true">' + BS.imgTag(l.p.img, { alt: "" }) + "</a>" +
+      "<div>" +
+        '<div class="line__top"><div><a class="line__t" href="' + BS.url(l.p) + '">' + esc(name) + '</a><p class="line__s">' + esc(l.p.title) + "</p></div>" +
+        '<p class="line__p num" data-line-price>' + linePrice(l, inc) + "</p></div>" +
+        '<p class="line__tier" data-line-tier' + (tier ? "" : " hidden") + ">" + tier + "</p>" +
+        '<div class="line__row">' + stepperHTML(l.id, l.qty, "sm", null, name) +
+        '<button class="textlink small line__rm" type="button" data-remove="' + esc(l.id) + '" aria-label="Remove ' + esc(name) + '">Remove</button></div>' +
+      "</div></div>";
+  }
+  function undoHTML() {
+    return '<div class="line line--undo" data-undo-row><p class="small">Removed <strong>' + esc(undo.name) + "</strong>.</p>" +
+      '<button class="textlink small" type="button" data-undo aria-label="Undo removing ' + esc(undo.name) + '">Undo</button></div>';
+  }
+  function drawerFootHTML(t, inc) {
+    var g = inc ? BS.withGst : Number;
+    return shipMeter(t) +
+      '<div class="sumrow"><span>' + (inc ? "Subtotal incl. GST" : "Subtotal before GST") + '</span><span class="num">' + inr(g(t.sub)) + "</span></div>" +
+      (t.savings > 0 ? '<div class="sumrow small" style="color:var(--green)"><span>Volume savings included</span><span class="num">' + inr(g(t.savings)) + "</span></div>" : "") +
+      '<div class="sumrow small muted"><span>' + (inc ? "Includes GST (18%). Dispatch is added at checkout." : "GST (18%) and dispatch are added at checkout.") + "</span></div>" +
+      '<a class="btn btn--block" href="checkout.html">Check out</a>' +
+      '<a class="btn btn--block btn--quiet" href="cart.html">View bag and get a quote</a>';
+  }
+  function setFoot(foot, html) {
+    if (foot._html === html) return;
+    var ae = doc.activeElement, href = ae && foot.contains(ae) ? ae.getAttribute("href") : null;
+    foot.innerHTML = html;
+    foot._html = html;
+    if (href) { var a = $$("a", foot).filter(function (x) { return x.getAttribute("href") === href; })[0]; if (a) a.focus(); }
+  }
+  var KINDS = ['[data-step="1"]', '[data-step="-1"]', "input", "[data-remove]", ".line__t"];
   function renderDrawer() {
     var body = $("[data-cart-lines]"), foot = $("[data-cart-foot]");
     if (!body) return;
-    var t = cart.totals();
+    var dr = drawer || $("#cart-drawer");
+    var t = cart.totals(), inc = BS.prefs().gst === "inc";
     var title = $("#cart-drawer-title");
     if (title) title.textContent = t.count ? "Your bag (" + t.count + ")" : "Your bag";
-    if (!t.lines.length) {
-      body.innerHTML = '<div class="empty" style="margin:16px 0">' + icon("handbag") + "<h3>Your bag is empty</h3><p>Search by part number or size, or paste a whole list into Quick order.</p>" +
-        '<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><a class="btn btn--sm" href="shop.html">Shop parts</a><a class="btn btn--sm btn--quiet" href="quick-order.html">Quick order</a></div></div>';
-      foot.innerHTML = "";
-      foot.hidden = true;
+    var ids = t.lines.map(function (l) { return l.id; }).join("|") + (undo ? "|undo:" + undo.id : "");
+    if (t.lines.length && body.getAttribute("data-ids") === ids) {
+      t.lines.forEach(function (l) {
+        var row = lineEl(body, l.id);
+        if (!row) return;
+        $("[data-line-price]", row).innerHTML = linePrice(l, inc);
+        var tier = lineTier(l, inc), te = $("[data-line-tier]", row);
+        te.innerHTML = tier;
+        te.hidden = !tier;
+        var st = $("[data-stepper]", row), input = $("input", st), minus = $('[data-step="-1"]', st);
+        if (String(input.value) !== String(l.qty)) input.value = l.qty;
+        if (minus) setMinus(minus, input, l.qty <= minQty(st));
+      });
+      setFoot(foot, drawerFootHTML(t, inc));
       return;
     }
-    foot.hidden = false;
-    body.innerHTML = t.lines.map(function (l) {
-      var b = BS.brand(l.p.brand);
-      var nt = BS.nextTier(l.p, l.qty);
-      var tierMsg = l.unit < l.p.price ? "Tier price " + inr(l.unit) + " / " + esc(BS.unitLabel(l.p)) + " applied" :
-        nt ? "Buy " + nt.qty + "+ for " + inr(nt.price) + " / " + esc(BS.unitLabel(l.p)) : "";
-      return '<div class="line" data-line="' + esc(l.id) + '">' +
-        '<a class="line__img" href="' + BS.url(l.p) + '" tabindex="-1" aria-hidden="true">' + BS.imgTag(l.p.img, { alt: "" }) + "</a>" +
-        "<div>" +
-          '<div class="line__top"><div><a class="line__t" href="' + BS.url(l.p) + '">' + esc(b.name + " " + l.p.pn) + '</a><p class="line__s">' + esc(l.p.title) + "</p></div>" +
-          '<p class="line__p num">' + inr(l.total) + "<small>" + inr(l.unit) + " × " + l.qty + "</small></p></div>" +
-          (tierMsg ? '<p class="line__tier">' + tierMsg + "</p>" : "") +
-          '<div class="line__row">' + stepperHTML(l.id, l.qty, "sm") +
-          '<button class="textlink small" type="button" data-remove="' + esc(l.id) + '">Remove</button></div>' +
-        "</div></div>";
-    }).join("");
-    foot.innerHTML = shipMeter(t) +
-      '<div class="sumrow"><span>Subtotal</span><span class="num">' + inr(t.sub) + "</span></div>" +
-      (t.savings > 0 ? '<div class="sumrow small" style="color:var(--green)"><span>Volume savings included</span><span class="num">' + inr(t.savings) + "</span></div>" : "") +
-      '<div class="sumrow small muted"><span>GST (18%) and dispatch are added at checkout</span></div>' +
-      '<a class="btn btn--block" href="checkout.html">Check out</a>' +
-      '<a class="btn btn--block btn--quiet" href="cart.html">View bag and get a quote</a>';
+    // Lines were added or removed: rebuild, then put focus back on the equivalent control.
+    var ae = doc.activeElement, keep = null;
+    if (ae && ae !== body && body.contains(ae)) {
+      var ln = ae.closest("[data-line]");
+      keep = { id: ln ? ln.getAttribute("data-line") : null, kind: KINDS.filter(function (k) { return ae.matches(k); })[0] || null, undo: ae.matches("[data-undo]") };
+    }
+    var rows = t.lines.map(function (l) { return drawerLineHTML(l, inc); });
+    if (undo) rows.splice(Math.min(undo.pos, rows.length), 0, undoHTML());
+    if (!t.lines.length) {
+      body.innerHTML = rows.join("") + '<div class="empty" style="margin:16px 0">' + icon("handbag") + "<h3>Your bag is empty</h3><p>Search by part number or size, or paste a whole list into Quick order.</p>" +
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><a class="btn btn--sm" href="shop.html">Shop parts</a><a class="btn btn--sm btn--quiet" href="quick-order.html">Quick order</a></div></div>';
+      foot.innerHTML = "";
+      foot._html = "";
+      foot.hidden = true;
+    } else {
+      foot.hidden = false;
+      body.innerHTML = rows.join("");
+      setFoot(foot, drawerFootHTML(t, inc));
+    }
+    body.setAttribute("data-ids", t.lines.length ? ids : "");
+    var target = null;
+    if (focusUndo) target = $("[data-undo]", body);
+    else if (keep) {
+      var row = lineEl(body, keep.undo && undone ? undone : keep.id);
+      if (row) {
+        target = keep.undo ? $(".line__t", row) : keep.kind ? $(keep.kind, row) : null;
+        if (!target || target.disabled) target = $("input", row);
+      }
+      if (!target) target = $(".line__t", body) || (dr && $("[data-close-cart]", dr));
+    }
+    focusUndo = false;
+    undone = null;
+    if (target) target.focus();
   }
   BS.renderDrawer = renderDrawer;
 
@@ -498,14 +757,22 @@
     var p = byId[st.getAttribute("data-stepper")];
     return Math.max(1, (p && p.moq) || 1);
   }
+  // Disabling a focused minus button would drop keyboard focus to <body>, so focus moves to the input.
+  function setMinus(minus, input, off) {
+    var kb = off && doc.activeElement === minus && minus.matches(":focus-visible");
+    minus.disabled = off;
+    if (kb) input.focus();
+  }
   // min defaults to the part's minimum order quantity (belts come in pairs, seals in fives).
-  function stepperHTML(id, qty, size, min) {
+  // name (optional) makes the labels specific: "Increase quantity of SKF 6205-2RS1".
+  function stepperHTML(id, qty, size, min, name) {
     var p = byId[id];
     min = Math.max(1, min || (p && p.moq) || 1);
-    return '<div class="stepper' + (size ? " stepper--" + size : "") + '" data-stepper="' + esc(id) + '"' + (min > 1 ? ' data-min="' + min + '"' : "") + ">" +
-      '<button type="button" data-step="-1" aria-label="Decrease quantity"' + (qty <= min ? " disabled" : "") + ">" + icon("minus") + "</button>" +
-      '<input type="number" inputmode="numeric" min="' + min + '" max="99999" value="' + qty + '" aria-label="Quantity">' +
-      '<button type="button" data-step="1" aria-label="Increase quantity">' + icon("plus") + "</button></div>";
+    var of = name ? " of " + esc(name) : "";
+    return '<div class="stepper' + (size ? " stepper--" + esc(size) : "") + '" data-stepper="' + esc(id) + '"' + (min > 1 ? ' data-min="' + min + '"' : "") + ">" +
+      '<button type="button" data-step="-1" aria-label="Decrease quantity' + of + '"' + (qty <= min ? " disabled" : "") + ">" + icon("minus") + "</button>" +
+      '<input type="number" inputmode="numeric" min="' + min + '" max="99999" value="' + qty + '" aria-label="Quantity' + of + '">' +
+      '<button type="button" data-step="1" aria-label="Increase quantity' + of + '">' + icon("plus") + "</button></div>";
   }
   BS.stepperHTML = stepperHTML;
 
@@ -518,7 +785,7 @@
     searchInput = $("#search-input");
     searchBody = $("[data-search-body]");
     closeCart(); closeMega(); closeMenu();
-    lastFocus = doc.activeElement;
+    lastFocus = doc.activeElement && doc.activeElement.closest && doc.activeElement.closest("#mmenu") ? $("[data-open-menu]") : doc.activeElement;
     searchEl.hidden = false;
     lock(true, "search");
     if (prefill != null) searchInput.value = prefill;
@@ -539,12 +806,18 @@
   BS.openSearch = openSearch;
   BS.closeSearch = closeSearch;
 
+  // The combobox points at the listbox only while one is on screen.
+  function setListbox(on) {
+    searchInput.setAttribute("aria-expanded", on ? "true" : "false");
+    if (on) searchInput.setAttribute("aria-controls", "search-results");
+    else searchInput.removeAttribute("aria-controls");
+  }
   function renderSearch() {
     var q = searchInput.value.trim();
     activeIdx = -1;
-    searchInput.setAttribute("aria-expanded", q ? "true" : "false");
     searchInput.removeAttribute("aria-activedescendant");
     if (!q) {
+      setListbox(false);
       var recentQ = store.list("recentQ").filter(function (x) { return typeof x === "string"; });
       searchBody.innerHTML =
         (recentQ.length ? '<div class="search__group"><p class="search__label">Recent searches</p><div class="search__quick">' + recentQ.map(function (r) { return '<button class="chip chip--outline" type="button" data-q="' + esc(r) + '">' + icon("clock") + esc(r) + "</button>"; }).join("") + "</div></div>" : "") +
@@ -561,18 +834,20 @@
     searchResults = BS.search(q, 8);
     var size = BS.parseSize(q);
     var head = size ? '<p class="search__label">Parts sized ' + esc([size.d, size.D, size.B].filter(function (x) { return x != null; }).join(" × ")) + " mm</p>" : '<p class="search__label">Products</p>';
+    setListbox(searchResults.length > 0);
     if (!searchResults.length) {
       searchBody.innerHTML = '<div class="search__group"><p class="search__empty">No exact match for “' + esc(q) + '”. Check the number, try the size as bore × outer × width, or ask us to source it.</p>' +
         '<div class="search__quick"><a class="chip chip--outline" href="tools.html?q=' + encodeURIComponent(q) + '#interchange">' + icon("arrows-left-right") + 'Find an equivalent</a><a class="chip chip--outline" href="quick-order.html?q=' + encodeURIComponent(q) + '#rfq">' + icon("paper-plane-tilt") + "Request a quote</a></div></div>";
       return;
     }
+    var inc = BS.prefs().gst === "inc";
     searchBody.innerHTML = '<div class="search__group">' + head + '<ul class="search__results" id="search-results" role="listbox" aria-label="Search results">' +
       searchResults.map(function (r, i) {
         var p = r.p, b = BS.brand(p.brand), st = BS.stock(p);
         return '<li role="presentation"><a class="sres" id="sres-' + i + '" role="option" aria-selected="false" href="' + BS.url(p) + '" data-sres>' +
           '<span class="sres__img">' + BS.imgTag(p.img, { alt: "" }) + "</span>" +
-          '<span style="min-width:0"><span class="sres__t">' + esc(b.name + " " + p.pn) + '</span><span class="sres__s">' + (r.via ? "Equivalent of " + esc(r.via) + " · " : "") + BS.subtitle(p) + "</span></span>" +
-          '<span class="sres__p num">' + inr(p.price) + "<small>" + esc(st.short) + "</small></span></a></li>";
+          '<span class="sres__txt"><span class="sres__t">' + esc(b.name + " " + p.pn) + '</span><span class="sres__s">' + (r.via ? "Equivalent of " + esc(r.via) + " · " : "") + BS.subtitle(p) + "</span></span>" +
+          '<span class="sres__p num">' + inr(inc ? BS.withGst(p.price) : p.price) + '<small class="sres__tax"> ' + (inc ? "incl. GST" : "+ GST") + '</small><small class="' + (p.stock ? (p.stock < 20 ? "is-low" : "") : "is-out") + '">' + esc(st.short) + "</small></span></a></li>";
       }).join("") + "</ul>" +
       '<a class="more search__all" href="shop.html?q=' + encodeURIComponent(q) + '">See all results for “' + esc(q) + "”</a></div>";
   }
@@ -598,12 +873,21 @@
 
   /* mega menu */
   var megaOpen = null, megaTimer;
+  // Panel photos carry data-src and load on first intent (hover or focus on the trigger), not on every page.
+  function loadMegaImgs(panel) {
+    if (!panel) return;
+    $$("img[data-src]", panel).forEach(function (img) {
+      img.src = img.getAttribute("data-src");
+      img.removeAttribute("data-src");
+    });
+  }
   function openMega(id, link) {
     clearTimeout(megaTimer);
     if (megaOpen && megaOpen.id === id) return;
     closeMega(true);
     var panel = doc.getElementById(id);
     if (!panel) return;
+    loadMegaImgs(panel);
     panel.classList.add("is-open");
     $("#gnav").classList.add("is-open");
     $("[data-page-dim]").classList.add("is-on");
@@ -623,11 +907,15 @@
   BS.closeMega = closeMega;
 
   /* mobile menu */
+  /* The phone menu covers the page, so the page behind it is made inert while it is open and Tab
+     cycles through the header and the menu only. */
   var menuOpen = false;
+  var BEHIND_MENU = "main, [data-ribbon], #footer, [data-help-float]";
   function toggleMenu(force) {
     var m = $("#mmenu"), btn = $("[data-open-menu]");
     if (!m) return;
     menuOpen = force != null ? force : !menuOpen;
+    $$(BEHIND_MENU).forEach(function (el) { if (menuOpen) el.setAttribute("inert", ""); else el.removeAttribute("inert"); });
     if (menuOpen) {
       closeCart(); closeSearch();
       m.hidden = false;
@@ -646,6 +934,10 @@
     }
   }
   function closeMenu() { if (menuOpen) toggleMenu(false); }
+  function trapMenu(e) {
+    var gnav = $("#gnav");
+    trap($("#mmenu"), e, focusables($(".gnav__in", gnav)));
+  }
 
   /* --------------------------------------------------------- cart badge + fly */
   function updateBadge(bump) {
@@ -655,7 +947,7 @@
       el.classList.toggle("is-on", n > 0);
     });
     $$("[data-open-cart]").forEach(function (b) {
-      b.setAttribute("aria-label", "Cart, " + plural(n, "item"));
+      b.setAttribute("aria-label", "Bag, " + plural(n, "item"));
       if (bump) { b.classList.remove("is-bump"); void b.offsetWidth; b.classList.add("is-bump"); }
     });
   }
@@ -686,14 +978,21 @@
     cart.add(id, qty);
     if (srcEl) flyToBag(srcEl);
     var b = BS.brand(p.brand);
-    var onBag = /(^|\/)cart\.html$/.test(location.pathname);
-    if (!opts.silent) BS.toast("<strong>" + esc(b.name + " " + p.pn) + "</strong> added to your bag.", onBag ? {} : { label: "View bag", onAction: openCart });
+    // No "View bag" action on the bag page itself, or while the drawer is already open.
+    var onBag = /(^|\/)cart\.html$/.test(location.pathname) || !!$("#cart-drawer.is-open");
+    var note = BS.storageOK ? "" : " Your browser is blocking site storage, so the bag empties when you change page.";
+    if (!opts.silent) BS.toast("<strong>" + esc(b.name + " " + p.pn) + "</strong> added to your bag." + note, onBag ? (note ? { ms: 10000 } : {}) : { label: "View bag", onAction: openCart });
   };
 
   /* ------------------------------------------------------------ scroll reveal */
   var io = "IntersectionObserver" in window && !reduceMotion ? new IntersectionObserver(function (entries) {
     entries.forEach(function (e) {
-      if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
+      if (e.isIntersecting) {
+        e.target.classList.add("is-in");
+        io.unobserve(e.target);
+        // The block is nearly in place a moment later: check whether the help button now covers it.
+        setTimeout(function () { BS.updateHelpFloat(); }, 350);
+      }
     });
   }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 }) : null;
   BS.reveal = function (root) {
@@ -768,8 +1067,19 @@
     }
     if ((el = t.closest("[data-remove]")) && drawer && drawer.contains(el)) {
       var rid = el.getAttribute("data-remove");
-      var gone = cart.remove(rid);
-      if (gone) BS.toast("Removed " + esc(BS.brand(byId[rid].brand).name + " " + byId[rid].pn) + ".", { label: "Undo", icon: "trash", onAction: function () { cart.set(rid, gone.qty); } });
+      var before = readCart().map(function (x) { return x.id; });
+      var pos = before.indexOf(rid);
+      if (pos === -1 || !byId[rid]) return;
+      undo = { id: rid, qty: readCart()[pos].qty, pos: pos, name: nameOf(byId[rid]) };
+      focusUndo = true;
+      cart.remove(rid);
+      return;
+    }
+    if (t.closest("[data-undo]") && undo) {
+      var u = undo;
+      undo = null;
+      undone = u.id;
+      cart.set(u.id, u.qty, u.pos);
       return;
     }
     if ((el = t.closest("[data-step]"))) {
@@ -808,15 +1118,14 @@
     if (asked > 0 && asked < min) emit("moq", { id: st.getAttribute("data-stepper"), min: min, asked: asked });
     input.value = v;
     var minus = $('[data-step="-1"]', st);
-    if (minus) minus.disabled = v <= min;
+    if (minus) setMinus(minus, input, v <= min);
     var id = st.getAttribute("data-stepper");
     if (id && byId[id] && !st.hasAttribute("data-local")) cart.set(id, v);
   });
 
   doc.addEventListener("keydown", function (e) {
-    var tag = (e.target.tagName || "").toLowerCase();
-    var typing = tag === "input" || tag === "textarea" || tag === "select" || e.target.isContentEditable;
-    if ((e.key === "/" && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k")) {
+    // Cmd+K or Ctrl+K opens search. There is no single-key shortcut (WCAG 2.1.4).
+    if ((e.metaKey || e.ctrlKey) && !e.altKey && String(e.key || "").toLowerCase() === "k") {
       e.preventDefault();
       openSearch();
       return;
@@ -825,7 +1134,11 @@
       if (searchEl && searchEl.classList.contains("is-open")) closeSearch();
       else if (drawer && drawer.classList.contains("is-open")) closeCart();
       else if (megaOpen) { var l = megaOpen.link; closeMega(); l.focus(); }
-      else if (menuOpen) toggleMenu(false);
+      else if (menuOpen) {
+        var mbtn = $("[data-open-menu]");
+        toggleMenu(false);
+        if (mbtn) mbtn.focus();
+      }
       return;
     }
     if (searchEl && searchEl.classList.contains("is-open")) {
@@ -839,24 +1152,53 @@
       }
       trap($(".search__panel"), e);
     } else if (drawer && drawer.classList.contains("is-open")) trap(drawer, e);
+    else if (menuOpen) trapMenu(e);
   });
 
   function initHeader() {
-    $$(".gnav__link[data-mega]").forEach(function (link) {
+    var triggers = $$(".gnav__link[data-mega]");
+    triggers.forEach(function (link) {
       var id = link.getAttribute("data-mega");
+      var panel = doc.getElementById(id);
       link.setAttribute("aria-expanded", "false");
       link.setAttribute("aria-controls", id);
       link.addEventListener("mouseenter", function () {
+        loadMegaImgs(panel);
         clearTimeout(megaTimer);
         megaTimer = setTimeout(function () { openMega(id, link); }, megaOpen ? 0 : 140);
       });
       link.addEventListener("mouseleave", function () { clearTimeout(megaTimer); });
+      link.addEventListener("focus", function () {
+        loadMegaImgs(panel);
+        if (megaOpen && megaOpen.link !== link) closeMega();
+      });
       link.addEventListener("keydown", function (e) {
         if (e.key === "ArrowDown" || (e.key === " " && !megaOpen)) {
           e.preventDefault();
           openMega(id, link);
-          var first = $("a", doc.getElementById(id));
+          var first = $("a", panel);
           if (first) first.focus();
+        } else if (e.key === "Tab" && !e.shiftKey && megaOpen && megaOpen.link === link) {
+          // The panels sit after the header icons in the page, so step into the open panel here.
+          var f = focusables(panel);
+          if (f.length) { e.preventDefault(); f[0].focus(); }
+        }
+      });
+      if (!panel) return;
+      // Leaving the panel by keyboard continues along the main nav, not into the page.
+      panel.addEventListener("keydown", function (e) {
+        if (e.key !== "Tab" || !megaOpen || megaOpen.panel !== panel) return;
+        var f = focusables(panel);
+        if (!f.length) return;
+        if (!e.shiftKey && doc.activeElement === f[f.length - 1]) {
+          e.preventDefault();
+          closeMega();
+          var li = link.closest("li"), nextLi = li && li.nextElementSibling;
+          var next = nextLi ? $("a, button", nextLi) : focusables($(".gnav__icons"))[0];
+          (next || link).focus();
+        } else if (e.shiftKey && doc.activeElement === f[0]) {
+          e.preventDefault();
+          link.focus();
         }
       });
     });
@@ -883,36 +1225,102 @@
         if (activeIdx > -1) e.preventDefault();
       });
     }
+    // The phone menu (and the inert page behind it) must not outlive a resize to the desktop header.
+    var desk = window.matchMedia("(min-width: 1069px)");
+    if (desk.addEventListener) desk.addEventListener("change", function () { if (desk.matches) closeMenu(); });
     // Footer accordions start closed on phones.
     if (window.matchMedia("(max-width: 640px)").matches) $$(".gfoot__grid ul").forEach(function (ul) { ul.classList.add("is-collapsed"); });
   }
 
   BS.on("cart", function (d) {
+    // The inline Undo row lasts until the bag changes again.
+    if (undo && !(d && d.type === "remove" && d.id === undo.id)) undo = null;
     updateBadge(d && d.type === "add");
     if (drawer && drawer.classList.contains("is-open")) renderDrawer();
   });
-  window.addEventListener("storage", function (e) { if (e.key === "bs.cart") { updateBadge(); if (drawer && !drawer.hidden) renderDrawer(); } });
+  // Prices in the drawer and in search follow the "+ GST / Incl. GST" preference.
+  BS.on("prefs", function () {
+    if (drawer && drawer.classList.contains("is-open")) renderDrawer();
+    if (searchEl && searchEl.classList.contains("is-open") && searchInput) renderSearch();
+  });
+  window.addEventListener("storage", function (e) {
+    if (e.key === "bs.cart") { undo = null; updateBadge(); if (drawer && drawer.classList.contains("is-open")) renderDrawer(); }
+  });
 
-  // Phones: tuck the help button away near the top of the page and while scrolling down,
-  // bring it back when the visitor scrolls up (where they look for help).
+  /* "Talk to a specialist" float. At every width it steps aside while it would cover a control or a
+     price (anything matching FLOAT_AVOID; pages can mark more with data-float-avoid). On phones it
+     also stays tucked near the top of the page, while reading down and after landing on a #section,
+     and comes back when the visitor scrolls up. */
+  var FLOAT_AVOID = "a, button, input, select, textarea, label, summary, [role=button], .seg, .pcard__price, .num, [class*='__price'], [class*='__total'], [data-float-avoid]";
   function initHelpFloat() {
     var fl = $("[data-help-float]");
     if (!fl) return;
-    var mq = window.matchMedia("(max-width: 640px)"), lastY = window.scrollY, ticking = false;
+    var mq = window.matchMedia("(max-width: 640px)");
+    var lastY = window.scrollY, down = false, queued = false;
+    var landed = location.hash.length > 1;
+    function covers() {
+      var r = fl.getBoundingClientRect();
+      if (!r.width) return false;
+      // Measure where the button rests, without the tuck or hover offset.
+      var ty = 0;
+      try { var tf = getComputedStyle(fl).transform; if (tf && tf !== "none") ty = new DOMMatrixReadOnly(tf).m42; } catch (e) { ty = 0; }
+      // Sample a grid over the button plus a 3px rim, dense enough (about every 22px) that a narrow
+      // button or link that slips between samples is still seen.
+      var pad = 3, left = r.left - pad, right = r.right + pad, top = r.top - ty - pad, bottom = r.bottom - ty + pad;
+      var cols = Math.max(3, Math.ceil((right - left) / 22) + 1), xs = [], ys = [top, (top + bottom) / 2, bottom];
+      for (var c = 0; c < cols; c++) xs.push(left + ((right - left) * c) / (cols - 1));
+      for (var i = 0; i < xs.length; i++) {
+        for (var j = 0; j < ys.length; j++) {
+          var x = xs[i], y = ys[j];
+          if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) continue;
+          var stack = doc.elementsFromPoint(x, y);
+          for (var k = 0; k < stack.length; k++) {
+            var el = stack[k];
+            if (el === fl || fl.contains(el)) continue;
+            if (el.closest(FLOAT_AVOID)) return true;
+            break;
+          }
+        }
+      }
+      return false;
+    }
     function upd() {
-      ticking = false;
-      var y = window.scrollY, tuck = false;
-      if (mq.matches) tuck = y < 480 || (y > lastY + 4);
-      if (Math.abs(y - lastY) > 4 || y < 480) lastY = y;
+      queued = false;
+      var y = window.scrollY, dy = y - lastY;
+      if (Math.abs(dy) > 4) { down = dy > 0; if (!down) landed = false; lastY = y; }
+      else if (y < 480) lastY = y;
+      var tuck = (mq.matches && (landed || y < 480 || down)) || covers();
       fl.classList.toggle("is-tucked", tuck);
     }
-    window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(upd); } }, { passive: true });
-    if (mq.addEventListener) mq.addEventListener("change", upd);
+    function queue() { if (!queued) { queued = true; requestAnimationFrame(upd); } }
+    // While scrolling, check about eight times a second and once more when scrolling stops.
+    var lastRun = 0, trail;
+    function onScroll() {
+      var now = Date.now();
+      clearTimeout(trail);
+      trail = setTimeout(queue, 140);
+      if (now - lastRun > 120) { lastRun = now; queue(); }
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", queue);
+    if (mq.addEventListener) mq.addEventListener("change", queue);
+    // Content that opens or closes under the button (accordions, tabs, results) without a scroll.
+    doc.addEventListener("click", function () { setTimeout(queue, 0); setTimeout(queue, 450); });
+    doc.addEventListener("keyup", function () { setTimeout(queue, 0); });
+    // Blocks that slide into place (.reveal) or expand with a transition settle without a scroll.
+    doc.addEventListener("transitionend", function (e) { if (e.target !== fl) queue(); }, true);
+    window.addEventListener("load", queue);
+    BS.updateHelpFloat = queue;
     upd();
   }
+  BS.updateHelpFloat = function () {};
 
   function init() {
-    doc.documentElement.classList.remove("no-js");
+    var root = doc.documentElement;
+    // If this script arrived late, the CSS failsafe has already shown every .reveal block: keep them shown.
+    if (window.performance && performance.now() > 2500) $$(".reveal").forEach(function (el) { el.classList.add("is-in"); });
+    root.classList.remove("no-js");
+    root.classList.add("bs-ready");
     initHelpFloat();
     initHeader();
     updateBadge();

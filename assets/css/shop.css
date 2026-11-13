@@ -1,5 +1,11 @@
 /* Shop / catalogue listing */
 
+/* Keyboard focus stops clear of the sticky toolbar (and of the compare tray at the bottom). */
+html{scroll-padding-top:calc(var(--nav-h) + 80px)}
+html:has(body.has-cmp){scroll-padding-bottom:116px}
+/* Without JavaScript the header notice explains; the listing and its skeletons would never fill in. */
+html:not(.js) .chapters,html:not(.js) .shop-main{display:none}
+
 /* ---------- head ---------- */
 .shop-head{padding:clamp(22px,3vw,36px) 0 clamp(26px,3vw,36px)}
 .shop-head__title{margin-top:14px;max-width:22ch;text-wrap:balance;overflow-wrap:anywhere}
@@ -19,10 +25,17 @@
 .chapter:hover .chapter__img{transform:scale(1.06)}
 .chapter[aria-current="page"] .chapter__img{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink)}
 .chapter[aria-current="page"]{font-weight:700}
+/* Every row keeps room for a two-line name and the count, so the grid does not jump between views. */
+.chapter__lbl{min-height:calc(2.5em + 17px)}
 .chapter__lbl .nw{white-space:nowrap}
 .chapter__n{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
 .chapter.is-off{color:var(--muted)}
 .chapter.is-off .chapter__img img{opacity:.4;filter:grayscale(1)}
+/* Loading placeholders hold the row's height (two label lines and the count) until shop.js fills it. */
+.chapter--sk{pointer-events:none}
+.chapter--sk .chapter__lbl{display:grid;justify-items:center;align-content:start;gap:5px;height:calc(2.5em + 17px);padding-top:2px}
+.chapter--sk .sk-l1{display:block;width:70px;height:12px}
+.chapter--sk .sk-l2{display:block;width:44px;height:10px}
 
 /* ---------- toolbar ---------- */
 .shop-bar{position:sticky;top:var(--nav-h);z-index:30;background:rgba(255,255,255,.88);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
@@ -52,7 +65,12 @@
 /* ---------- filters ---------- */
 /* Side padding (cancelled by negative margins) keeps row hovers and focus rings from being clipped by the scroll box; the mask softens the cut when the list scrolls. */
 .filters{position:sticky;top:calc(var(--nav-h) + 76px);max-height:calc(100vh - var(--nav-h) - 92px);display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#d2d2d7 transparent;padding:10px 16px 32px;margin:-8px -16px 0;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 8px,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(180deg,transparent 0,#000 8px,#000 calc(100% - 32px),transparent)}
-.filters__head,.filters__foot{display:none}
+.filters__foot{display:none}
+/* Desktop: the "Filters" heading stays in the outline (h1, then h2 Filters, then the h3 groups) but is not shown. */
+@media (min-width:1068px){
+  .filters__head{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .filters__close{display:none}
+}
 .filters fieldset{border:0;margin:0;padding:0;min-width:0}
 .fsearch{padding-bottom:20px}
 .fsearch__lbl{display:block;font-size:13px;font-weight:600;margin-bottom:8px}
@@ -92,6 +110,8 @@
 .fopt.is-off:hover{background:none}
 .fopt.is-off input{cursor:default}
 .fmore{margin-top:8px;font-size:14px;min-height:32px}
+.flink--sk,.fopt--sk{pointer-events:none}
+.flink--sk .skeleton,.fopt--sk .skeleton{display:block;height:12px}
 
 .fsize__row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .fsize__f,.fprice__f{display:grid;gap:5px;min-width:0}
@@ -292,6 +312,7 @@ body.is-locked .wa-float{opacity:0;visibility:hidden;pointer-events:none}
 }
 /* Two rows below 768: count and GST, then the controls. Only the controls row stays on screen when stuck. */
 @media (max-width:767px){
+  html{scroll-padding-top:130px}
   .shop-bar{top:-2px}
   .shop-bar__in{flex-wrap:wrap;gap:4px 8px;min-height:0;padding-top:8px;padding-bottom:10px}
   .shop-bar__in::after{content:"";order:1;flex:0 0 100%;height:0}
@@ -312,6 +333,7 @@ body.is-locked .wa-float{opacity:0;visibility:hidden;pointer-events:none}
   .chapters__row{margin:-3px -16px -2px;padding:7px 16px 8px;scroll-padding:0 16px;gap:2px}
   .chapter{width:86px;font-size:12px;padding:6px 2px 8px}
   .chapter__img{width:64px;height:64px}
+  .chapter--sk .sk-l1{width:60px}
 
   .shop-body{padding-top:18px}
   .rgrid.pgrid--3{gap:10px}
@@ -329,6 +351,8 @@ body.is-locked .wa-float{opacity:0;visibility:hidden;pointer-events:none}
   .is-list .pcard--row{flex-direction:row;flex-wrap:wrap;align-items:flex-start;gap:12px 14px;padding:12px}
   .is-list .pcard--row .pcard__media{width:92px;height:92px;flex:none}
   .is-list .pcard--row .pcard__body{flex:1;min-width:0;padding:0}
+  /* keep the brand and part number clear of the 44px save button in the corner */
+  .is-list .pcard--row .pcard__brand,.is-list .pcard--row .pcard__title{padding-right:40px}
   .is-list .pcard__specs{gap:2px 12px;margin-top:6px;font-size:12px}
   .is-list .pcard__specs .is-size{display:none}
   .is-list .pcard__buy{width:100%;border-left:0;padding:12px 0 0;border-top:1px solid var(--hair);display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:12px}

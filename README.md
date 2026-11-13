@@ -31,7 +31,8 @@ assets/css/site.css        Design system: tokens, components, header, footer
 assets/css/<page>.css      Page styles
 assets/js/catalog.js       Product catalogue (categories, brands, products, reviews)
 assets/js/images.js        Photo manifest with credits
-assets/js/site.js          Shared logic: search, cart, saved list, mega menu, drawer, toasts
+assets/js/site.js          Shared logic: search, cart, saved list, mega menu, drawer, toasts,
+                           seller details, dispatch dates and delivery zones, credit rule
 assets/js/pages/<page>.js  Page logic
 assets/img/p, assets/img/s Product and scene photos (WebP)
 assets/fonts               Geist and Geist Mono (SIL Open Font License)
@@ -40,21 +41,23 @@ partials/                  Shared head, header and footer
 tools/build.mjs            Copies the partials into every page
 ```
 
-The header, footer and `<head>` basics live in `partials/`. After editing a partial, run:
+The header, footer and `<head>` basics live in `partials/`. Never edit the copies inside the pages: edit the partial, then run this from the site folder:
 
 ```bash
-node tools/build.mjs
+node tools/build.mjs                 # every page
+node tools/build.mjs shop.html       # or only the pages you name
 ```
 
-It fills the `<!-- @header -->` style markers in every page. Pages stay plain HTML that GitHub Pages serves as they are.
+It fills the `<!-- @header -->` style markers in every page, and marks the current header link with `aria-current` from each page's `<body data-nav="...">` (`"page"` when the link is that page, `"true"` for the section you are in, `none` for no section). Pages stay plain HTML that GitHub Pages serves as they are.
 
-To preview locally:
+To preview locally, serve the folder that contains the site, so paths match the live site (`/bearing-setu-sample-website/`). The 404 page uses that base path, so it only loads cleanly this way:
 
 ```bash
+cd ..                                # the folder that contains bearing-setu-sample-website
 python3 -m http.server 4173
 ```
 
-Then open http://localhost:4173.
+Then open http://localhost:4173/bearing-setu-sample-website/ (and http://localhost:4173/bearing-setu-sample-website/404.html for the not-found page).
 
 ## Editing products
 

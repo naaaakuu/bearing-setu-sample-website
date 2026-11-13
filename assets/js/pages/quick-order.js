@@ -93,10 +93,24 @@
     return line;
   }
 
+  // The quantity the bag will charge for: a line under the minimum order is rounded up to it, as BS.cart.add does.
+  function billQty(l) { return l.p ? Math.max(l.qty, l.p.moq || 1) : l.qty; }
   function lineAmount(l) {
-    if (!l.p) return { unit: 0, amount: 0, base: 0 };
-    var unit = BS.unitPrice(l.p, l.qty);
-    return { unit: unit, amount: round2(unit * l.qty), base: round2(l.p.price * l.qty) };
+    if (!l.p) return { unit: 0, amount: 0, base: 0, qty: l.qty };
+    var q = billQty(l);
+    var unit = BS.unitPrice(l.p, q);
+    return { unit: unit, amount: round2(unit * q), base: round2(l.p.price * q), qty: q };
+  }
+
+  // The one catalogue product a piece of text names exactly: "Brand PN" (any spacing or dashes),
+  // or a part number that only one product carries. Anything looser is left to resolve().
+  function exactProduct(text) {
+    var n = BS.norm(text);
+    if (!n) return null;
+    var named = BS.products.filter(function (p) { return BS.norm(label(p)) === n || BS.norm(BS.brand(p.brand).name + " " + p.pn) === n; });
+    if (named.length === 1) return named[0];
+    var bare = BS.products.filter(function (p) { return BS.norm(p.pn) === n; });
+    return bare.length === 1 ? bare[0] : null;
   }
 
   /* ------------------------------------------------------------- results table
@@ -214,7 +228,7 @@
     }
     function unitHTML(l, a) {
       if (!l.p) return NONE;
-      var nt = BS.nextTier(l.p, l.qty);
+      var nt = BS.nextTier(l.p, a.qty);
       var u = esc(BS.unitLabel(l.p));
       var sub = a.unit < l.p.price ? '<small class="is-tier">Tier price, list ' + inr(l.p.price) + "</small>" :
         nt ? "<small>" + inr(nt.price) + " at " + nt.qty + "+</small>" : "";
@@ -223,7 +237,7 @@
     function stockHTML(l) {
       if (!l.p) return '<span class="stock stock--out">On request</span>';
       var s = BS.stock(l.p);
-      if (l.p.stock > 0 && l.qty > l.p.stock) return '<span class="stock stock--low">' + l.p.stock + " in stock, balance on request</span>";
+      if (l.p.stock > 0 && billQty(l) > l.p.stock) return '<span class="stock stock--low">' + l.p.stock + " in stock, balance on request</span>";
       return '<span class="' + s.cls + '">' + esc(s.text) + "</span>";
     }
 
@@ -233,22 +247,25 @@
       var sub = 0, base = 0;
       priced.forEach(function (l) { var a = lineAmount(l); sub += a.amount; base += a.base; });
       sub = round2(sub);
-      var gst = round2(sub * BS.GST);
+      var n = priced.length;
+      // Same sums as the bag (BS.cart.totals): dispatch is charged under the free-dispatch threshold, and GST applies to it too.
+      var shipFee = n && sub < BS.FREE_SHIP ? BS.SHIP_FEE : 0;
+      var gst = round2((sub + shipFee) * BS.GST);
       var save = round2(base - sub);
       var found = lines.filter(function (l) { return l.status === "found"; }).length;
       var check = lines.filter(function (l) { return l.status === "check"; }).length;
       var miss = lines.length - found - check;
       announce(status, BS.plural(lines.length, "line") + " · " + found + " matched" + (check ? " · " + check + " to check" : "") + (miss ? " · " + miss + " not found" : ""));
-      var ship = sub >= BS.FREE_SHIP ? "Free dispatch on this order." : "Add " + inr(Math.ceil(BS.FREE_SHIP - sub)) + " for free dispatch. Otherwise " + inr(BS.SHIP_FEE) + ".";
-      var n = priced.length;
+      var ship = !n ? "" : shipFee ? "Add " + inr(Math.ceil(BS.FREE_SHIP - sub)) + " more before GST for free dispatch." : "Free dispatch on this order.";
       sum.hidden = false;
       sum.innerHTML =
         '<div class="qo-sum__left">' +
           '<dl class="qo-sum__nums">' +
             '<div><dt>Lines priced</dt><dd class="num">' + n + " of " + lines.length + "</dd></div>" +
-            '<div><dt>Total ex GST</dt><dd class="num">' + inr(sub) + "</dd></div>" +
+            '<div><dt>Parts ex GST</dt><dd class="num">' + inr(sub) + "</dd></div>" +
+            '<div><dt>Dispatch</dt><dd class="num">' + (!n ? NONE : shipFee ? inr(shipFee) : "Free") + "</dd></div>" +
             '<div><dt>GST 18%</dt><dd class="num">' + inr(gst) + "</dd></div>" +
-            '<div class="is-total"><dt>Total incl. GST</dt><dd class="num">' + inr(round2(sub + gst)) + "</dd></div>" +
+            '<div class="is-total"><dt>Total incl. GST</dt><dd class="num">' + inr(round2(sub + shipFee + gst)) + "</dd></div>" +
           "</dl>" +
           '<p class="small qo-sum__note">' + (save > 0 ? '<span class="qo-save">You save ' + inr(save) + " with tier prices.</span> " : "") + esc(ship) + "</p>" +
         "</div>" +
@@ -500,8 +517,9 @@
 
   var ta = $("[data-paste]");
   var meta = $("[data-paste-meta]");
-  var draft = BS.store.get("qoDraft", null) || {};
-  var choices = draft.choices || {};
+  var draft = BS.store.get("qoDraft", null);
+  if (!draft || typeof draft !== "object") draft = {};
+  var choices = draft.choices && typeof draft.choices === "object" && !Array.isArray(draft.choices) ? draft.choices : {};
   var lineMap = [];
   var pasteLines = [];
 
@@ -543,9 +561,12 @@
       parsePaste();
     },
     onAdd: function (p, qty) {
-      choices[BS.norm(p.pn)] = p.id;
+      // Written as "Brand PN" so the line keeps naming this exact part, even when another brand shares the number.
+      // Only when that text alone would not land on this part is the pick remembered (and shown as a choice).
+      var probe = makeLine("", label(p), 1, null, null);
+      if (probe.p !== p || probe.status !== "found") choices[BS.norm(label(p))] = p.id;
       var v = ta.value.replace(/\s+$/, "");
-      ta.value = (v ? v + "\n" : "") + p.pn + " x " + qty;
+      ta.value = (v ? v + "\n" : "") + label(p) + " x " + qty;
       parsePaste();
       BS.toast("<strong>" + esc(label(p)) + "</strong> added to your list.", { icon: "list-checks" });
     },
@@ -988,11 +1009,13 @@
         var text = (pn || desc).replace(/[\r\n]+/g, " ");
         // the same quick-order parser the paste box uses
         var parsed = BS.parseLines(text + " x " + qty)[0] || { raw: text, part: text, qty: qty };
-        var line = makeLine((brandText && !brandFromText(pn) ? brandText.trim() + " " : "") + (pn || desc) + " x " + qty, parsed.part, parsed.qty, hint, null);
+        var typed = (brandText && !brandFromText(pn) ? brandText.trim() + " " : "") + (pn || desc);
+        var line = makeLine(typed + " x " + qty, parsed.part, parsed.qty, hint, null);
         if (line.status === "missing" && pn && desc) {
           var alt = makeLine(line.raw, desc, qty, hint, null);
           if (alt.status !== "missing") { alt.status = "check"; alt.note = "Matched on the description. Check the part number."; line = alt; }
         }
+        line.typed = typed;
         out.push(line);
       }
       if (prog) prog.textContent = "Matched " + i + " of " + rows.length + "…";
@@ -1046,11 +1069,28 @@
   dateIn.min = todayISO();
 
   function rowCount() { return $$(".qo-line", linesEl).length; }
-  function addRow(part, qty, target, focus) {
+  // A line filled from a known product (the bag, a product page, a matched list line) remembers its id,
+  // so "Timken 6205-2RS" stays Timken even though ZKL sells a 6205-2RS too.
+  function pinRow(li, part, id) {
+    if (id && BS.byId(id)) { li.setAttribute("data-id", id); li.setAttribute("data-label", part || ""); }
+    else { li.removeAttribute("data-id"); li.removeAttribute("data-label"); }
+  }
+  // The catalogue product a quote line names: its pinned id while the text is unchanged, an exact
+  // "Brand PN", or a single clear match. Null when several parts fit or nothing does.
+  function rowProduct(li, text) {
+    var id = li.getAttribute("data-id");
+    if (id && text === li.getAttribute("data-label") && BS.byId(id)) return BS.byId(id);
+    var p = exactProduct(text);
+    if (p) return p;
+    var r = resolve(text);
+    return r.p && r.status === "found" && !r.ambiguous ? r.p : null;
+  }
+  function addRow(part, qty, target, focus, id) {
     if (rowCount() >= MAX_RFQ) { BS.toast("A quote request holds up to " + MAX_RFQ + " lines. Attach the full list as a file.", { icon: "info" }); return null; }
     var k = ++rowSeq;
     var li = doc.createElement("li");
     li.className = "qo-line";
+    pinRow(li, part, id);
     li.innerHTML =
       '<span class="qo-line__n num" aria-hidden="true"></span>' +
       '<div class="field qo-line__part"><label for="rl-p-' + k + '">Part number or description</label>' +
@@ -1086,7 +1126,7 @@
   function setRows(items) {
     linesEl.innerHTML = "";
     if (!items.length) items = [{}];
-    items.slice(0, MAX_RFQ).forEach(function (it) { addRow(it.part, it.qty, it.target); });
+    items.slice(0, MAX_RFQ).forEach(function (it) { addRow(it.part, it.qty, it.target, false, it.id); });
   }
   function getRows() {
     return $$(".qo-line", linesEl).map(function (li) {
@@ -1102,10 +1142,11 @@
     var hint = $("[data-match-hint]", input.closest(".field"));
     var v = input.value.trim();
     if (!v || v.length < 3) { hint.innerHTML = ""; return; }
-    var r = resolve(v);
-    if (r.p && r.status === "found" && !r.ambiguous) {
-      var s = BS.stock(r.p);
-      hint.innerHTML = icon("check-circle") + "<span>In the catalogue: " + esc(label(r.p)) + ", " + inr(r.p.price) + " + GST. " + esc(s.short) + ".</span>";
+    var p = rowProduct(input.closest(".qo-line"), v);
+    var r = p ? null : resolve(v);
+    if (p) {
+      var s = BS.stock(p);
+      hint.innerHTML = icon("check-circle") + "<span>In the catalogue: " + esc(label(p)) + ", " + inr(p.price) + " + GST. " + esc(s.short) + ".</span>";
       hint.className = "hint qo-line__match is-found";
     } else if (r.p) {
       hint.innerHTML = "<span>Several parts fit. We will confirm the exact one.</span>";
@@ -1126,10 +1167,13 @@
     renumber();
     if (next) $('[data-l="part"]', next).focus();
   });
-  linesEl.addEventListener("input", BS.debounce(function (e) {
-    if (e.target.matches('[data-l="part"]')) matchHint(e.target);
-    renumber();
-  }, 200));
+  // One timer per part field, so moving straight on to the quantity does not drop the part's match hint.
+  var renumberSoon = BS.debounce(renumber, 200);
+  linesEl.addEventListener("input", function (e) {
+    var t = e.target;
+    if (t.matches('[data-l="part"]')) { clearTimeout(t._hint); t._hint = setTimeout(function () { if (t.isConnected) matchHint(t); }, 200); }
+    renumberSoon();
+  });
 
   // brand chips: "Any" is exclusive
   var brandBox = $("[data-brands]");
@@ -1200,7 +1244,7 @@
     "rfq-company": function (v) { return v.length < 2 ? "Enter your company name." : ""; },
     "rfq-name": function (v) { return v.length < 2 ? "Enter your name." : ""; },
     "rfq-email": function (v) { return !v ? "Enter your work email." : /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v) ? "" : "Enter an email address like name@company.com."; },
-    "rfq-mobile": function (v) { if (!v) return "Enter a mobile number."; var d = normMobile(v); return /^[6-9]\d{9}$/.test(d) ? "" : "Enter a 10-digit mobile number, for example 98220 45117."; },
+    "rfq-mobile": function (v) { if (!v) return "Enter a mobile number."; var d = normMobile(v); return /^[6-9]\d{9}$/.test(d) ? "" : "Enter a 10-digit Indian mobile number starting with 6, 7, 8 or 9."; },
     "rfq-gstin": function (v) {
       if (!v) return "";
       v = v.toUpperCase();
@@ -1317,9 +1361,9 @@
     var now = new Date();
     var ref = "RFQ-" + String(now.getFullYear()).slice(2) + pad(now.getMonth() + 1) + "-" + (1000 + Math.floor(Math.random() * 9000));
     var rows = getRows().filter(function (r) { return r.part; }).map(function (r) {
-      var res = resolve(r.part);
+      var p = rowProduct(r.li, r.part);
       var t = r.target.replace(/[,₹\s]/g, "");
-      return { part: r.part, qty: parseInt(r.qty.replace(/,/g, ""), 10), target: t ? +t : null, id: res.p && res.status === "found" && !res.ambiguous ? res.p.id : null };
+      return { part: r.part, qty: parseInt(r.qty.replace(/,/g, ""), 10), target: t ? +t : null, id: p ? p.id : null };
     });
     var f = fileInput.files && fileInput.files[0];
     var g = gstIn.value.trim().toUpperCase();
@@ -1401,9 +1445,13 @@
 
   /* moving lines into the quote form */
   var source = "form";
-  function linesToRows(lines) {
-    return lines.map(function (l) { return { part: l.p ? label(l.p) : l.part, qty: String(l.qty) }; });
+  // A matched line goes over as "Brand PN" with its id. A line still to check (several parts fit, or a
+  // closest guess) goes over as typed, so the quote does not name a part the buyer has not confirmed.
+  function lineToRow(l) {
+    var sure = l.p && l.status === "found";
+    return { part: sure ? label(l.p) : (l.typed || l.part), qty: String(l.qty), id: sure ? l.p.id : null };
   }
+  function linesToRows(lines) { return lines.map(lineToRow); }
   function sendToQuote(lines, from, file) {
     if (!lines.length) return;
     var rows = linesToRows(lines);
@@ -1417,13 +1465,15 @@
   function quoteOne(l) {
     if (!l) return;
     var empty = firstEmptyRow();
-    var part = l.p ? label(l.p) : l.part;
+    var row = lineToRow(l);
+    var part = row.part;
     if (empty) {
+      pinRow(empty, part, row.id);
       $('[data-l="part"]', empty).value = part;
       $('[data-l="qty"]', empty).value = l.qty;
       matchHint($('[data-l="part"]', empty));
       renumber();
-    } else addRow(part, String(l.qty), "");
+    } else addRow(part, row.qty, "", false, row.id);
     BS.toast("<strong>" + esc(part) + "</strong> added to your quote request.", { label: "Open", icon: "paper-plane-tilt", onAction: function () { selectTab("rfq", { scroll: "force" }); } });
   }
   function showNote(html) {
@@ -1444,46 +1494,22 @@
     if (gstIn.value) gstIn.dispatchEvent(new Event("input"));
   }
 
-  /* The floating "Talk to a specialist" button sits bottom right. Over the order tools it
-     would cover prices, remove buttons and form fields (on phones it sits on the amount
-     column), so it steps aside while it overlaps a tool card and comes back below them.
-     The same help is in the quote form and in "Ask a specialist" further down. */
-  var help = $("[data-help-float]"), helpOff = false, helpRaf = 0;
-  if (help) help.classList.add("qo-float");
-  function placeHelp() {
-    helpRaf = 0;
-    if (!help) return;
-    var hb = help.getBoundingClientRect();
-    if (!hb.width) return;
-    var off = $$(".qo-work .qo-card").some(function (el) {
-      if (!el.offsetParent) return false;
-      var r = el.getBoundingClientRect();
-      return r.right > hb.left && r.left < hb.right && r.top < hb.bottom + 8 && r.bottom > hb.top - 8;
-    });
-    if (off !== helpOff) {
-      helpOff = off;
-      help.classList.toggle("is-off", off);
-      if (off) help.setAttribute("tabindex", "-1"); else help.removeAttribute("tabindex");
-      if (off) help.setAttribute("aria-hidden", "true"); else help.removeAttribute("aria-hidden");
-    }
-  }
-  function queueHelp() { if (!helpRaf) helpRaf = requestAnimationFrame(placeHelp); }
-  window.addEventListener("scroll", queueHelp, { passive: true });
-  window.addEventListener("resize", queueHelp);
-  BS.on("qo-layout", queueHelp);
+  /* The floating "Talk to a specialist" button steps aside over the order tools: each panel carries
+     data-float-avoid, so the shared float logic in site.js tucks it while it would cover prices or
+     fields. Results, mapping and tab changes resize the panels without a scroll, so re-check then.
+     BS.updateHelpFloat is set when site.js starts, after this script runs, so look it up each time. */
+  BS.on("qo-layout", function () { BS.updateHelpFloat(); });
 
   /* -------------------------------------------------------------- start up */
   function prefillFromURL() {
     var q = BS.params();
     var items = [];
-    // A product id, or a part number that only one product in the catalogue carries, becomes "Brand PN".
+    // A product id, a "Brand PN", or a part number that only one product carries becomes "Brand PN"
+    // pinned to that product. A number several brands share stays as sent, for the specialist to confirm.
     function partFor(token) {
       var t = String(token || "").replace(/\s+/g, " ").trim().slice(0, 120);
-      var p = BS.byId(t);
-      if (p) return label(p);
-      var n = BS.norm(t);
-      var same = n ? BS.products.filter(function (x) { return BS.norm(x.pn) === n; }) : [];
-      return same.length === 1 ? label(same[0]) : t;
+      var p = BS.byId(t) || exactProduct(t);
+      return p ? { part: label(p), id: p.id } : { part: t, id: null };
     }
     function qtyFor(v) { var n = parseInt(v, 10); return String(n > 0 ? Math.min(n, 99999) : 1); }
     if (q.get("lines")) {
@@ -1492,10 +1518,14 @@
         var i = tok.lastIndexOf(":");
         var pn = (i > -1 ? tok.slice(0, i) : tok).trim();
         if (!pn) return;
-        items.push({ part: partFor(pn), qty: qtyFor(i > -1 ? tok.slice(i + 1) : 1) });
+        var at = partFor(pn);
+        items.push({ part: at.part, id: at.id, qty: qtyFor(i > -1 ? tok.slice(i + 1) : 1) });
       });
     }
-    if (q.get("pn") && q.get("pn").trim()) items.push({ part: partFor(q.get("pn")), qty: qtyFor(q.get("qty")) });
+    if (q.get("pn") && q.get("pn").trim()) {
+      var one = partFor(q.get("pn"));
+      items.push({ part: one.part, id: one.id, qty: qtyFor(q.get("qty")) });
+    }
     // the shop sends what was searched for when nothing matched
     if (!items.length && q.get("q") && q.get("q").trim()) items.push({ part: q.get("q").replace(/\s+/g, " ").trim().slice(0, 120), qty: "" });
     var sizeAdded = false;
@@ -1535,6 +1565,5 @@
   else if (fromURL) selectTab("rfq");
   else selectTab("paste", { hash: false });
 
-  queueHelp();
   BS.reveal();
 })();

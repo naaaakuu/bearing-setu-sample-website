@@ -1,6 +1,7 @@
 /* About, policies, site map and 404. One script, switched by <body data-page>. */
 (function () {
   "use strict";
+  if (!window.BS) return; // site.js failed to load: the static page still reads fine.
   var BS = window.BS, $ = BS.$, $$ = BS.$$, esc = BS.esc, icon = BS.icon;
   var page = document.body.getAttribute("data-page");
 
@@ -39,12 +40,37 @@
         '<span class="aind__in"><h3>' + esc(d[1]) + "</h3><p>" + esc(d[2]) + '</p><span class="aind__go">Shop parts' + icon("arrow-right") + "</span></span></a></li>";
     }).join("");
 
+    /* stock examples: read live from the catalogue, so they always match the listings.
+       Each row shows one state (in stock, low, made to order). If the named part has moved to another
+       state, show a part that is in that state now; if none is, show the named part as it is. */
+    function stockState(p) { var c = BS.stock(p).cls; return /--low/.test(c) ? "low" : /--out/.test(c) ? "out" : "in"; }
+    function brandName(p) { return BS.brand(p.brand).name.replace(/\s*\(.*\)$/, ""); }
+    $$("[data-stock-pid]").forEach(function (li) {
+      var p = BS.byId(li.getAttribute("data-stock-pid")), want = li.getAttribute("data-stock-state");
+      if (!p) return; // keep the written example
+      if (want && stockState(p) !== want) {
+        var alt = BS.products.filter(function (q) { return q.cat === p.cat && stockState(q) === want; })[0] ||
+          BS.products.filter(function (q) { return stockState(q) === want; })[0];
+        if (alt) p = alt;
+      }
+      var st = BS.stock(p), pn = $(".mono", li), lab = $(".stock", li);
+      if (pn) pn.textContent = brandName(p) + " " + p.pn;
+      if (lab) { lab.className = st.cls; lab.textContent = st.text; }
+    });
+    var chatStock = $("[data-chat-stock]"), cFag = BS.byId("fag-6205-2rsr-c3"), cSkf = BS.byId("skf-6205-2rs1-c3");
+    if (chatStock && cFag && cSkf) {
+      var avail = function (p) { if (p.stock) return "is in stock in Pune"; var t = BS.stock(p).text; return t.charAt(0).toLowerCase() + t.slice(1); };
+      chatStock.textContent = cFag.stock && cSkf.stock ? "Both are in stock in Pune." : "The FAG " + avail(cFag) + " and the SKF " + avail(cSkf) + ".";
+    }
+
     /* supplier form */
     var LINES = ["Bearings", "Housed units", "Belts and pulleys", "Seals and O-rings", "Lubricants", "Chains and sprockets", "Couplings", "Linear motion", "Mounting tools"];
     $("[data-lines]").innerHTML = LINES.map(function (l, i) {
       return '<label class="pick"><input type="checkbox" name="lines" value="' + esc(l) + '" id="ln-' + i + '"><span>' + icon("check") + esc(l) + "</span></label>";
     }).join("");
     var form = $("[data-sell-form]"), done = $("[data-sell-done]"), btn = $("[data-sell-btn]");
+    // The button ships disabled, so without this script the form cannot be sent (and cannot put its details in a URL).
+    btn.disabled = false;
     var F = { company: $("#s-company"), name: $("#s-name"), type: $("#s-type"), email: $("#s-email"), mobile: $("#s-mobile"), gstin: $("#s-gstin") };
     var linesSet = $(".lines", form), linesErr = $("#s-lines-err"), gHint = $("[data-gstin-hint]"), G_HINT = gHint.textContent;
     var msg = $("#s-msg"), msgCount = $("[data-msg-count]");
@@ -264,11 +290,21 @@
         var authors = {};
         rows.forEach(function (m) { authors[m.author || "Unknown"] = 1; });
         count.textContent = BS.plural(rows.length, "photograph") + " by " + BS.plural(Object.keys(authors).length, "creator") + ".";
+        // The thumbnail is 44 px, so use the smallest file there is. Every -sm.webp has a -xs.webp (about 128 px wide)
+        // beside it, even where the manifest does not list it yet; if one is missing, the image falls back to the sm file.
+        var thumb = function (m) {
+          var sm = m.sm || m.src;
+          return m.xs || (/-sm\.webp$/.test(sm) ? sm.replace(/-sm\.webp$/, "-xs.webp") : sm);
+        };
+        box.addEventListener("error", function (e) {
+          var t = e.target, fb = t && t.getAttribute && t.getAttribute("data-fallback");
+          if (t.tagName === "IMG" && fb && t.getAttribute("src") !== fb) t.setAttribute("src", fb);
+        }, true);
         box.innerHTML = '<div class="table-wrap"><table class="table"><thead><tr><th scope="col">Photo</th><th scope="col">Creator</th><th scope="col">Licence</th><th scope="col"><span class="sr-only">Source</span></th></tr></thead><tbody>' +
           rows.map(function (m) {
             var lic = safeUrl(m.license_url), src = safeUrl(m.source_url);
             var title = String(m.title || "Untitled").replace(/\.(jpe?g|png|tiff?|webp)$/i, "");
-            return '<tr><td><span class="credits__img"><img src="' + esc(m.sm || m.src) + '" alt="" width="44" height="44" loading="lazy"><span>' + esc(title) + "</span></span></td>" +
+            return '<tr><td><span class="credits__img"><img src="' + esc(thumb(m)) + '" data-fallback="' + esc(m.sm || m.src) + '" alt="" width="44" height="44" loading="lazy" decoding="async"><span>' + esc(title) + "</span></span></td>" +
               "<td>" + esc(m.author || "Unknown") + "</td>" +
               '<td class="credits__lic">' + (lic ? '<a href="' + esc(lic) + '" rel="noopener license">' + esc(m.license || "Licence") + "</a>" : esc(m.license || "")) + "</td>" +
               '<td class="r">' + (src ? '<a href="' + esc(src) + '" rel="noopener">Source</a>' : "") + "</td></tr>";

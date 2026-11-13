@@ -263,7 +263,7 @@
     },
     "ba-name": function (v) { return v.length < 2 ? "Enter the name of the person we should contact." : ""; },
     "ba-email": function (v) { return !v ? "Enter a work email." : /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v) ? "" : "Enter an email address like name@company.com."; },
-    "ba-mobile": function (v) { if (!v) return "Enter a mobile number."; return /^[6-9]\d{9}$/.test(normMobile(v)) ? "" : "Enter a 10-digit mobile number, for example 98220 45117."; },
+    "ba-mobile": function (v) { if (!v) return "Enter a mobile number."; return /^[6-9]\d{9}$/.test(normMobile(v)) ? "" : "Enter a 10-digit Indian mobile number starting with 6, 7, 8 or 9."; },
     "ba-city": function (v) { return v.length < 2 ? "Enter the city of your plant or office." : ""; },
     "ba-spend": function (v) { return v ? "" : "Choose your monthly spend."; },
     "ba-industry": function (v) { return v ? "" : "Choose your industry."; },
@@ -395,29 +395,8 @@
     gst.dispatchEvent(new Event("input"));
   }
 
-  /* The floating "Talk to a specialist" button steps aside while it would sit on the
-     calculator or the application form (on phones it covers the right edge of the fields). */
-  var help = $("[data-help-float]"), helpOff = false, helpRaf = 0;
-  if (help) help.classList.add("bz-float");
-  function placeHelp() {
-    helpRaf = 0;
-    if (!help) return;
-    var hb = help.getBoundingClientRect();
-    if (!hb.width) return;
-    var off = $$(".bz-calc, .bz-apply__panel").some(function (el) {
-      var r = el.getBoundingClientRect();
-      return r.height && r.right > hb.left && r.left < hb.right && r.top < hb.bottom + 8 && r.bottom > hb.top - 8;
-    });
-    if (off === helpOff) return;
-    helpOff = off;
-    help.classList.toggle("is-off", off);
-    if (off) { help.setAttribute("tabindex", "-1"); help.setAttribute("aria-hidden", "true"); }
-    else { help.removeAttribute("tabindex"); help.removeAttribute("aria-hidden"); }
-  }
-  function queueHelp() { if (!helpRaf) helpRaf = requestAnimationFrame(placeHelp); }
-  window.addEventListener("scroll", queueHelp, { passive: true });
-  window.addEventListener("resize", queueHelp);
-  queueHelp();
+  /* The floating "Talk to a specialist" button steps aside over the calculator and the application
+     form through the shared float logic in site.js: both carry data-float-avoid in the markup. */
 
   BS.reveal();
 })();

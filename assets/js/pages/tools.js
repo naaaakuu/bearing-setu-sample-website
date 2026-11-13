@@ -546,7 +546,8 @@
   function catRow(p, opts) {
     opts = opts || {};
     var b = BS.brand(p.brand), st = BS.stock(p);
-    return '<div class="prow" data-pid="' + esc(p.id) + '">' +
+    // data-float-avoid: the "Talk to a specialist" float steps aside instead of covering the price or Add button.
+    return '<div class="prow" data-pid="' + esc(p.id) + '" data-float-avoid>' +
       '<a class="prow__img" href="' + BS.url(p) + '" tabindex="-1" aria-hidden="true">' + BS.imgTag(p.img, { alt: "", sizes: "72px", cls: "" }).replace("<img ", "<img data-fly ") + "</a>" +
       '<div class="prow__body"><a class="prow__t" href="' + BS.url(p) + '">' + esc(b.name + " " + p.pn) + "</a>" +
       '<p class="prow__s">' + (opts.note ? '<span class="prow__note">' + opts.note + "</span> · " : "") + (opts.sub != null ? opts.sub : BS.subtitle(p)) + "</p>" +
@@ -764,7 +765,7 @@
     var vars = variants(r);
     var varHTML = vars.length ? '<div class="xch__vars"><p class="xch__h">Same size, other versions in stock</p><div class="xch__rows">' + vars.slice(0, 4).map(function (x) { return catRow(x.p, { note: esc(sealLabel(x.d)), sub: esc(BS.dims(x.p)) }); }).join("") + "</div></div>" : "";
     setHTML(xchOut, '<div class="xch__tablehead"><p class="xch__h">Equivalent designations</p><p class="small muted">' + (stockedN ? BS.plural(stockedN, "brand") + " in stock here" : "None in stock yet, we can source them") + "</p></div>" +
-      '<div class="xt-wrap"><table class="xt"><thead><tr><th scope="col">Maker</th><th scope="col">Designation</th><th scope="col">At Bearingsetu</th></tr></thead><tbody>' + rowsHTML + "</tbody></table></div>" + varHTML +
+      '<div class="xt-wrap" data-float-avoid><table class="xt"><thead><tr><th scope="col">Maker</th><th scope="col">Designation</th><th scope="col">At Bearingsetu</th></tr></thead><tbody>' + rowsHTML + "</tbody></table></div>" + varHTML +
       (r.unknown.length ? '<div class="notice notice--warm" style="margin-top:16px">' + icon("warning-circle") + "<p>We left out <strong class=\"mono\">" + r.unknown.map(esc).join(", ") + "</strong> because we could not read it. Check that code with us before you swap brands.</p></div>" : "") +
       (r.type === "srb" || r.type === "crb" || r.type === "ac" ? '<p class="tiny muted xch__fine">Cage and design letters differ most on roller and angular contact bearings. We show each maker’s standard current version.</p>' : ""));
     say(xchLive, "Basic designation " + r.basic + ", " + r.name.toLowerCase() + ". " + (stockedN ? BS.plural(stockedN, "brand") + " in stock here." : "None in stock yet."));
@@ -858,6 +859,26 @@
 
   var svgDraw = $("[data-belt-draw]"), beltRes = $("[data-belt-result]"), beltStats = $("[data-belt-stats]"), beltNotes = $("[data-belt-notes]"), beltMatch = $("[data-belt-match]");
   var beltSvg = $("[data-belt-svg]");
+
+  /* The drive turns for 4 seconds after each change and each time it scrolls into view, then rests.
+     Motion that starts on its own stops within 5 seconds (WCAG 2.2.2); none runs with reduced motion. */
+  var driveTimer = 0, driveInView = !("IntersectionObserver" in window);
+  function stopDrive() { clearTimeout(driveTimer); svgDraw.classList.remove("is-running"); }
+  function runDrive() {
+    stopDrive();
+    if (BS.reduceMotion || !driveInView || svgDraw.classList.contains("is-ghost")) return;
+    svgDraw.classList.add("is-running");
+    driveTimer = setTimeout(stopDrive, 4000);
+  }
+  if (!driveInView) {
+    new IntersectionObserver(function (entries) {
+      var on = entries[entries.length - 1].isIntersecting;
+      if (on === driveInView) return;
+      driveInView = on;
+      if (on) runDrive(); else stopDrive();
+    }, { threshold: 0.35 }).observe(beltSvg);
+  }
+
   function drawBelt(d1, d2, C, sec, ghost) {
     var compact = beltSvg.getBoundingClientRect().width < 520;
     var W = compact ? 380 : 640, H = compact ? 290 : 340, r1 = d1 / 2, r2 = d2 / 2;
@@ -892,7 +913,7 @@
     var T1 = 4, T2 = T1 * d2 / d1;
     var rim = Math.PI * 2 * R1 / T1;
     var dimY = cy + Math.max(R1, R2) + 34;
-    svgDraw.setAttribute("class", ghost ? "is-ghost" : "");
+    svgDraw.classList.toggle("is-ghost", !!ghost);
     svgDraw.innerHTML =
       '<line class="bd__axis" x1="' + (x1 - R1 - 14).toFixed(1) + '" y1="' + cy + '" x2="' + (x2 + R2 + 14).toFixed(1) + '" y2="' + cy + '"/>' +
       pulley(x1, R1, d1, "Driver", T1, "bp--driver") + pulley(x2, R2, d2, "Driven", T2, "bp--driven") +
@@ -902,6 +923,7 @@
       '<line x1="' + x1.toFixed(1) + '" y1="' + dimY + '" x2="' + x2.toFixed(1) + '" y2="' + dimY + '"/>' +
       '<path d="M' + (x1 + 7).toFixed(1) + " " + (dimY - 4) + "L" + x1.toFixed(1) + " " + dimY + "L" + (x1 + 7).toFixed(1) + " " + (dimY + 4) + '"/><path d="M' + (x2 - 7).toFixed(1) + " " + (dimY - 4) + "L" + x2.toFixed(1) + " " + dimY + "L" + (x2 - 7).toFixed(1) + " " + (dimY + 4) + '"/>' +
       '<text x="' + ((x1 + x2) / 2).toFixed(1) + '" y="' + (dimY + 20) + '" text-anchor="middle">C ' + fmt(C, 1) + " mm</text></g>";
+    runDrive();
   }
 
   function beltProducts(sec) {
@@ -1080,7 +1102,7 @@
       cards = BS.products.filter(function (p) { return p.sub === "greases"; }).slice(0, 3).map(function (p) { return [p, "Bearing grease", ""]; });
     }
     if (!cards.length) { setHTML(grRecs, ""); return; }
-    setHTML(grRecs, '<div class="row-head"><h3 class="h3">Greases for this job. <span class="tone">' + (heavy ? "Heavy-duty first." : "Start with the everyday one.") + '</span></h3><a class="more" href="shop.html?cat=lubrication&amp;sub=greases">All greases</a></div>' +
+    setHTML(grRecs, '<div class="row-head"><h3 class="h3">' + (heavy ? "Greases for this job, heavy-duty first." : "Greases for this job, general-purpose first.") + '</h3><a class="more" href="shop.html?cat=lubrication&amp;sub=greases">All greases</a></div>' +
       '<div class="recs">' + cards.map(function (x) {
         return '<div class="rec"><p class="rec__why"><strong>' + esc(x[1]) + "</strong>" + esc(x[2]) + "</p>" + catRow(x[0]) + "</div>";
       }).join("") + "</div>");

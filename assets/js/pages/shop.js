@@ -33,12 +33,11 @@
   P.forEach(function (p, i) { ORDER[p.id] = i; });
 
   var BEARING_CATS = { "ball-bearings": 1, "roller-bearings": 1 };
-  var NAV_KEY = {
-    "ball-bearings": "bearings", "roller-bearings": "bearings", "housed-units": "bearings",
-    "belts-pulleys": "transmission", "power-transmission": "transmission", "linear-motion": "transmission",
-    "seals": "seals", "lubrication": "lubrication", "mounting-tools": "tools"
-  };
-  var TAGS = { bestseller: "Bestsellers", "new": "New in stock", "price-drop": "Lower prices", bulk: "Bulk favourites" };
+  // Group views from the header (shop.html?cat=bearings, ?cat=transmission) cover several categories.
+  var GROUPS = BS.GROUPS || {};
+  var GROUP_ALL = { bearings: "All bearings", transmission: "All transmission parts" };
+  // Lookups keyed by URL values use BS.own, so ?tag=constructor or ?cat=__proto__ match nothing.
+  var TAGS ={ bestseller: "Bestsellers", "new": "New in stock", "price-drop": "Lower prices", bulk: "Bulk favourites" };
   var TAG_LINE = {
     bestseller: "The parts maintenance teams reorder most, on the shelf in Pune.",
     "new": "Recently added to the catalogue and in stock now.",
@@ -98,25 +97,35 @@
     return "";
   }
   function storedView() { return BS.store.get("shopView", "grid") === "list" ? "list" : "grid"; }
+  function isGroup(c) { return !!c && BS.own(GROUPS, c); }
+  function groupCats(c) { return isGroup(c) ? GROUPS[c].cats : []; }
+  function groupAll(c) { return BS.own(GROUP_ALL, c) ? GROUP_ALL[c] : "All " + GROUPS[c].name.toLowerCase(); }
+  // The single catalogue category in view, if any (a group view has none).
+  function realCat(s) { return s.cat && !isGroup(s.cat) ? s.cat : ""; }
 
   function readState() {
     var u = BS.params();
+    var rawCat = u.get("cat");
     var s = {
-      cat: BS.cat(u.get("cat")) ? u.get("cat") : "",
+      cat: BS.cat(rawCat) || isGroup(rawCat) ? rawCat : "",
       sub: list(u.get("sub")),
       q: (u.get("q") || "").replace(/\uFFFD/g, "").trim().slice(0, 80),
       d: pos(u.get("d")), D: pos(u.get("D")), B: pos(u.get("B")),
       brand: list(u.get("brand")).map(function (b) { return b.toLowerCase(); }).filter(function (b) { return BS.catalog.brands.some(function (x) { return x.id === b; }); }),
       seal: pick(list(u.get("seal")), SEALS),
       clr: pick(list(u.get("clr")), CLRS),
-      tag: TAGS[u.get("tag")] ? u.get("tag") : "",
+      tag: BS.own(TAGS, u.get("tag")) ? u.get("tag") : "",
       stock: u.get("stock") === "1",
       ship: u.get("ship") === "0",
       min: pos(u.get("min")), max: pos(u.get("max")),
       sort: SORTS.indexOf(u.get("sort")) !== -1 ? u.get("sort") : "relevance",
       view: u.get("view") === "list" || u.get("view") === "grid" ? u.get("view") : storedView()
     };
-    if (!s.cat && s.sub.length) s.cat = catOfSub(s.sub[0]);
+    // A type picks its category; inside a group view it narrows to that member category.
+    if (s.sub.length && (!s.cat || isGroup(s.cat))) {
+      var sc = catOfSub(s.sub[0]);
+      if (!s.cat || groupCats(s.cat).indexOf(sc) !== -1) s.cat = sc;
+    }
     // Swapped ranges from hand-edited links: read them the way they were meant.
     var t;
     if (s.min != null && s.max != null && s.min > s.max) { t = s.min; s.min = s.max; s.max = t; }
@@ -167,7 +176,7 @@
   function near(a, b) { return a != null && Math.abs(a - b) < 0.6; }
   var TESTS = {
     q: function (p, s) { return !s.q || !!searchMap(s.q)[p.id]; },
-    cat: function (p, s) { return !s.cat || p.cat === s.cat; },
+    cat: function (p, s) { return !s.cat || (isGroup(s.cat) ? groupCats(s.cat).indexOf(p.cat) !== -1 : p.cat === s.cat); },
     sub: function (p, s) { return !s.sub.length || s.sub.indexOf(p.sub) !== -1; },
     size: function (p, s) { return (s.d == null || near(p.d, s.d)) && (s.D == null || near(p.D, s.D)) && (s.B == null || near(p.B, s.B)); },
     brand: function (p, s) { return !s.brand.length || s.brand.indexOf(p.brand) !== -1; },
@@ -211,6 +220,9 @@
     return (s.q ? 1 : 0) + s.sub.length + (hasSize(s) ? 1 : 0) + s.brand.length + s.seal.length + s.clr.length +
       (s.tag ? 1 : 0) + (s.stock ? 1 : 0) + (s.ship ? 1 : 0) + (s.min != null || s.max != null ? 1 : 0);
   }
+  // shop.html?brand=skf on its own: the page is that brand's shelf.
+  function brandOnly(s) { return !s.cat && s.brand.length === 1 && activeCount(s) === 1; }
+  function brandShort(id) { return BS.brand(id).name.replace(/\s*\(.*\)$/, ""); }
 
   /* ---------------------------------------------------------------- labels */
   function subLabel(catId, subId) {
@@ -240,10 +252,12 @@
       if (s.d != null && s.D != null) return noun + " sized " + sizeText(s);
       return noun + " with a " + sizeText(s).replace(" mm wide", " mm width");
     }
-    if (s.cat && s.sub.length === 1) return subLabel(s.cat, s.sub[0]);
+    if (realCat(s) && s.sub.length === 1) return subLabel(s.cat, s.sub[0]);
+    if (isGroup(s.cat)) return GROUPS[s.cat].name;
     if (s.cat) return BS.cat(s.cat).name;
     if (s.tag) return TAGS[s.tag];
     if (s.ship) return "Ready to ship today";
+    if (brandOnly(s)) return brandShort(s.brand[0]);
     return "All products";
   }
   function gstWord() { return BS.prefs().gst === "inc" ? "incl. GST" : "+ GST"; }
@@ -254,14 +268,18 @@
       if (s.q && activeCount(s) === 1) return "Nothing in the catalogue matches this yet. We can source it for you.";
       return "Nothing matches all of these at once. Remove a filter or two to see more.";
     }
-    if (onlyCat) return BS.cat(s.cat).blurb;
-    if (!s.cat && activeCount(s) === 0) return "Bearings, belts, seals, lubricants and tools from " + BS.catalog.brands.length + " brands. Tier prices for volume, GST invoice on every order.";
+    if (onlyCat && !isGroup(s.cat)) return BS.cat(s.cat).blurb;
+    // The same line as in shop.html, so the heading block keeps its height when this replaces it.
+    if (!s.cat && activeCount(s) === 0) return "Bearings, belts, seals, lubricants and tools, priced for single pieces and for volume.";
     if (s.tag && activeCount(s) === 1 && !s.cat) return TAG_LINE[s.tag];
-    var brands = {};
+    var brands = {}, cats = {};
     var min = Infinity, today = 0;
-    items.forEach(function (p) { brands[p.brand] = 1; if (p.price < min) min = p.price; if (p.stock > 0 && p.ship === 0) today++; });
+    items.forEach(function (p) { brands[p.brand] = 1; cats[p.cat] = 1; if (p.price < min) min = p.price; if (p.stock > 0 && p.ship === 0) today++; });
     var nb = Object.keys(brands).length;
-    var out = plural(items.length, "part") + " from " + plural(nb, "brand") + ", starting at " + inr(priceNum(min)) + " " + gstWord() + ".";
+    // A brand's own page counts categories instead of repeating "from 1 brand".
+    var spread = brandOnly(s) ? " across " + plural(Object.keys(cats).length, "category", "categories") : " from " + plural(nb, "brand");
+    // A group view lists its categories in the chapter row, so its line keeps to the numbers.
+    var out = plural(items.length, "part") + spread + ", starting at " + inr(priceNum(min)) + " " + gstWord() + ".";
     if (today) out += " " + (today === items.length ? (items.length === 1 ? "It ships" : "All ship") : today + " ship") + " today.";
     if (s.q) {
       var sm = searchMap(s.q), via = items.filter(function (p) { return sm[p.id] && sm[p.id].via; }).length;
@@ -286,7 +304,7 @@
   window.addEventListener("popstate", function () {
     state = readState();
     shown = PAGE;
-    render({ scroll: false });
+    render({ scroll: false, first: true });
   });
 
   /* ---------------------------------------------------------------- render */
@@ -333,7 +351,8 @@
     el.line.textContent = summary(s, current);
     doc.title = h + " · Bearingsetu";
     var crumbs = ['<li><a href="shop.html">Store</a></li>'];
-    if (s.cat) {
+    if (isGroup(s.cat)) crumbs.push('<li><span aria-current="page">' + esc(GROUPS[s.cat].name) + "</span></li>");
+    else if (s.cat) {
       var c = BS.cat(s.cat);
       if (s.sub.length === 1) {
         crumbs.push('<li><a href="shop.html?cat=' + esc(s.cat) + '">' + esc(c.name) + "</a></li>");
@@ -343,12 +362,8 @@
     else if (hasSize(s)) crumbs.push('<li><span aria-current="page">Find by size</span></li>');
     else crumbs.push('<li><span aria-current="page">' + esc(h) + "</span></li>");
     el.crumbs.innerHTML = crumbs.join("");
-    // Global nav: mark the section this category lives in.
-    var key = s.cat ? NAV_KEY[s.cat] : "store";
-    $$(".gnav__link[data-nav]").forEach(function (a) {
-      if (a.getAttribute("data-nav") === key) a.setAttribute("aria-current", "page");
-      else a.removeAttribute("aria-current");
-    });
+    // Global nav: mark the section this category or group lives in.
+    if (BS.setNav && BS.navKey) BS.setNav(BS.navKey(s.cat));
     el.rfq.forEach(function (a) { a.href = "quick-order.html" + (s.q ? "?q=" + encodeURIComponent(s.q) : "") + "#rfq"; });
   }
 
@@ -373,9 +388,33 @@
   function blank(s) {
     return { cat: "", sub: [], q: "", d: null, D: null, B: null, brand: [], seal: [], clr: [], tag: "", stock: false, ship: false, min: null, max: null, sort: s.sort === "relevance" ? "relevance" : s.sort, view: s.view };
   }
+  // The "All bearings" chapter: the photo most used in the group that no member category shows already.
+  // Photos are compared by file, since two image keys can point at the same picture.
+  function groupImg(g) {
+    var used = groupCats(g).map(function (id) { var c = BS.cat(id); return c ? c.img : ""; }).filter(Boolean);
+    var seen = used.map(function (k) { return BS.img(k).src; });
+    var f = {};
+    P.forEach(function (p) {
+      if (groupCats(g).indexOf(p.cat) === -1 || seen.indexOf(BS.img(p.img).src) !== -1) return;
+      f[p.img] = (f[p.img] || 0) + 1;
+    });
+    var keys = Object.keys(f).sort(function (a, b) { return f[b] - f[a] || collator.compare(a, b); });
+    return keys[0] || used[0];
+  }
   function renderChapters() {
     var s = state, html = "";
-    if (s.cat) {
+    if (isGroup(s.cat)) {
+      // The group's categories, counted with every other active filter (a click keeps them).
+      var gp = pool(s, ["cat", "sub"]);
+      var gc = countBy(gp, function (p) { return p.cat; });
+      // A short label ("All transmission") keeps the chapter name to two lines.
+      html += chapterHTML(toUrl(s), groupImg(s.cat), "All " + GROUPS[s.cat].name.toLowerCase(), plural(current.length, "part"), true, "group:" + s.cat, !current.length);
+      groupCats(s.cat).forEach(function (id) {
+        var gcat = BS.cat(id);
+        if (!gcat) return;
+        html += chapterHTML(toUrl(withCat(s, id)), gcat.img, gcat.name, plural(gc[id] || 0, "part"), false, "cat:" + id, !gc[id]);
+      });
+    } else if (s.cat) {
       // Sub-categories, counted against the other active filters.
       var c = BS.cat(s.cat);
       var sp = pool(s, ["sub"]);
@@ -385,8 +424,9 @@
         html += chapterHTML(toUrl(withSub(s, [sb.id])), subImg(c.id, sb.id), sb.name, plural(n, "part"), s.sub.length === 1 && s.sub[0] === sb.id, "sub:" + sb.id, !n);
       });
     } else {
-      // Categories that hold results for the current search or size. With none, offer a fresh start.
-      var cp = pool(s, ["cat", "sub", "brand", "seal", "clr"]);
+      // Categories that hold results for the current search, size or brand. A click narrows to one
+      // of them and keeps the other filters. With none, offer a fresh start.
+      var cp = pool(s, ["cat", "sub"]);
       var cc = countBy(cp, function (p) { return p.cat; });
       var cats = CATS.filter(function (c) { return cc[c.id]; });
       var fresh = !cats.length;
@@ -400,6 +440,9 @@
           ns.sub = [sb.id];
           html += chapterHTML(toUrl(ns), subImg(only.id, sb.id), sb.name, plural(tc[sb.id], "part"), false, "csub:" + only.id + ":" + sb.id, false);
         });
+        // Then the whole category, for browsing beyond this search. It also keeps the row in place,
+        // so a part-number search does not collapse the space the page drew for it.
+        html += chapterHTML("shop.html?cat=" + only.id, only.img, "All " + lcFirst(only.name), plural(P.filter(function (p) { return p.cat === only.id; }).length, "part"), false, "fresh:" + only.id, false);
       } else {
         (fresh ? CATS : cats).forEach(function (c) {
           var n = fresh ? P.filter(function (p) { return p.cat === c.id; }).length : cc[c.id];
@@ -409,7 +452,7 @@
     }
     // One chapter on its own is not a choice; hide the row.
     el.chaptersNav.hidden = (html.match(/class="chapters__item"/g) || []).length < 2;
-    el.chaptersNav.setAttribute("aria-label", s.cat || html.indexOf('data-chapter="csub:') !== -1 ? "Browse by type" : "Browse by category");
+    el.chaptersNav.setAttribute("aria-label", realCat(s) || html.indexOf('data-chapter="csub:') !== -1 ? "Browse by type" : "Browse by category");
     var row = el.chapters, keep = row.scrollLeft;
     row.innerHTML = html;
     row.scrollLeft = keep;
@@ -435,20 +478,26 @@
   function renderFacets() {
     var s = state;
 
-    // Category: counts ignore the category-specific filters that a switch clears.
-    var cp = pool(s, ["cat", "sub", "brand", "seal", "clr"]);
-    var cc = countBy(cp, function (p) { return p.cat; });
-    var catHTML = '<li><a class="flink" href="' + esc(toUrl(withCat(s, ""))) + '" data-cat="" data-fkey="cat:"' + (!s.cat ? ' aria-current="true"' : "") + '><span class="flink__dot" aria-hidden="true"></span><span class="flink__name">All categories</span><span class="flink__n num">' + cp.length + "</span></a></li>";
+    // Category: each count is what a click shows. Narrowing into a category keeps the other filters;
+    // switching away from another category clears the ones that belong to it (see withCat).
+    var ccKeep = countBy(pool(s, ["cat", "sub"]), function (p) { return p.cat; });
+    var cpClear = pool(s, ["cat", "sub", "brand", "seal", "clr"]);
+    var ccClear = countBy(cpClear, function (p) { return p.cat; });
+    function flinkHTML(id, name, n, on) {
+      return '<li><a class="flink' + (!n && !on ? " is-off" : "") + '" href="' + esc(toUrl(id === s.cat ? s : withCat(s, id))) + '" data-cat="' + esc(id) + '" data-fkey="cat:' + esc(id) + '"' + (on ? ' aria-current="true"' : "") + '><span class="flink__dot" aria-hidden="true"></span><span class="flink__name">' + esc(name) + '</span><span class="flink__n num">' + n + "</span></a></li>";
+    }
+    var catHTML = flinkHTML("", "All categories", s.cat ? cpClear.length : current.length, !s.cat);
+    // A group view (Bearings, Transmission) shows as the chosen row under "All categories".
+    if (isGroup(s.cat)) catHTML += flinkHTML(s.cat, groupAll(s.cat), current.length, true);
     CATS.forEach(function (c) {
-      var n = cc[c.id] || 0;
-      catHTML += '<li><a class="flink' + (!n ? " is-off" : "") + '" href="' + esc(toUrl(withCat(s, c.id))) + '" data-cat="' + c.id + '" data-fkey="cat:' + c.id + '"' + (s.cat === c.id ? ' aria-current="true"' : "") + '><span class="flink__dot" aria-hidden="true"></span><span class="flink__name">' + esc(c.name) + '</span><span class="flink__n num">' + n + "</span></a></li>";
+      catHTML += flinkHTML(c.id, c.name, (narrows(s, c.id) ? ccKeep : ccClear)[c.id] || 0, s.cat === c.id);
     });
     el.fCat.innerHTML = catHTML;
 
     // Type, within the category.
     var gSub = group("sub");
-    gSub.hidden = !s.cat;
-    if (s.cat) {
+    gSub.hidden = !realCat(s);
+    if (realCat(s)) {
       var sp = pool(s, ["sub"]);
       var sc = countBy(sp, function (p) { return p.sub; });
       el.fSub.innerHTML = BS.cat(s.cat).subs.map(function (sb) { return optHTML("sub", sb.id, sb.name, sc[sb.id] || 0, s.sub.indexOf(sb.id) !== -1); }).join("");
@@ -523,10 +572,15 @@
     // Search box mirrors q unless someone is typing in it.
     if (doc.activeElement !== el.qInput) el.qInput.value = s.q;
   }
+  // Narrowing (from all products, a brand page or a group view into one of its categories) keeps the
+  // brand, seal and clearance filters. Switching from one category to another clears them, with the type.
+  function narrows(s, catId) { return !!catId && (!s.cat || groupCats(s.cat).indexOf(catId) !== -1); }
   function withCat(s, catId) {
     var n = clone(s);
+    var keep = narrows(s, catId);
     n.cat = catId;
-    n.sub = []; n.brand = []; n.seal = []; n.clr = [];
+    n.sub = [];
+    if (!keep) { n.brand = []; n.seal = []; n.clr = []; }
     return n;
   }
 
@@ -571,9 +625,12 @@
 
   /* results */
   function cardSizes() { return state.view === "list" ? "(max-width: 640px) 96px, 180px" : "(max-width: 833px) 46vw, (max-width: 1068px) 31vw, 300px"; }
-  function cardHTML(p, i) {
-    return '<li class="rgrid__item">' + BS.card(p, { row: state.view === "list", reveal: true, i: i, sizes: cardSizes() }) + "</li>";
+  function cardHTML(p, i, still) {
+    return '<li class="rgrid__item">' + BS.card(p, { row: state.view === "list", reveal: !still, i: i, sizes: cardSizes() }) + "</li>";
   }
+  // Cards in the first row are on screen when the page opens: they show at once, without the fade,
+  // so the largest image paints as soon as it loads.
+  function firstRow() { return state.view === "list" ? 2 : window.innerWidth < 834 ? 2 : 3; }
   function specLine(p) {
     var bits = [];
     if (p.d != null && BEARING_CATS[p.cat]) {
@@ -641,7 +698,7 @@
       el.empty.hidden = false;
       el.empty.innerHTML = emptyHTML();
       $$(".pcard", el.empty).forEach(function (c) { dedupeSpec(c, BS.byId(c.getAttribute("data-pid"))); });
-      if (opts.instant) showNow(el.empty);
+      if (opts.instant || opts.first) showNow(el.empty);
       BS.reveal(el.empty);
       return;
     }
@@ -649,7 +706,8 @@
     el.empty.hidden = true;
     el.empty.innerHTML = "";
     shown = Math.min(Math.max(shown, PAGE), n);
-    el.grid.innerHTML = current.slice(0, shown).map(function (p, i) { return cardHTML(p, Math.min(i, 5)); }).join("");
+    var still = opts.first ? firstRow() : 0;
+    el.grid.innerHTML = current.slice(0, shown).map(function (p, i) { return cardHTML(p, Math.min(i, 5), i < still); }).join("");
     decorate(el.grid);
     if (opts.instant) showNow(el.grid);
     BS.reveal(el.grid);
@@ -764,6 +822,7 @@
       var key = x.getAttribute("data-chapter").split(":");
       if (key[0] === "fresh") commit(withCat(blank(state), key[1]), { push: true });
       else if (key[0] === "cat") commit(withCat(state, key[1]), { push: true });
+      else if (key[0] === "group") { if (state.cat !== key[1]) commit(withCat(blank(state), key[1]), { push: true }); }
       else if (key[0] === "csub") { var cs = withCat(state, key[1]); cs.sub = [key[2]]; commit(cs, { push: true }); }
       else update(function (s) { s.sub = key[1] ? [key[1]] : []; }, { push: true });
       return;
@@ -1154,7 +1213,7 @@
     var canon = toUrl(state);
     if (canon !== "shop.html" + location.search) history.replaceState(null, "", canon);
   } catch (e) { /* ignore */ }
-  render({ scroll: false });
+  render({ scroll: false, first: true });
   renderTray();
   BS.reveal();
 })();

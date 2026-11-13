@@ -22,8 +22,9 @@
 .bz-acct__bar{height:6px;border-radius:var(--pill);background:rgba(0,0,0,.1);margin:12px 0 10px;overflow:hidden}
 .bz-acct__bar span{display:block;height:100%;border-radius:inherit;background:var(--blue)}
 .bz-acct__foot{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-2);font-weight:500}
-.js .bz-hero__media .bz-acct{opacity:0;transform:translateY(16px);transition:opacity .8s var(--ease) .5s,transform 1s var(--ease) .5s}
-.js .bz-hero__media.is-in .bz-acct{opacity:1;transform:none}
+/* The account card rises in on its own (CSS only), so the hero never waits for a script. */
+.bz-acct{animation:bz-acct-in 1s var(--ease) .5s both}
+@keyframes bz-acct-in{from{opacity:0;transform:translateY(16px)}}
 
 /* bento */
 .bz-bento{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
@@ -69,12 +70,12 @@
 .bz-terms dd{font-weight:600;color:#fff;text-align:right}
 .bz-credit__pick{display:grid;gap:10px}
 .bz-credit__l{font-size:13px;font-weight:600;color:var(--navy-ink)}
-.bz-seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:4px;border-radius:18px;background:rgba(255,255,255,.08)}
-.bz-seg button{min-height:44px;border:0;border-radius:14px;background:transparent;color:#e6ebfa;font-size:14px;font-weight:600;transition:background-color .25s var(--ease-out),color .2s}
+.bz-seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:4px;border-radius:var(--r-lg);background:rgba(255,255,255,.08)}
+.bz-seg button{min-height:44px;border:0;border-radius:var(--pill);background:transparent;color:#e6ebfa;font-size:14px;font-weight:600;transition:background-color .25s var(--ease-out),color .2s}
 .bz-seg button:hover{background:rgba(255,255,255,.1)}
 .bz-seg button[aria-checked="true"]{background:#fff;color:var(--navy)}
-.bz-seg button:focus-visible{outline:3px solid #8fb3ff;outline-offset:2px}
-.bz-gauge{position:relative;margin-top:6px}
+.bz-seg button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.bz-gauge{position:relative;width:100%;max-width:400px;margin:6px auto 0}
 .bz-gauge svg{width:100%;height:auto;overflow:visible}
 .bz-gauge__track,.bz-gauge__fill{fill:none;stroke-width:16;stroke-linecap:round}
 .bz-gauge__track{stroke:rgba(255,255,255,.12)}
@@ -145,8 +146,8 @@
 .bz-range__input::-moz-range-progress{height:8px;border-radius:var(--pill);background:var(--blue)}
 .bz-range__input::-moz-range-thumb{width:30px;height:30px;border-radius:50%;background:#fff;border:0;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 4px 14px rgba(15,28,71,.24)}
 .bz-range__input:focus{outline:none}
-.bz-range__input:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(31,79,209,.4),0 4px 14px rgba(15,28,71,.24)}
-.bz-range__input:focus-visible::-moz-range-thumb{box-shadow:0 0 0 4px rgba(31,79,209,.4),0 4px 14px rgba(15,28,71,.24)}
+.bz-range__input:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px var(--focus),0 4px 14px rgba(15,28,71,.24)}
+.bz-range__input:focus-visible::-moz-range-thumb{box-shadow:0 0 0 3px var(--focus),0 4px 14px rgba(15,28,71,.24)}
 .bz-range__ticks{position:relative;height:10px;margin-top:-8px}
 .bz-range__ticks span{position:absolute;top:0;left:calc(15px + (100% - 30px) * var(--p));width:2px;height:8px;border-radius:2px;background:#a1a1a6;transform:translateX(-50%)}
 .bz-range__jump{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -245,10 +246,6 @@
 .bz-done__acts{display:flex;gap:12px;flex-wrap:wrap}
 .bz-done__again{justify-self:start;min-height:44px}
 
-/* floating help button: steps aside over the calculator and the form (see business.js) */
-.wa-float.bz-float{transition:transform .35s var(--ease),box-shadow .3s,opacity .25s var(--ease-out),visibility 0s linear 0s}
-.wa-float.bz-float.is-off{opacity:0;visibility:hidden;transform:translateY(10px);pointer-events:none;transition:transform .35s var(--ease),opacity .2s var(--ease-out),visibility 0s linear .2s}
-
 /* ---------- responsive ---------- */
 @media (max-width:1068px){
   .bz-bento{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -266,6 +263,9 @@
   .bz-tile--tiers,.bz-tile--lists{grid-template-columns:minmax(0,1fr)}
   .bz-tile{min-height:0}
   .bz-tile--photo{min-height:420px}
+  /* One column: the copy runs higher up the photo, over lighter areas, so the shade starts darker and earlier. */
+  .bz-tile__shade{background:linear-gradient(180deg,rgba(8,12,28,.3) 0%,rgba(8,12,28,.66) 38%,rgba(8,12,28,.88) 100%)}
+  .bz-tile--photo .bz-tile__copy{text-shadow:0 1px 14px rgba(8,12,28,.55)}
   .bz-apply__copy{position:static}
   .bz-steps{grid-template-columns:minmax(0,1fr);gap:28px}
   .bz-steps::before{display:none}

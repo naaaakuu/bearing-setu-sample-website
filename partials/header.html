@@ -8,8 +8,8 @@
     <nav aria-label="Main" class="gnav__nav">
       <ul class="gnav__links">
         <li><a class="gnav__link" data-nav="store" data-mega="m-store" href="shop.html">Store</a></li>
-        <li><a class="gnav__link" data-nav="bearings" data-mega="m-bearings" href="shop.html?cat=ball-bearings">Bearings</a></li>
-        <li><a class="gnav__link" data-nav="transmission" data-mega="m-transmission" href="shop.html?cat=belts-pulleys">Transmission</a></li>
+        <li><a class="gnav__link" data-nav="bearings" data-mega="m-bearings" href="shop.html?cat=bearings">Bearings</a></li>
+        <li><a class="gnav__link" data-nav="transmission" data-mega="m-transmission" href="shop.html?cat=transmission">Transmission</a></li>
         <li><a class="gnav__link" data-nav="seals" data-mega="m-seals" href="shop.html?cat=seals">Seals</a></li>
         <li><a class="gnav__link" data-nav="lubrication" data-mega="m-lube" href="shop.html?cat=lubrication">Lubrication</a></li>
         <li><a class="gnav__link" data-nav="tools" data-mega="m-tools" href="tools.html">Tools</a></li>
@@ -19,9 +19,9 @@
       </ul>
     </nav>
     <div class="gnav__icons">
-      <button class="icon-btn" type="button" data-open-search aria-label="Search products (press /)"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-magnifying-glass"/></svg></button>
+      <button class="icon-btn" type="button" data-open-search aria-label="Search products" aria-keyshortcuts="Meta+K Control+K" title="Search (Ctrl K or ⌘ K)"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-magnifying-glass"/></svg></button>
       <a class="icon-btn hide-s" href="account.html" aria-label="Your account" data-nav="account"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-user"/></svg></a>
-      <button class="icon-btn cart-btn" type="button" data-open-cart aria-label="Cart, 0 items" aria-controls="cart-drawer"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-handbag"/></svg><span class="cart-count" data-cart-count aria-hidden="true">0</span></button>
+      <button class="icon-btn cart-btn" type="button" data-open-cart aria-label="Bag, 0 items" aria-controls="cart-drawer"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-handbag"/></svg><span class="cart-count" data-cart-count aria-hidden="true">0</span></button>
       <button class="icon-btn only-m" type="button" data-open-menu aria-label="Open menu" aria-expanded="false" aria-controls="mmenu"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-list"/></svg></button>
     </div>
   </div>
@@ -60,7 +60,7 @@
         </ul>
       </div>
       <a class="mega__feature" href="shop.html?stock=1&amp;ship=0">
-        <img src="assets/img/s/warehouse-sm.webp" alt="" loading="lazy" width="900" height="563">
+        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/s/warehouse-sm.webp" alt="" decoding="async" width="900" height="563">
         <span>Order by 4 pm, dispatched today<small>Thousands of parts ready on the shelf.</small></span>
       </a>
     </div>
@@ -71,6 +71,7 @@
       <div>
         <p class="mega__h">Bearings</p>
         <ul class="mega__big">
+          <li><a href="shop.html?cat=bearings">All bearings</a></li>
           <li><a href="shop.html?cat=ball-bearings">Ball bearings</a></li>
           <li><a href="shop.html?cat=roller-bearings">Roller bearings</a></li>
           <li><a href="shop.html?cat=housed-units">Housed units</a></li>
@@ -99,7 +100,7 @@
         </ul>
       </div>
       <a class="mega__feature" href="tools.html#decoder">
-        <img src="assets/img/p/dgbb-sealed-sm.webp" alt="" loading="lazy" width="480" height="480">
+        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/p/dgbb-sealed-sm.webp" alt="" decoding="async" width="480" height="480">
         <span>What does 6205-2RS1/C3 mean?<small>Decode any bearing number in seconds.</small></span>
       </a>
     </div>
@@ -108,12 +109,12 @@
   <div class="mega" id="m-transmission" data-mega-panel>
     <div class="mega__in">
       <div>
-        <p class="mega__h">Power transmission</p>
+        <p class="mega__h">Transmission</p>
         <ul class="mega__big">
+          <li><a href="shop.html?cat=transmission">All transmission parts</a></li>
           <li><a href="shop.html?cat=belts-pulleys">Belts &amp; pulleys</a></li>
-          <li><a href="shop.html?cat=power-transmission&amp;sub=roller-chains">Roller chains</a></li>
-          <li><a href="shop.html?cat=power-transmission&amp;sub=sprockets">Sprockets</a></li>
-          <li><a href="shop.html?cat=power-transmission&amp;sub=couplings">Couplings</a></li>
+          <li><a href="shop.html?cat=power-transmission">Chains &amp; couplings</a></li>
+          <li><a href="shop.html?cat=linear-motion">Linear motion</a></li>
         </ul>
       </div>
       <div>
@@ -127,15 +128,18 @@
         </ul>
       </div>
       <div>
-        <p class="mega__h">Linear motion</p>
+        <p class="mega__h">Chains and linear motion</p>
         <ul class="mega__list">
+          <li><a href="shop.html?cat=power-transmission&amp;sub=roller-chains">Roller chains</a></li>
+          <li><a href="shop.html?cat=power-transmission&amp;sub=sprockets">Sprockets</a></li>
+          <li><a href="shop.html?cat=power-transmission&amp;sub=couplings">Couplings</a></li>
           <li><a href="shop.html?cat=linear-motion&amp;sub=linear-bearings">Linear bearings</a></li>
           <li><a href="shop.html?cat=linear-motion&amp;sub=linear-guides">Linear guides</a></li>
           <li><a href="shop.html?cat=linear-motion&amp;sub=shafts">Shafts &amp; supports</a></li>
         </ul>
       </div>
       <a class="mega__feature" href="tools.html#belt">
-        <img src="assets/img/p/v-belt-sm.webp" alt="" loading="lazy" width="480" height="480">
+        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/p/v-belt-sm.webp" alt="" decoding="async" width="480" height="480">
         <span>Belt length calculator<small>Pulley sizes and centre distance in, belt number out.</small></span>
       </a>
     </div>
@@ -146,6 +150,7 @@
       <div>
         <p class="mega__h">Seals &amp; O-rings</p>
         <ul class="mega__big">
+          <li><a href="shop.html?cat=seals">All seals</a></li>
           <li><a href="shop.html?cat=seals&amp;sub=oil-seals">Oil seals</a></li>
           <li><a href="shop.html?cat=seals&amp;sub=o-rings">O-rings</a></li>
           <li><a href="shop.html?cat=seals&amp;sub=v-rings">V-rings</a></li>
@@ -168,7 +173,7 @@
         </ul>
       </div>
       <a class="mega__feature" href="shop.html?cat=seals">
-        <img src="assets/img/p/oil-seal-sm.webp" alt="" loading="lazy" width="480" height="480">
+        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/p/oil-seal-sm.webp" alt="" decoding="async" width="480" height="480">
         <span>Keep the grease in, grit out<small>Nitrile and Viton lip seals in common sizes.</small></span>
       </a>
     </div>
@@ -179,6 +184,7 @@
       <div>
         <p class="mega__h">Lubrication</p>
         <ul class="mega__big">
+          <li><a href="shop.html?cat=lubrication">All lubrication</a></li>
           <li><a href="shop.html?cat=lubrication&amp;sub=greases">Greases</a></li>
           <li><a href="shop.html?cat=lubrication&amp;sub=oils">Oils</a></li>
           <li><a href="shop.html?cat=lubrication&amp;sub=grease-guns">Grease guns</a></li>
@@ -198,7 +204,7 @@
         <p class="small muted">Greases and oils travel by road. Aerosols are not sent by air.</p>
       </div>
       <a class="mega__feature" href="shop.html?cat=lubrication&amp;sub=greases">
-        <img src="assets/img/p/grease-sm.webp" alt="" loading="lazy" width="480" height="480">
+        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/p/grease-sm.webp" alt="" decoding="async" width="480" height="480">
         <span>Greases for every bearing<small>Lithium, high-temperature and EP grades.</small></span>
       </a>
     </div>
@@ -218,6 +224,7 @@
       <div>
         <p class="mega__h">Mounting tools</p>
         <ul class="mega__list">
+          <li><a href="shop.html?cat=mounting-tools">All mounting tools</a></li>
           <li><a href="shop.html?cat=mounting-tools&amp;sub=pullers">Pullers</a></li>
           <li><a href="shop.html?cat=mounting-tools&amp;sub=heaters">Induction heaters</a></li>
           <li><a href="shop.html?cat=mounting-tools&amp;sub=fitting-kits">Fitting kits</a></li>
@@ -233,7 +240,7 @@
         </ul>
       </div>
       <a class="mega__feature" href="shop.html?cat=mounting-tools">
-        <img src="assets/img/p/bearing-puller-sm.webp" alt="" loading="lazy" width="480" height="480">
+        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/p/bearing-puller-sm.webp" alt="" decoding="async" width="480" height="480">
         <span>Fit it right the first time<small>Pullers, heaters and fitting kits.</small></span>
       </a>
     </div>
@@ -269,7 +276,7 @@
         </ul>
       </div>
       <a class="mega__feature" href="business.html">
-        <img src="assets/img/s/factory-sm.webp" alt="" loading="lazy" width="900" height="563">
+        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/s/factory-sm.webp" alt="" decoding="async" width="900" height="563">
         <span>Prices for your volumes<small>Tier pricing, GST invoices and credit.</small></span>
       </a>
     </div>
@@ -303,7 +310,7 @@
         </ul>
       </div>
       <a class="mega__feature" href="support.html#contact">
-        <img src="assets/img/s/conveyor-sm.webp" alt="" loading="lazy" width="900" height="675">
+        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/s/conveyor-sm.webp" alt="" decoding="async" width="900" height="675">
         <span>Talk to a parts specialist<small>Monday to Saturday, 9:30 am to 7 pm.</small></span>
       </a>
     </div>
@@ -318,6 +325,7 @@
       <li>
         <button class="mmenu__row" type="button" aria-expanded="false" aria-controls="mm-bearings">Bearings <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-caret-down"/></svg></button>
         <ul class="mmenu__sub" id="mm-bearings" hidden>
+          <li><a href="shop.html?cat=bearings">All bearings</a></li>
           <li><a href="shop.html?cat=ball-bearings">Ball bearings</a></li>
           <li><a href="shop.html?cat=roller-bearings">Roller bearings</a></li>
           <li><a href="shop.html?cat=housed-units">Housed units</a></li>
@@ -327,17 +335,64 @@
       <li>
         <button class="mmenu__row" type="button" aria-expanded="false" aria-controls="mm-trans">Transmission <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-caret-down"/></svg></button>
         <ul class="mmenu__sub" id="mm-trans" hidden>
+          <li><a href="shop.html?cat=transmission">All transmission parts</a></li>
           <li><a href="shop.html?cat=belts-pulleys">Belts &amp; pulleys</a></li>
-          <li><a href="shop.html?cat=power-transmission">Chains, sprockets &amp; couplings</a></li>
+          <li><a href="shop.html?cat=power-transmission">Chains &amp; couplings</a></li>
           <li><a href="shop.html?cat=linear-motion">Linear motion</a></li>
         </ul>
       </li>
-      <li><a class="mmenu__row" href="shop.html?cat=seals">Seals</a></li>
-      <li><a class="mmenu__row" href="shop.html?cat=lubrication">Lubrication</a></li>
-      <li><a class="mmenu__row" href="tools.html">Tools</a></li>
+      <li>
+        <button class="mmenu__row" type="button" aria-expanded="false" aria-controls="mm-seals">Seals <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-caret-down"/></svg></button>
+        <ul class="mmenu__sub" id="mm-seals" hidden>
+          <li><a href="shop.html?cat=seals">All seals</a></li>
+          <li><a href="shop.html?cat=seals&amp;sub=oil-seals">Oil seals</a></li>
+          <li><a href="shop.html?cat=seals&amp;sub=o-rings">O-rings</a></li>
+          <li><a href="shop.html?cat=seals&amp;sub=v-rings">V-rings</a></li>
+        </ul>
+      </li>
+      <li>
+        <button class="mmenu__row" type="button" aria-expanded="false" aria-controls="mm-lube">Lubrication <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-caret-down"/></svg></button>
+        <ul class="mmenu__sub" id="mm-lube" hidden>
+          <li><a href="shop.html?cat=lubrication">All lubrication</a></li>
+          <li><a href="shop.html?cat=lubrication&amp;sub=greases">Greases</a></li>
+          <li><a href="shop.html?cat=lubrication&amp;sub=oils">Oils</a></li>
+          <li><a href="shop.html?cat=lubrication&amp;sub=grease-guns">Grease guns</a></li>
+          <li><a href="shop.html?cat=lubrication&amp;sub=auto-lubricators">Automatic lubricators</a></li>
+        </ul>
+      </li>
+      <li>
+        <button class="mmenu__row" type="button" aria-expanded="false" aria-controls="mm-tools">Tools <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-caret-down"/></svg></button>
+        <ul class="mmenu__sub" id="mm-tools" hidden>
+          <li><a href="tools.html">Engineering tools</a></li>
+          <li><a href="tools.html#decoder">Part number decoder</a></li>
+          <li><a href="tools.html#interchange">Interchange finder</a></li>
+          <li><a href="shop.html?cat=mounting-tools">Mounting tools</a></li>
+          <li><a href="shop.html?cat=mounting-tools&amp;sub=pullers">Pullers</a></li>
+          <li><a href="shop.html?cat=mounting-tools&amp;sub=heaters">Induction heaters</a></li>
+          <li><a href="shop.html?cat=mounting-tools&amp;sub=fitting-kits">Fitting kits</a></li>
+        </ul>
+      </li>
       <li><a class="mmenu__row" href="quick-order.html">Quick order</a></li>
-      <li><a class="mmenu__row" href="business.html">Business</a></li>
-      <li><a class="mmenu__row" href="support.html">Support</a></li>
+      <li>
+        <button class="mmenu__row" type="button" aria-expanded="false" aria-controls="mm-business">Business <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-caret-down"/></svg></button>
+        <ul class="mmenu__sub" id="mm-business" hidden>
+          <li><a href="business.html">Business accounts</a></li>
+          <li><a href="business.html#credit">30-day credit</a></li>
+          <li><a href="quick-order.html#rfq">Request a quote</a></li>
+          <li><a href="account.html#orders">Orders and reorder</a></li>
+          <li><a href="account.html#invoices">GST invoices</a></li>
+        </ul>
+      </li>
+      <li>
+        <button class="mmenu__row" type="button" aria-expanded="false" aria-controls="mm-support">Support <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-caret-down"/></svg></button>
+        <ul class="mmenu__sub" id="mm-support" hidden>
+          <li><a href="support.html">Help centre</a></li>
+          <li><a href="support.html#track">Track an order</a></li>
+          <li><a href="support.html#returns">Returns</a></li>
+          <li><a href="support.html#contact">Contact us</a></li>
+          <li><a href="policies.html#shipping">Shipping and dispatch</a></li>
+        </ul>
+      </li>
     </ul>
     <div class="mmenu__foot">
       <a class="btn btn--quiet btn--block" href="account.html"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-user"/></svg>Your account</a>
@@ -346,3 +401,4 @@
   </nav>
 </div>
 <div class="ribbon" data-ribbon><p>GST invoice on every order. Free dispatch on orders of ₹5,000 or more before GST. <a class="more" href="business.html">30-day credit for business</a></p></div>
+<noscript><div class="nojs-note"><p class="notice notice--warm"><span>This store needs JavaScript to show prices, your bag and checkout. Turn it on in your browser, or email your parts list to <a href="mailto:orders@bearingsetu.com">orders@bearingsetu.com</a> and we will reply within 2 working hours, Monday to Saturday.</span></p></div></noscript>

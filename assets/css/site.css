@@ -6,6 +6,8 @@
 
 @font-face{font-family:"Geist";src:url("../fonts/Geist-Variable.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
 @font-face{font-family:"Geist Mono";src:url("../fonts/GeistMono-Variable.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+/* Arial scaled to Geist's widths, so text does not reflow when Geist arrives late (no layout shift). */
+@font-face{font-family:"Geist Fallback";src:local("Arial"),local("ArialMT"),local("Helvetica"),local("Liberation Sans");size-adjust:101.8%;ascent-override:99%;descent-override:28.5%;line-gap-override:0%}
 
 :root{
   --bg:#ffffff;
@@ -31,6 +33,9 @@
   --amber:#8a5a00;
   --red:#c4271b;
   --red-tint:#fdeceb;
+  /* Focus ring: solid blue on light surfaces (6.8:1 on white); --focus-light on navy and dark tiles. */
+  --focus:#1f4fd1;
+  --focus-light:#8fb3ff;
 
   --r-xl:28px;
   --r-lg:22px;
@@ -46,7 +51,7 @@
   --ease:cubic-bezier(.16,1,.3,1);
   --ease-out:cubic-bezier(.22,.61,.36,1);
 
-  --font:"Geist",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --font:"Geist","Geist Fallback",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
   --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
 
   --wrap:1240px;
@@ -74,7 +79,8 @@ button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
 button{cursor:pointer}
 a{color:var(--blue);text-decoration:none}
 a:hover{text-decoration:underline;text-underline-offset:.18em}
-:focus-visible{outline:3px solid rgba(31,79,209,.55);outline-offset:2px;border-radius:6px}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:6px}
+.tile--dark,.tile--ink,.on-dark,.toast{--focus:var(--focus-light)}
 ::selection{background:#cfdcff}
 .i{width:1.15em;height:1.15em;fill:currentColor;flex:none;display:inline-block;vertical-align:-.18em}
 img.no-blend{mix-blend-mode:normal!important}
@@ -104,6 +110,9 @@ img.is-contain{object-fit:contain!important;padding:8%}
 .h1{font-size:clamp(38px,5.2vw,64px);line-height:1.04;letter-spacing:-.042em;font-weight:700}
 .h2{font-size:clamp(32px,4.1vw,52px);line-height:1.06;letter-spacing:-.038em;font-weight:700}
 .h3{font-size:clamp(24px,2.5vw,32px);line-height:1.12;letter-spacing:-.028em;font-weight:700}
+/* No single word stranded on the last line of a big heading. */
+.display,.h1,.h2{text-wrap:balance}
+.h3{text-wrap:pretty}
 .h4{font-size:21px;line-height:1.2;letter-spacing:-.02em;font-weight:650}
 .lede{font-size:clamp(19px,1.75vw,23px);line-height:1.4;letter-spacing:-.016em;color:var(--ink-2);font-weight:450}
 .sub{font-size:clamp(17px,1.4vw,19px);line-height:1.45;color:var(--muted)}
@@ -164,8 +173,9 @@ img.is-contain{object-fit:contain!important;padding:8%}
 .gnav__links{flex:1;display:flex;justify-content:center;gap:clamp(14px,2vw,30px);list-style:none}
 .gnav__links>li{position:static}
 .gnav__link{display:inline-flex;align-items:center;height:var(--nav-h);padding:0 2px;border:0;background:none;color:var(--ink);opacity:.86;font-size:13px;font-weight:450;letter-spacing:-.005em;text-decoration:none;transition:opacity .2s}
-.gnav__link:hover,.gnav__link[aria-expanded="true"],.gnav__link[aria-current="page"]{opacity:1;text-decoration:none}
-.gnav__link[aria-current="page"]{font-weight:600}
+/* aria-current="page" is this exact page; aria-current="true" is the section you are in. Both look the same. */
+.gnav__link:hover,.gnav__link[aria-expanded="true"],.gnav__link[aria-current]:not([aria-current="false"]){opacity:1;text-decoration:none}
+.gnav__link[aria-current]:not([aria-current="false"]){font-weight:600}
 .gnav__icons{display:flex;align-items:center;gap:2px;flex:none}
 .cart-count{position:absolute;top:6px;right:5px;min-width:17px;height:17px;padding:0 4px;border-radius:var(--pill);background:var(--blue);color:#fff;font-size:10.5px;font-weight:700;line-height:17px;text-align:center;letter-spacing:0;transform:scale(0);transition:transform .35s var(--ease)}
 .cart-count.is-on{transform:scale(1)}
@@ -208,6 +218,10 @@ img.is-contain{object-fit:contain!important;padding:8%}
 /* ribbon */
 .ribbon{background:var(--mist);text-align:center;padding:11px var(--gutter);font-size:14px;color:var(--ink-2)}
 .ribbon a{white-space:nowrap}
+.ribbon .more{font-size:inherit;font-weight:500}
+/* Shown only when JavaScript is off (header partial). */
+.nojs-note{max-width:calc(var(--wrap) + var(--gutter)*2);margin:16px auto 0;padding:0 var(--gutter)}
+.nojs-note a{color:inherit;text-decoration:underline;text-underline-offset:.18em}
 
 /* ---------- search overlay ---------- */
 .search{position:fixed;inset:0;z-index:var(--z-search);display:grid;grid-template-rows:auto 1fr;opacity:0;visibility:hidden;transition:opacity .25s var(--ease-out),visibility 0s linear .25s}
@@ -216,10 +230,14 @@ img.is-contain{object-fit:contain!important;padding:8%}
 .search__panel{position:relative;background:#fbfbfd;border-bottom:1px solid var(--hair);box-shadow:0 40px 80px -40px rgba(15,28,71,.3);transform:translateY(-14px);transition:transform .4s var(--ease);max-height:min(86vh,760px);overflow:auto}
 .search.is-open .search__panel{transform:none}
 .search__in{max-width:calc(820px + var(--gutter)*2);margin:0 auto;padding:22px var(--gutter) 34px}
-.search__bar{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding-bottom:12px}
+.search__bar{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding-bottom:12px;transition:border-color .2s var(--ease-out),box-shadow .2s var(--ease-out)}
 .search__bar .i{width:24px;height:24px;color:var(--muted)}
+/* The input has no outline of its own; the bar's underline turns blue while it has focus. */
+.search__bar:has(.search__input:focus){border-bottom-color:var(--focus);box-shadow:0 1px 0 var(--focus)}
+.search__bar:has(.search__input:focus) .i{color:var(--ink)}
 .search__input{flex:1;min-width:0;border:0;background:transparent;font-size:clamp(22px,3vw,30px);font-weight:600;letter-spacing:-.03em;padding:6px 0;outline:none;color:var(--ink)}
 .search__input::placeholder{color:var(--muted)}
+.search__input::-webkit-search-cancel-button,.search__input::-webkit-search-decoration{-webkit-appearance:none;appearance:none}
 .search__kbd{font-family:var(--mono);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:2px 6px;background:#fff}
 .search__body{padding-top:18px}
 .search__group+.search__group{margin-top:22px}
@@ -230,10 +248,14 @@ img.is-contain{object-fit:contain!important;padding:8%}
 .sres:hover,.sres[aria-selected="true"]{background:var(--mist);text-decoration:none}
 .sres__img{width:52px;height:52px;border-radius:10px;background:var(--mist);display:grid;place-items:center;overflow:hidden}
 .sres__img img{width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply}
-.sres__t{font-weight:600;font-size:16px;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sres__s{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sres__txt{min-width:0}
+.sres__t{display:block;font-weight:600;font-size:16px;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sres__s{display:block;margin-top:1px;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sres__p{font-size:15px;font-weight:600;text-align:right;white-space:nowrap}
 .sres__p small{display:block;font-size:12px;font-weight:400;color:var(--green)}
+.sres__p small.sres__tax{display:inline;color:var(--muted)}
+.sres__p small.is-low{color:var(--amber)}
+.sres__p small.is-out{color:var(--muted)}
 .search__empty{padding:18px 4px;color:var(--muted);font-size:15px}
 .search__all{margin-top:14px}
 
@@ -286,7 +308,7 @@ img.is-contain{object-fit:contain!important;padding:8%}
 .pcard__title a{color:var(--ink);text-decoration:none}
 .pcard__title a::after{content:"";position:absolute;inset:0;z-index:0;border-radius:var(--r-lg)}
 .pcard__title a:focus-visible{outline:none}
-.pcard__title a:focus-visible::after{outline:3px solid rgba(31,79,209,.55);outline-offset:2px}
+.pcard__title a:focus-visible::after{outline:2px solid var(--focus);outline-offset:2px}
 .pcard__spec{font-size:14px;color:var(--muted);margin-top:4px;line-height:1.35}
 .pcard__meta{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
 .pcard__price{margin-top:auto;padding-top:14px;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
@@ -387,6 +409,11 @@ img.is-contain{object-fit:contain!important;padding:8%}
 .line__p small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
 .line__row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
 .line__tier{font-size:12px;color:var(--blue);font-weight:500;margin-top:4px}
+.line__rm{min-height:36px;padding:0 4px}
+/* Inline "Removed … Undo" row in the bag drawer. */
+.line--undo{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0;padding:6px 6px 6px 16px;border:0;border-radius:var(--r-md);background:var(--mist);animation:toast-in .4s var(--ease)}
+.line--undo p{min-width:0}
+.line--undo .textlink{min-height:44px;padding:0 12px;font-weight:600;border-radius:var(--r-sm)}
 .sumrow{display:flex;justify-content:space-between;gap:12px;font-size:15px}
 .sumrow--total{font-size:19px;font-weight:700;letter-spacing:-.02em}
 .progress{height:6px;border-radius:var(--pill);background:var(--mist-2);overflow:hidden}
@@ -440,9 +467,11 @@ img.is-contain{object-fit:contain!important;padding:8%}
 .table .r{text-align:right}
 
 /* WhatsApp float */
-.wa-float{position:fixed;right:20px;bottom:20px;z-index:calc(var(--z-drawer) - 2);display:inline-flex;align-items:center;gap:8px;height:52px;padding:0 18px 0 14px;border-radius:var(--pill);background:#fff;color:var(--ink);box-shadow:0 10px 30px rgba(15,28,71,.18);font-size:15px;font-weight:600;text-decoration:none;transition:transform .3s var(--ease),box-shadow .3s}
+.wa-float{position:fixed;right:20px;bottom:20px;z-index:calc(var(--z-drawer) - 2);display:inline-flex;align-items:center;gap:8px;height:52px;padding:0 18px 0 14px;border-radius:var(--pill);background:#fff;color:var(--ink);box-shadow:0 10px 30px rgba(15,28,71,.18);font-size:15px;font-weight:600;text-decoration:none;transition:transform .35s var(--ease),box-shadow .3s,opacity .25s var(--ease-out),visibility 0s linear 0s}
 .wa-float:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(15,28,71,.22);text-decoration:none}
 .wa-float .i{width:26px;height:26px;color:#1f9d55}
+/* site.js tucks the button away while it would cover a control or price (and on phones while reading down). */
+.wa-float.is-tucked{opacity:0;visibility:hidden;transform:translateY(24px);pointer-events:none;transition:transform .35s var(--ease),opacity .2s var(--ease-out),visibility 0s linear .2s}
 
 /* ---------- footer ---------- */
 .gfoot{background:var(--mist);color:var(--muted);font-size:12px;line-height:1.5;padding:28px 0 36px;margin-top:0}
@@ -462,6 +491,12 @@ img.is-contain{object-fit:contain!important;padding:8%}
 /* ---------- motion ---------- */
 .js .reveal{opacity:0;transform:translateY(28px);transition:opacity .9s var(--ease),transform 1.1s var(--ease);transition-delay:calc(var(--i,0) * 70ms)}
 .js .reveal.is-in{opacity:1;transform:none}
+/* Failsafe: if site.js has not started 3 s after the page is drawn (slow network, blocked or failed
+   script), show every .reveal block anyway. site.js adds .bs-ready when it starts. */
+.js:not(.bs-ready) .reveal:not(.is-in){animation:bs-reveal-in .6s var(--ease) 3s both}
+@keyframes bs-reveal-in{to{opacity:1;transform:none}}
+/* With JavaScript off the head script never adds .js: placeholders would never resolve, so hide them. */
+html:not(.js) .skeleton{visibility:hidden;animation:none}
 
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
@@ -512,11 +547,9 @@ img.is-contain{object-fit:contain!important;padding:8%}
   .gfoot__grid ul{padding:0 0 14px}
   .gfoot__grid ul.is-collapsed{display:none}
   .wa-float{right:14px;bottom:14px;height:48px;padding:0 14px}
-  .wa-float span{display:none}
+  /* Icon only on phones; the text stays as the accessible name. */
+  .wa-float span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   body:has(input:focus,textarea:focus,select:focus) .wa-float{opacity:0;visibility:hidden;pointer-events:none}
-  /* On phones the help button stays out of the way at the top of a page and while reading down. */
-  .wa-float{transition:transform .35s var(--ease),opacity .25s var(--ease-out),visibility 0s linear 0s}
-  .wa-float.is-tucked{opacity:0;visibility:hidden;transform:translateY(24px);pointer-events:none;transition:transform .35s var(--ease),opacity .2s var(--ease-out),visibility 0s linear .2s}
   .shelf-nav{display:none}
   .gfoot{padding-bottom:72px}
   /* 44px touch targets */
@@ -524,8 +557,12 @@ img.is-contain{object-fit:contain!important;padding:8%}
   .pcard__actions .btn,.btn--sm,.chip,.seg button{min-height:44px}
   .stepper{height:46px}
   .stepper button{width:44px;height:44px}
-  .stepper--sm{height:44px}
-  .stepper--sm button{width:42px;height:42px}
+  .stepper--sm{height:46px}
+  .stepper--sm button{width:44px;height:44px}
+  .brand{min-height:44px}
+  main .more{min-height:44px}
+  .line__rm{min-height:44px;padding:0 10px}
+  .mmenu__sub a{padding:10px 0}
   .toast__act{min-height:44px;padding:0 12px}
   .toasts{bottom:16px}
   .drawer__body{padding:4px 16px}

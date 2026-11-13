@@ -6,8 +6,10 @@
 // file from partials/ (header.html, footer.html, head.html). Pages stay plain HTML
 // that GitHub Pages can serve as-is; run `node tools/build.mjs` after editing a partial.
 //
-// Per-page values inside partials: {{nav:<key>}} becomes aria-current="page" on the
-// link whose data-nav matches the page's <body data-nav="...">.
+// Header highlight: the link whose data-nav matches the page's <body data-nav="..."> gets
+// aria-current. It is "page" only when the link's href is this page's file (shop.html on
+// shop.html); otherwise it is "true", meaning "the section you are in" (Store on product.html).
+// Use <body data-nav="none"> for pages that belong to no header section.
 
 import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -30,7 +32,13 @@ for (const page of pages) {
   let out = src;
   for (const [name, html] of Object.entries(partials)) {
     const re = new RegExp(`(<!-- @${name} -->)[\\s\\S]*?(<!-- /@${name} -->)`, "g");
-    const body = html.replace(/\s*data-nav="([^"]+)"/g, (m, key) => (key === nav ? `${m} aria-current="page"` : m));
+    // Match each opening tag that carries data-nav, so the tag's own href can be compared with the page.
+    const body = html.replace(/<a\b[^>]*\sdata-nav="([^"]+)"[^>]*>/g, (tag, key) => {
+      if (key !== nav) return tag;
+      const href = (tag.match(/\shref="([^"]*)"/) || [])[1] || "";
+      const current = href.replace(/&amp;/g, "&") === page ? "page" : "true";
+      return tag.replace(/(\sdata-nav="[^"]+")/, `$1 aria-current="${current}"`);
+    });
     out = out.replace(re, `$1\n${body}\n$2`);
   }
   if (out !== src) {

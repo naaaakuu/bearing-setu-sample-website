@@ -1,6 +1,8 @@
-/* Account dashboard (account.html).
-   The first half builds the sample business account and its orders, invoices and
-   timelines, and exposes them as window.BSA so support.html can track the same orders.
+/* Account dashboard (account.html) and the shared order data.
+   The first half builds the sample business account and its orders, invoices, credit and
+   timelines, and exposes them as window.BSA. support.html tracks the same orders and
+   checkout.html reads the same credit balance and draws the same invoice, so an order shows
+   the same dates, payment state and totals wherever it is opened.
    The second half runs only on the account page. */
 (function () {
   "use strict";
@@ -33,7 +35,6 @@
   function addDays(x, n) { var y = D(x); y.setDate(y.getDate() + n); return y; }
   function at(x, h, m) { var y = D(x); y.setHours(h, m || 0, 0, 0); return y; }
   function nextWork(x) { var y = addDays(x, 1); while (!isWork(y)) y = addDays(y, 1); return y; }
-  function addWork(x, n) { var y = D(x); while (n > 0) { y = addDays(y, 1); if (isWork(y)) n--; } return y; }
   function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
   function startOfDay(x) { return at(x, 0, 0); }
   function relDay(x) {
@@ -45,13 +46,14 @@
   function hash(s) { var h = 2166136261; s = String(s); for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
   function r2(n) { return Math.round(n * 100) / 100; }
   function num(v) { var n = Number(v); return isFinite(n) ? n : null; }
+  // A stored date, or null when it is missing or unreadable (new Date(null) would be 1970).
+  function when(x) { if (x == null || x === "") return null; var d = D(x); return valid(d) ? d : null; }
+  function fmtMobile(m) { m = String(m || ""); return m.length === 10 ? m.slice(0, 5) + " " + m.slice(5) : m; }
 
   /* =============================================================== account */
-  var ACCOUNT = {
-    company: "Kaveri Spinning Mills Pvt Ltd", short: "Kaveri Spinning Mills", city: "Coimbatore", state: "Tamil Nadu",
-    gstin: "33AAFCK4821M1Z7", buyer: "Lakshmi Narayanan", first: "Lakshmi", role: "Maintenance Purchase", limit: 200000
-  };
-  var SELLER = { name: "Bearingsetu", lines: ["Warehouse, Bhosari MIDC area", "Pune 411026, Maharashtra"], gstin: "27ABCDE1234F1Z5", state: "Maharashtra", code: "27", email: "orders@bearingsetu.com" };
+  // One sample account and one seller identity for the whole site (site.js).
+  var ACCOUNT = BS.ACCOUNT;
+  var SELLER = BS.SELLER;
 
   var DEFAULT_ADDRS = [
     { id: "cbe", label: "Coimbatore mill", name: "Lakshmi Narayanan", line1: "SF No. 118/2, Sathy Road", line2: "Saravanampatti", city: "Coimbatore", state: "Tamil Nadu", pin: "641035", note: "Stores, gate 2. Receiving 9 am to 5 pm.", isDefault: true },
@@ -64,22 +66,23 @@
   }
   function addrById(id) { return addresses().filter(function (a) { return a.id === id; })[0] || DEFAULT_ADDRS.filter(function (a) { return a.id === id; })[0]; }
 
-  var PAY = { credit: "30-day credit", neft: "Bank transfer (NEFT)" };
+  var PAY = { credit: "30-day credit", neft: "Bank transfer (NEFT/RTGS)", upi: "UPI", card: "Card or netbanking" };
 
   /* Six past orders, Aug to Nov 2026, built from real catalogue ids. The three unpaid credit
      invoices (BS-2610-2290, BS-2611-0583, BS-2611-4821) add up to the ₹53,680 credit used.
      Each step has a fixed time; normSample() decides from the clock which steps have happened,
-     so an order never shows a step from the future as done. */
+     so an order never shows a step from the future as done. Expected delivery follows the
+     zones on policies.html#shipping: Coimbatore and Tiruppur are 4 working days after dispatch. */
   var SAMPLE = [
     { id: "BS-2611-6034", date: "2026-11-13T09:20:00+05:30", status: "Packed", addr: "tpr", pay: "neft", paid: "2026-11-13T09:52:00+05:30", po: "KSM/TPR/PO/2611/41", courier: "Delhivery", awb: "1490218842107", inv: "INV/26-27/01142",
       lines: [["fag-6204-2rsr", 60], ["gates-800-8m-20", 4], ["fenner-a33", 10]],
       ev: { packed: "2026-11-13T13:45:00+05:30" },
-      exp: { dispatched: "2026-11-13T18:00:00+05:30", out: "2026-11-16T09:00:00+05:30", delivered: "2026-11-16T14:00:00+05:30" }, recv: "R. Senthil Kumar" },
+      exp: { dispatched: "2026-11-13T18:00:00+05:30", out: "2026-11-18T09:00:00+05:30", delivered: "2026-11-18T14:00:00+05:30" }, recv: "R. Senthil Kumar" },
     { id: "BS-2611-4821", date: "2026-11-11T10:42:00+05:30", status: "Dispatched", addr: "cbe", pay: "credit", po: "KSM/MNT/PO/2611/118", courier: "Blue Dart", awb: "50948271630", inv: "INV/26-27/01131", recv: "K. Prakash",
       lines: [["skf-6205-2rs1-c3", 20], ["gates-1000-5m-15", 4], ["skf-lgmt-2-1kg", 6]],
       ev: { packed: "2026-11-11T15:10:00+05:30", dispatched: "2026-11-11T18:05:00+05:30" },
       scans: [["2026-11-12T04:30:00+05:30", "Left the Blue Dart Pune hub"], ["2026-11-13T06:10:00+05:30", "Arrived at the Blue Dart Coimbatore hub"]],
-      exp: { out: "2026-11-14T09:00:00+05:30", delivered: "2026-11-14T14:00:00+05:30" } },
+      exp: { out: "2026-11-16T09:00:00+05:30", delivered: "2026-11-16T14:00:00+05:30" } },
     { id: "BS-2611-0583", date: "2026-11-04T11:05:00+05:30", status: "Delivered", addr: "tpr", pay: "credit", po: "KSM/TPR/PO/2611/07", courier: "Delhivery", awb: "1490217735562", inv: "INV/26-27/01024", recv: "S. Murugan",
       lines: [["fenner-b43", 10], ["ntn-ucp205d1", 3], ["skf-6202-2rs1", 40], ["nok-tc-30x47x7", 50]],
       ev: { packed: "2026-11-04T14:30:00+05:30", dispatched: "2026-11-04T17:50:00+05:30", out: "2026-11-07T08:40:00+05:30", delivered: "2026-11-07T13:15:00+05:30" } },
@@ -113,22 +116,21 @@
     return { id: id, p: p || null, qty: qty, unit: u, amount: r2(u * qty), pn: p ? p.pn : (extra && extra.pn) || id, brand: b, title: p ? p.title : "", hsn: p ? p.hsn : "" };
   }
 
-  /* Where a real order (placed through checkout) stands right now. Orders before 4 pm on a
-     working day are packed and dispatched the same day; the rest go on the next working day. */
-  function schedule(date, mode) {
-    var d = D(date);
-    var cutoff = at(d, 16, 0);
-    var sameDayOk = isWork(d) && d < cutoff && d >= at(d, 9, 30);
-    var early = isWork(d) && d < at(d, 9, 30);
-    var day = sameDayOk || early ? d : nextWork(d);
-    var packed = sameDayOk ? new Date(Math.min(d.getTime() + 2 * 3600e3, at(d, 16, 0).getTime())) : at(day, 11, 30);
-    if (mode === "pickup") {
-      var ready = new Date(Math.max(packed.getTime() + 90 * 60e3, d.getTime() + 4 * 3600e3));
-      return { packed: packed, dispatched: ready, out: null, delivered: null };
+  /* Dispatch and delivery for an order placed through checkout. Checkout stores the dispatch
+     day and the delivery (or pick-up) date it promised, so those are used as they are. An
+     order saved without them gets the same BS.schedule answer for its pincode. Parts are
+     packed by 4 pm and dispatched by 6 pm on the dispatch day, as the confirmation says.
+     fresh: ignore the stored dates (a bank transfer that arrived later restarts the clock). */
+  function planOf(o, from, mode, lines, pin, fresh) {
+    var dl = !fresh && o.delivery && typeof o.delivery === "object" ? o.delivery : {};
+    var dispatch = when(dl.dispatch), eta = when(dl.eta);
+    if (!dispatch || !eta) {
+      var s = BS.schedule(lines.map(function (l) { return { id: l.id, qty: l.qty }; }), from, pin);
+      dispatch = s.dispatch;
+      eta = mode === "pickup" ? s.pickup.ready : mode === "express" ? s.express.on : s.standard.to;
     }
-    var disp = at(day, 18, 0);
-    var arrive = addWork(day, mode === "express" ? 1 : 3);
-    return { packed: packed, dispatched: disp, out: at(arrive, 9, 0), delivered: at(arrive, 14, 0) };
+    if (mode === "pickup") return { packed: eta, dispatched: eta, out: null, delivered: null };
+    return { packed: at(dispatch, 16, 0), dispatched: at(dispatch, 18, 0), out: at(eta, 9, 0), delivered: at(eta, 14, 0) };
   }
 
   function normSample(s, now) {
@@ -138,20 +140,25 @@
     var t = computeTotals(lines);
     var ev = { confirmed: D(s.date) }, exp = {};
     var status = s.status;
+    var paid = s.paid && D(s.paid) <= now ? D(s.paid) : null;
+    // A bank transfer that has not arrived yet: nothing is packed, so no dates are promised.
+    var awaiting = s.pay === "neft" && !paid && status !== "Cancelled";
     if (status === "Cancelled") {
       Object.keys(s.ev || {}).forEach(function (k) { ev[k] = D(s.ev[k]); });
+    } else if (awaiting) {
+      status = "Confirmed";
     } else {
       var plan = Object.assign({}, s.ev || {}, s.exp || {});
       Object.keys(plan).forEach(function (k) { var at = D(plan[k]); if (at <= now) ev[k] = at; else exp[k] = at; });
       status = ev.delivered ? "Delivered" : ev.dispatched ? "Dispatched" : ev.packed ? "Packed" : "Confirmed";
     }
-    var paid = s.paid && D(s.paid) <= now ? D(s.paid) : null;
     var o = {
       id: s.id, date: D(s.date), status: status, sample: true, lines: lines, totals: t, addr: a, mode: "standard",
-      courier: s.courier || "", awb: s.awb || "", po: s.po || "", payKey: s.pay, payLabel: PAY[s.pay] || s.pay,
+      courier: s.courier || "", awb: s.awb || "", po: s.po || "", payKey: s.pay, payLabel: PAY[s.pay] || s.pay, awaiting: awaiting,
       ev: ev, exp: exp, scans: (s.scans || []).map(function (x) { return [D(x[0]), x[1]]; }).filter(function (x) { return x[0] <= now; }),
       note: s.note || "", recv: ev.delivered ? s.recv || "" : "",
-      paid: paid, invNo: s.inv || "", billTo: { company: ACCOUNT.company, gstin: ACCOUNT.gstin, state: ACCOUNT.state }, billAddr: addrById("cbe")
+      paid: paid, invNo: s.inv || "", billTo: { company: ACCOUNT.company, gstin: ACCOUNT.gstin, state: ACCOUNT.state }, billAddr: addrById("cbe"),
+      contact: {}, shipLabel: "Standard delivery", coupon: ""
     };
     return o;
   }
@@ -167,6 +174,8 @@
       var unit = num(l.unit != null ? l.unit : l.price);
       var L = lineOf(id, qty, unit, { pn: l.pn, brand: l.brand ? BS.brand(l.brand).name : "" });
       if (num(l.total) != null) L.amount = num(l.total);
+      if (!L.title && l.title) L.title = String(l.title);
+      if (!L.hsn && l.hsn) L.hsn = String(l.hsn);
       return L;
     }).filter(function (l) { return l.pn; });
     if (!lines.length) return null;
@@ -174,7 +183,7 @@
     var sub = num(tt.sub != null ? tt.sub : tt.subtotal);
     var calc = computeTotals(lines);
     sub = sub != null ? sub : calc.sub;
-    var discount = Math.abs(num(tt.discount != null ? tt.discount : tt.coupon) || 0);
+    var discount = Math.abs(num(tt.discount != null ? tt.discount : typeof tt.coupon === "number" ? tt.coupon : null) || 0);
     var ship = num(tt.ship != null ? tt.ship : tt.shipping != null ? tt.shipping : tt.delivery);
     if (ship == null) ship = calc.ship;
     var taxable = r2(sub - discount + ship);
@@ -183,28 +192,37 @@
     var total = num(tt.total);
     if (total == null) total = Math.round(taxable + tax);
     var totals = { sub: sub, discount: discount, ship: ship, taxable: taxable, tax: tax, total: total, roundOff: r2(total - taxable - tax) };
+    // Keep checkout's own GST split, so the invoice prints the same CGST, SGST or IGST figures.
+    if (typeof tt.intra === "boolean") { totals.intra = tt.intra; totals.cgst = num(tt.cgst); totals.sgst = num(tt.sgst); totals.igst = num(tt.igst); }
 
     var a = o.address || o.shipping || {};
     var addr = {
       label: a.label || "", name: a.name || a.fullName || (o.contact && o.contact.name) || "",
       line1: a.line1 || a.address1 || a.addr1 || a.street || "", line2: a.line2 || a.address2 || a.addr2 || "",
-      city: a.city || "", state: a.state || "", pin: String(a.pincode || a.pin || a.zip || a.postcode || "")
+      city: a.city || "", state: a.state || "", pin: String(a.pincode || a.pin || a.zip || a.postcode || o.pincode || "")
     };
     var dl = o.delivery;
-    var dKey = String(typeof dl === "string" ? dl : dl ? dl.id || dl.key || dl.method || dl.label || dl.name || "" : "").toLowerCase();
+    var dKey = String(typeof dl === "string" ? dl : dl ? dl.method || dl.id || dl.key || dl.label || dl.name || "" : "").toLowerCase();
     var mode = /pick/.test(dKey) ? "pickup" : /express/.test(dKey) ? "express" : "standard";
     var pm = o.payment || o.pay || o.paymentMethod;
+    var pMethod = pm && typeof pm === "object" ? String(pm.method || "") : "";
     var pLabel = String(typeof pm === "string" ? pm : pm ? pm.label || pm.method || pm.id || pm.name || "" : "");
-    var pKey = /credit/i.test(pLabel) ? "credit" : /neft|rtgs|bank/i.test(pLabel) ? "neft" : /upi/i.test(pLabel) ? "upi" : pLabel ? "card" : "";
-    var PL = { credit: "30-day credit", neft: "Bank transfer (NEFT/RTGS)", upi: "UPI", card: "Card or netbanking" };
+    var pKey = PAY[pMethod] && /^(credit|neft|upi|card)$/.test(pMethod) ? pMethod :
+      /credit/i.test(pLabel) ? "credit" : /neft|rtgs|bank/i.test(pLabel) ? "neft" : /upi/i.test(pLabel) ? "upi" : pLabel ? "card" : "";
+    // UPI and card are paid when the order is placed. A bank transfer is paid only once it
+    // arrives (payment.paidAt); until then the order waits and promises no dispatch date.
+    var paidAt = pm && typeof pm === "object" ? when(pm.paidAt) : null;
+    var paid = pKey === "upi" || pKey === "card" ? date : pKey === "neft" ? paidAt : null;
     var c = o.contact || {};
-    var sch = schedule(date, mode);
     var now = new Date();
     var stored = String(o.status || "Confirmed");
     var ev = { confirmed: date }, exp = {};
     var status = "Confirmed";
+    var awaiting = false;
     if (/cancel/i.test(stored)) { status = "Cancelled"; ev.cancelled = D(o.cancelledAt || date); }
+    else if (pKey === "neft" && !paid) { awaiting = true; }
     else {
+      var sch = planOf(o, pKey === "neft" ? paid : date, mode, lines, addr.pin, pKey === "neft");
       ["packed", "dispatched", "out", "delivered"].forEach(function (k) {
         if (!sch[k]) return;
         if (sch[k] <= now) ev[k] = sch[k]; else exp[k] = sch[k];
@@ -216,12 +234,15 @@
     var courier = mode === "pickup" ? "" : (h % 2 ? "Blue Dart" : "Delhivery");
     var awb = mode === "pickup" ? "" : courier === "Blue Dart" ? "509" + String(10000000 + (h % 89999999)).slice(0, 8) : "14902" + String(10000000 + (h % 89999999)).slice(0, 8);
     var gstin = c.gstin || o.gstin || "";
+    var cpn = typeof tt.coupon === "string" ? tt.coupon : tt.coupon && typeof tt.coupon === "object" ? String(tt.coupon.code || "") : "";
     return {
       id: String(o.id), date: date, status: status, sample: false, lines: lines, totals: totals, addr: addr, mode: mode,
-      courier: courier, awb: awb, po: c.po || o.po || "", payKey: pKey, payLabel: PL[pKey] || pLabel || "Paid online",
+      courier: courier, awb: awb, po: c.po || o.po || "", payKey: pKey, payLabel: PAY[pKey] || pLabel || "Paid online", awaiting: awaiting,
       ev: ev, exp: exp, scans: [], note: status === "Cancelled" ? "This order was cancelled." : "", recv: "",
-      paid: pKey && pKey !== "credit" ? date : null, invNo: typeof o.invoice === "string" && /^INV\//.test(o.invoice) ? o.invoice : "", real: true,
-      billTo: { company: c.company || c.companyName || "", gstin: gstin, state: addr.state, name: addr.name }
+      paid: paid, invNo: typeof o.invoice === "string" && /^INV\//.test(o.invoice) ? o.invoice : "", real: true,
+      billTo: { company: c.business === false ? "" : c.company || c.companyName || "", gstin: gstin, state: addr.state, name: addr.name },
+      contact: { email: c.email || "", mobile: c.mobile || "" },
+      shipLabel: dl && typeof dl === "object" && dl.label ? String(dl.label) : "", coupon: cpn
     };
   }
 
@@ -254,17 +275,31 @@
     if (!date) return null;
     var no = o.invNo || "INV/" + fy(date) + "/" + String(1200 + (hash(o.id) % 700)).padStart(5, "0");
     var due = o.payKey === "credit" ? addDays(startOfDay(date), 30) : null;
+    // paid, due or overdue (30-day credit), or awaiting (a bank transfer that has not arrived)
     var state = "paid";
-    if (!o.paid && o.payKey === "credit") state = startOfDay(new Date()) > due ? "overdue" : "due";
+    if (o.payKey === "credit" && !o.paid) state = startOfDay(new Date()) > due ? "overdue" : "due";
+    else if (o.awaiting) state = "awaiting";
     return { no: no, date: date, due: due, state: state, paid: o.paid, order: o };
   }
   function invoices() { return orders().map(invoiceOf).filter(Boolean); }
+  /* The credit line: unpaid invoices on 30-day credit, sample and placed on this device.
+     Checkout reads the same figures, so both pages show one available balance. */
   function credit() {
-    var due = invoices().filter(function (i) { return i.state !== "paid"; });
-    var used = due.reduce(function (s, i) { return s + i.order.totals.total; }, 0);
+    var due = invoices().filter(function (i) { return i.order.payKey === "credit" && i.state !== "paid"; });
+    var used = r2(due.reduce(function (s, i) { return s + i.order.totals.total; }, 0));
     var next = due.slice().sort(function (a, b) { return a.due - b.due; })[0] || null;
     var nextAmt = next ? due.filter(function (i) { return sameDay(i.due, next.due); }).reduce(function (s, i) { return s + i.order.totals.total; }, 0) : 0;
-    return { limit: ACCOUNT.limit, used: used, avail: Math.max(0, ACCOUNT.limit - used), next: next, nextAmt: nextAmt, dueCount: due.length };
+    return { limit: ACCOUNT.limit, used: used, avail: Math.max(0, r2(ACCOUNT.limit - used)), next: next, nextAmt: nextAmt, dueCount: due.length };
+  }
+  // "UPI · paid", "30-day credit · due 13 Dec", "Bank transfer (NEFT/RTGS) · awaiting transfer"
+  function payText(o, inv) {
+    if (inv === undefined) inv = invoiceOf(o);
+    // before dispatch a sample order has no invoice yet, but a bank transfer may already be in
+    var st = inv ? inv.state : o.awaiting ? "awaiting" : o.paid ? "paid" : "";
+    if (st === "awaiting") return o.payLabel + " · awaiting transfer";
+    if ((st === "due" || st === "overdue") && inv.due) return o.payLabel + " · due " + fmtDate(inv.due, { short: true });
+    if (st === "paid" && o.paid) return o.payLabel + " · paid";
+    return o.payLabel;
   }
 
   /* Tracking timeline for an order: five steps with dates, the current one marked. */
@@ -280,47 +315,41 @@
       var when = o.ev[k] || null, expd = !when ? o.exp[k] || null : null;
       var st = cancelled ? (i === 0 ? "done" : "void") : i < idx ? "done" : i === idx ? (i === 4 ? "done" : "current") : "next";
       if (!cancelled && i === 4 && idx === 4) st = "current";
-      var detail = "";
+      var detail = "", wait = "";
       var shipped = !!(o.ev.dispatched || o.ev.delivered);
-      if (k === "dispatched" && !pickup && o.courier && shipped) detail = o.courier + " · AWB " + o.awb;
-      if (k === "dispatched" && !pickup && !shipped && !cancelled) detail = "Courier and AWB are added at dispatch.";
-      if (k === "dispatched" && pickup) detail = "Bhosari MIDC warehouse, Pune. Bring the order number.";
+      if (o.awaiting) {
+        // Nothing is packed until the transfer arrives, so the later steps carry no dates.
+        if (k === "confirmed") detail = "Waiting for your bank transfer of " + inr(o.totals.total) + ". Use " + o.id + " as the payment reference.";
+        else wait = k === "packed" ? "After your transfer arrives" : "Not yet";
+        if (k === "dispatched" && !pickup) detail = "We pack and dispatch once the transfer reaches our account.";
+      } else {
+        if (k === "dispatched" && !pickup && o.courier && shipped) detail = o.courier + " · AWB " + o.awb;
+        if (k === "dispatched" && !pickup && !shipped && !cancelled) detail = "Courier and AWB are added at dispatch.";
+      }
+      if (k === "dispatched" && pickup) detail = "Bhosari MIDC, Pune 411026. Bring the order number and a photo ID.";
       if (k === "delivered" && when && o.recv) detail = "Received by " + o.recv;
-      steps.push({ key: k, label: labels[i], at: when, expected: expd, state: st, detail: detail, scans: k === "dispatched" ? o.scans : [] });
+      steps.push({ key: k, label: labels[i], at: when, expected: expd, state: st, detail: detail, wait: wait, scans: k === "dispatched" ? o.scans : [] });
     });
     return { steps: steps, cancelled: cancelled, idx: idx };
   }
   function etaText(o) {
     if (o.status === "Cancelled") return "Cancelled " + fmtDate(o.ev.cancelled || o.date, { short: true });
     if (o.status === "Delivered") return "Delivered " + fmtDate(o.ev.delivered || o.date, { day: true, short: true });
+    if (o.awaiting) return "Waiting for your bank transfer";
     if (o.mode === "pickup") { var r = o.ev.dispatched || o.exp.dispatched; return r ? "Ready for pick up " + relDay(r) + (o.ev.dispatched ? "" : ", from " + fmtTime(r)) : "Ready for pick up soon"; }
     var e = o.exp.delivered || o.ev.delivered;
-    return e ? "Arriving " + relDay(e) : "Arriving soon";
+    if (!e) return "Arriving soon";
+    var rel = relDay(e);
+    return "Arriving " + (rel === "today" || rel === "tomorrow" ? rel : "by " + rel);
   }
-
-  /* ---------------------------------------------------------- amount in words */
-  var ONES = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
-  var TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
-  function two(n) { return n < 20 ? ONES[n] : TENS[Math.floor(n / 10)] + (n % 10 ? "-" + ONES[n % 10] : ""); }
-  function three(n) { var h = Math.floor(n / 100), r = n % 100; return (h ? ONES[h] + " hundred" + (r ? " " : "") : "") + (r ? two(r) : ""); }
-  function words(n) {
-    n = Math.floor(Math.abs(n));
-    if (!n) return "zero";
-    var cr = Math.floor(n / 1e7); n %= 1e7;
-    var lk = Math.floor(n / 1e5); n %= 1e5;
-    var th = Math.floor(n / 1000); n %= 1000;
-    var out = [];
-    if (cr) out.push(words(cr) + " crore");
-    if (lk) out.push(two(lk) + " lakh");
-    if (th) out.push(two(th) + " thousand");
-    if (n) out.push(three(n));
-    return out.join(" ");
-  }
-  function rupeesInWords(n) { var w = words(n); return w.charAt(0).toUpperCase() + w.slice(1) + " rupees only"; }
 
   /* --------------------------------------------------------- tax invoice doc */
-  var LOGO = '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="none" stroke="#16255c" stroke-width="10" stroke-dasharray="9 8.28"/><circle cx="50" cy="50" r="38" fill="#16255c"/><circle cx="50" cy="50" r="29" fill="#fff"/><g fill="#16255c"><circle cx="71" cy="50" r="5"/><circle cx="64.85" cy="64.85" r="5"/><circle cx="50" cy="71" r="5"/><circle cx="35.15" cy="64.85" r="5"/><circle cx="29" cy="50" r="5"/><circle cx="35.15" cy="35.15" r="5"/><circle cx="50" cy="29" r="5"/><circle cx="64.85" cy="35.15" r="5"/></g><circle cx="50" cy="50" r="11" fill="#16255c"/><path d="M6 74 Q50 50 98 60" fill="none" stroke="#f29a0e" stroke-width="7" stroke-linecap="round"/></svg>';
+  /* One template for every tax invoice: BS.bag.docHTML in cart.js, which also draws the
+     quotation. It is filled from this order data wherever the invoice is opened (the checkout
+     confirmation, Orders and Invoices here), so one invoice number always shows the same
+     seller, lines, batches, totals and amount in words. Needs cart.js on the page. */
   var STATE_CODES = { "Jammu and Kashmir": "01", "Himachal Pradesh": "02", "Punjab": "03", "Chandigarh": "04", "Uttarakhand": "05", "Haryana": "06", "Delhi": "07", "Rajasthan": "08", "Uttar Pradesh": "09", "Bihar": "10", "Sikkim": "11", "Arunachal Pradesh": "12", "Nagaland": "13", "Manipur": "14", "Mizoram": "15", "Tripura": "16", "Meghalaya": "17", "Assam": "18", "West Bengal": "19", "Jharkhand": "20", "Odisha": "21", "Chhattisgarh": "22", "Madhya Pradesh": "23", "Gujarat": "24", "Dadra and Nagar Haveli and Daman and Diu": "26", "Maharashtra": "27", "Karnataka": "29", "Goa": "30", "Lakshadweep": "31", "Kerala": "32", "Tamil Nadu": "33", "Puducherry": "34", "Andaman and Nicobar Islands": "35", "Telangana": "36", "Andhra Pradesh": "37", "Ladakh": "38" };
+  function codeOf(state, gstin) { return BS.own(STATE_CODES, state) ? STATE_CODES[state] : gstin ? String(gstin).slice(0, 2) : ""; }
   function batchCode(o, l, i) {
     var h = hash(o.id + l.pn + i);
     var wk = 1 + (h % 40);
@@ -329,106 +358,55 @@
   function addrHTML(a) {
     return [a.line1, a.line2, [a.city, a.pin].filter(Boolean).join(" "), a.state].filter(Boolean).map(esc).join("<br>");
   }
+  // Address lines as the invoice prints them: line 1, line 2, then "City, State 641035".
+  function docAddr(a) {
+    var last = [a.city, a.state].filter(Boolean).join(", ") + (a.pin ? " " + a.pin : "");
+    return [a.line1, a.line2, last.trim()].filter(Boolean).map(esc).join("<br>");
+  }
+  function payTerms(o, inv) {
+    if (inv.state === "due" || inv.state === "overdue") return "30-day credit, due " + fmtDate(inv.due);
+    if (inv.state === "awaiting") return "Bank transfer, awaiting payment";
+    return o.paid ? o.payLabel + ", paid" : o.payLabel;
+  }
   function invoiceHTML(o) {
-    var inv = invoiceOf(o);
-    if (!inv) return "";
-    var t = o.totals;
-    var intra = /maharashtra/i.test(o.addr.state || "");
-    var bt = o.billTo || {};
-    var code = STATE_CODES[o.addr.state] || (bt.gstin ? bt.gstin.slice(0, 2) : "");
-    var half = r2(t.tax / 2);
-    var rows = o.lines.map(function (l, i) {
-      return "<tr><td class=\"num\">" + (i + 1) + "</td><td><strong>" + esc((l.brand ? l.brand + " " : "") + l.pn) + "</strong><span>" + esc(l.title) + "</span><span class=\"mono\">Batch " + batchCode(o, l, i) + "</span></td>" +
-        "<td class=\"mono\">" + esc(l.hsn || "") + "</td><td class=\"r num\">" + l.qty + "</td><td class=\"r num\">" + inr(l.unit, 2) + "</td><td class=\"r num\">18%</td><td class=\"r num\">" + inr(l.amount, 2) + "</td></tr>";
-    }).join("");
-    var taxRows = intra ?
-      "<tr><td>CGST 9%</td><td class=\"r num\">" + inr(half, 2) + "</td></tr><tr><td>SGST 9%</td><td class=\"r num\">" + inr(r2(t.tax - half), 2) + "</td></tr>" :
-      "<tr><td>IGST 18%</td><td class=\"r num\">" + inr(t.tax, 2) + "</td></tr>";
-    var terms = o.payKey === "credit" ? "30-day credit · due " + fmtDate(inv.due) : inv.paid ? "Paid · " + esc(o.payLabel) : esc(o.payLabel);
-    return '<article class="paper" aria-label="Tax invoice ' + esc(inv.no) + '">' +
-      '<header class="paper__head"><div class="paper__brand">' + LOGO + "<span>Bearing<b>setu</b></span></div>" +
-        '<div class="paper__title"><h3>Tax invoice</h3><p>Original for recipient</p></div></header>' +
-      '<div class="paper__parties">' +
-        "<div><h4>Sold by</h4><p><strong>" + SELLER.name + "</strong><br>" + SELLER.lines.join("<br>") + '<br><span class="mono">GSTIN ' + SELLER.gstin + "</span> (sample)<br>State code 27</p></div>" +
-        "<div><h4>Bill to</h4><p><strong>" + esc(bt.company || bt.name || o.addr.name || "Customer") + "</strong><br>" + addrHTML(o.billAddr || o.addr) + (bt.gstin ? '<br><span class="mono">GSTIN ' + esc(bt.gstin) + "</span>" : "<br>Unregistered buyer") + (code ? "<br>State code " + esc(code) : "") + "</p></div>" +
-        "<div><h4>Ship to</h4><p><strong>" + esc(o.addr.name || bt.company || "") + "</strong>" + (o.addr.label ? "<br>" + esc(o.addr.label) : "") + "<br>" + addrHTML(o.addr) + "</p></div>" +
-      "</div>" +
-      '<dl class="paper__meta">' +
-        "<div><dt>Invoice no.</dt><dd class=\"mono\">" + esc(inv.no) + "</dd></div>" +
-        "<div><dt>Invoice date</dt><dd>" + fmtDate(inv.date) + "</dd></div>" +
-        "<div><dt>Order no.</dt><dd class=\"mono\">" + esc(o.id) + "</dd></div>" +
-        (o.po ? "<div><dt>Your PO</dt><dd class=\"mono\">" + esc(o.po) + "</dd></div>" : "") +
-        "<div><dt>Place of supply</dt><dd>" + esc(o.addr.state || "") + (code ? " (" + esc(code) + ")" : "") + "</dd></div>" +
-        "<div><dt>Terms</dt><dd>" + terms + "</dd></div>" +
-      "</dl>" +
-      '<table class="paper__lines"><thead><tr><th>#</th><th>Item and batch</th><th>HSN</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">GST</th><th class="r">Taxable value</th></tr></thead><tbody>' + rows + "</tbody></table>" +
-      '<div class="paper__foot">' +
-        '<div class="paper__words"><h4>Amount in words</h4><p>' + rupeesInWords(t.total) + "</p>" +
-          '<h4>Notes</h4><p>' + (intra ? "Intra-state supply from Maharashtra: CGST and SGST apply." : "Inter-state supply from Maharashtra: IGST applies.") + " Returns are accepted within 7 days of delivery for unused parts in original packing. Batch numbers trace each part to our stock records.</p></div>" +
-        '<table class="paper__sum"><tbody>' +
-          "<tr><td>Taxable value of goods</td><td class=\"r num\">" + inr(t.sub, 2) + "</td></tr>" +
-          (t.discount ? "<tr><td>Discount</td><td class=\"r num\">−" + inr(t.discount, 2) + "</td></tr>" : "") +
-          "<tr><td>Dispatch</td><td class=\"r num\">" + (t.ship ? inr(t.ship, 2) : "Free") + "</td></tr>" +
-          taxRows +
-          (t.roundOff ? "<tr><td>Round off</td><td class=\"r num\">" + (t.roundOff < 0 ? "−" : "") + inr(Math.abs(t.roundOff), 2) + "</td></tr>" : "") +
-          '<tr class="paper__total"><td>Total</td><td class="r num">' + inr(t.total, 2) + "</td></tr>" +
-        "</tbody></table>" +
-      "</div>" +
-      '<p class="paper__sign">For Bearingsetu<br><span>Computer-generated invoice, no signature needed.</span></p>' +
-      '<p class="paper__sample">Sample invoice from a demonstration store. It is not a valid tax document.</p>' +
-      "</article>";
+    var bag = BS.bag, inv = o && invoiceOf(o);
+    if (!bag || !inv) return "";
+    var t = o.totals, a = o.addr || {}, ba = o.billAddr || a, bt = o.billTo || {}, c = o.contact || {};
+    var intra = typeof t.intra === "boolean" ? t.intra : /^maharashtra$/i.test(a.state || "");
+    var cgst = intra ? (t.cgst != null ? t.cgst : r2(t.tax / 2)) : 0;
+    var sgst = intra ? (t.sgst != null ? t.sgst : r2(t.tax - cgst)) : 0;
+    var code = codeOf(a.state);
+    var bcode = codeOf(ba.state, bt.gstin);
+    var billTo = (bt.gstin ? "<strong>" + esc(bt.company || bt.name || a.name || "") + "</strong><br>GSTIN " + esc(bt.gstin) : "<strong>" + esc(bt.name || a.name || "Customer") + "</strong><br>Unregistered buyer") +
+      "<br>" + docAddr(ba) + (bcode ? "<br>State code " + esc(bcode) : "") + (o.po ? "<br>Your PO " + esc(o.po) : "") + (c.email ? "<br>" + esc(c.email) : "");
+    var shipTo = o.mode === "pickup" ? "<strong>" + esc(SELLER.name) + "</strong><br>" + SELLER.lines.map(esc).join("<br>") + "<br>Monday to Saturday, 9:30 am to 7 pm" :
+      "<strong>" + esc(a.name || bt.company || "") + "</strong>" + (o.sample && a.label ? "<br>" + esc(a.label) : "") + "<br>" + docAddr(a) + (c.mobile ? "<br>+91 " + esc(fmtMobile(c.mobile)) : "");
+    var meta = [["Invoice date", fmtDate(inv.date)], ["Order", '<span class="mono">' + esc(o.id) + "</span>"],
+      ["Place of supply", esc(a.state || "") + (code ? " (" + esc(code) + ")" : "")], ["Payment", esc(payTerms(o, inv))]];
+    var lines = bag.docLines(o.lines).map(function (x, i) { x.batch = batchCode(o, o.lines[i], i); return x; });
+    return bag.docHTML({
+      kind: "invoice", no: inv.no, meta: meta,
+      parties: [{ h: "Bill to", html: billTo }, { h: o.mode === "pickup" ? "Collect from" : "Ship to", html: shipTo }],
+      lines: lines,
+      totals: {
+        sub: t.sub, discount: t.discount, coupon: t.discount ? { code: o.coupon || "" } : null, ship: t.ship,
+        shipLabel: o.shipLabel || (o.mode === "express" ? "Express delivery" : "Standard delivery"),
+        taxable: t.taxable, intra: intra, cgst: cgst, sgst: sgst, igst: intra ? 0 : t.tax, gst: t.tax, roundOff: t.roundOff, total: t.total
+      },
+      terms: [
+        "GST is charged at 18% on all items. " + (intra ? "Intra-state supply from Maharashtra: CGST 9% and SGST 9%." : "Inter-state supply from Maharashtra: IGST 18%.") + " Reverse charge does not apply.",
+        "Unused parts in their original packing can be returned within 7 days of delivery. Report a damaged or wrong part within 48 hours of delivery.",
+        "Batch numbers trace each part to our stock records.",
+        "Certified that the particulars given above are true and correct. This is a computer-generated invoice and needs no signature."
+      ],
+      note: "Sample document from the Bearingsetu demo store. Not a valid tax invoice. Questions: " + esc(SELLER.email)
+    });
   }
-
-  /* ------------------------------------------------------- document dialog */
-  var docm = null, docLast = null;
-  function closeDoc() {
-    if (!docm || docm.hidden) return;
-    docm.classList.remove("is-open");
-    document.body.classList.remove("docm-open", "is-locked");
-    setTimeout(function () { if (!docm.classList.contains("is-open")) docm.hidden = true; }, 260);
-    if (docLast && docLast.focus) docLast.focus();
-  }
-  function openDoc(title, html) {
-    if (!docm) {
-      docm = document.createElement("div");
-      docm.className = "docm";
-      docm.hidden = true;
-      docm.setAttribute("role", "dialog");
-      docm.setAttribute("aria-modal", "true");
-      docm.setAttribute("aria-labelledby", "docm-title");
-      docm.innerHTML = '<div class="docm__bar"><h2 class="docm__title" id="docm-title"></h2>' +
-        '<div class="docm__acts"><button class="btn btn--sm" type="button" data-docm-print>' + icon("printer") + 'Print<span class="docm__long"> or save as PDF</span></button>' +
-        '<button class="icon-btn" type="button" data-docm-close aria-label="Close invoice">' + icon("x") + "</button></div></div>" +
-        '<div class="docm__scroll" data-docm-scroll><div class="docm__body" data-docm-body></div></div>';
-      document.body.appendChild(docm);
-      docm.addEventListener("click", function (e) {
-        if (e.target.closest("[data-docm-close]") || e.target === docm || e.target.hasAttribute("data-docm-scroll")) closeDoc();
-        else if (e.target.closest("[data-docm-print]")) window.print();
-      });
-      document.addEventListener("keydown", function (e) {
-        if (!docm || docm.hidden || !docm.classList.contains("is-open")) return;
-        if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeDoc(); return; }
-        if (e.key !== "Tab") return;
-        var f = $$("button,a[href],[tabindex]:not([tabindex='-1'])", docm).filter(function (el) { return el.offsetParent !== null; });
-        if (!f.length) return;
-        var a = document.activeElement;
-        if (!docm.contains(a)) { f[0].focus(); e.preventDefault(); }
-        else if (e.shiftKey && a === f[0]) { f[f.length - 1].focus(); e.preventDefault(); }
-        else if (!e.shiftKey && a === f[f.length - 1]) { f[0].focus(); e.preventDefault(); }
-      }, true);
-    }
-    docLast = document.activeElement;
-    $("#docm-title", docm).textContent = title;
-    $("[data-docm-body]", docm).innerHTML = html;
-    $("[data-docm-scroll]", docm).scrollTop = 0;
-    docm.hidden = false;
-    document.body.classList.add("docm-open", "is-locked");
-    requestAnimationFrame(function () { docm.classList.add("is-open"); $("[data-docm-print]", docm).focus(); });
-  }
-  function openInvoice(o) {
-    var inv = invoiceOf(o);
-    if (!inv) { BS.toast("There is no invoice for a cancelled order.", { icon: "info" }); return; }
-    openDoc("Tax invoice " + inv.no, invoiceHTML(o));
+  function openInvoice(o, trigger) {
+    var inv = o && invoiceOf(o);
+    if (!inv) { BS.toast(o && o.status === "Cancelled" ? "There is no invoice for a cancelled order." : "The GST invoice is issued at dispatch.", { icon: "info" }); return; }
+    if (!BS.bag || !BS.bag.openDoc) return;
+    BS.bag.openDoc({ kicker: "Tax invoice", title: inv.no, file: inv.no.replace(/\//g, "-"), html: invoiceHTML(o), trigger: trigger });
   }
 
   /* ---------- form helpers (validate on submit, then on blur) ---------- */
@@ -479,7 +457,7 @@
   window.BSA = {
     account: ACCOUNT, seller: SELLER, sampleTrack: SAMPLE_TRACK, statuses: STATUSES,
     orders: orders, find: find, timeline: timeline, etaText: etaText, invoices: invoices, invoiceOf: invoiceOf, credit: credit,
-    openInvoice: openInvoice, addresses: addresses, form: { setErr: setErr, wire: wireForm, busy: busy },
+    payText: payText, invoiceHTML: invoiceHTML, openInvoice: openInvoice, addresses: addresses, form: { setErr: setErr, wire: wireForm, busy: busy },
     fmt: { date: fmtDate, time: fmtTime, dt: fmtDT, rel: relDay }, dates: { addDays: addDays, isWork: isWork, nextWork: nextWork, at: at, sameDay: sameDay }
   };
 
@@ -610,12 +588,12 @@
     var a = o.addr;
     var ship = o.mode === "pickup" ? "Pick up from our Pune warehouse" :
       o.courier && (o.ev.dispatched || o.ev.delivered) && o.awb ? esc(o.courier) + ' · AWB <span class="mono">' + esc(o.awb) + "</span>" : "Courier and AWB are added at dispatch";
-    var payTxt = esc(o.payLabel) + (inv ? inv.state === "paid" ? " · paid" : " · due " + fmtDate(inv.due, { short: true }) : "");
+    var payTxt = esc(payText(o, inv));
     return '<article class="ord' + (isOpen ? " is-open" : "") + '" data-order="' + esc(o.id) + '">' +
       '<button class="ord__head" type="button" aria-expanded="' + isOpen + '" aria-controls="' + esc(bid) + '" data-ord-toggle>' +
         '<span class="ord__id"><span class="mono">' + esc(o.id) + '</span><span class="ord__date">' + fmtDate(o.date) + (o.real ? " · placed on this device" : "") + "</span></span>" +
         '<span class="ord__thumbs" aria-hidden="true">' + thumbs + "</span>" +
-        '<span class="ord__items">' + BS.plural(o.lines.length, "part") + '<small class="num">' + pieces + " pieces</small></span>" +
+        '<span class="ord__items">' + BS.plural(o.lines.length, "part") + '<small class="num">' + BS.plural(pieces, "piece") + "</small></span>" +
         '<span class="ord__total num">' + inr(t.total) + "</span>" +
         '<span class="ord__status">' + badge(o.status) + "</span>" +
         '<span class="ord__chev" aria-hidden="true">' + icon("caret-down") + "</span>" +
@@ -630,7 +608,7 @@
             "<div><dt>GST 18%</dt><dd class=\"num\">" + inr(t.tax, 2) + "</dd></div>" +
             '<div class="osum__total"><dt>Total</dt><dd class="num">' + inr(t.total) + "</dd></div></dl></div>" +
           '<dl class="ord__facts">' +
-            "<div><dt>Deliver to</dt><dd>" + (a.label ? "<strong>" + esc(a.label) + "</strong><br>" : "") + esc(a.name) + "<br>" + addrHTML(a) + "</dd></div>" +
+            "<div><dt>" + (o.mode === "pickup" ? "Billing address" : "Deliver to") + "</dt><dd>" + (a.label ? "<strong>" + esc(a.label) + "</strong><br>" : "") + esc(a.name) + "<br>" + addrHTML(a) + "</dd></div>" +
             "<div><dt>Shipment</dt><dd>" + ship + '<br><span class="muted">' + esc(etaText(o)) + "</span></dd></div>" +
             "<div><dt>Payment</dt><dd>" + payTxt + "</dd></div>" +
             (o.po ? '<div><dt>Your PO</dt><dd class="mono">' + esc(o.po) + "</dd></div>" : "") +
@@ -710,6 +688,7 @@
         var days = i.due ? Math.round((i.due - today) / 864e5) : 0;
         var st = i.state === "paid" ? '<span class="badge badge--green">Paid</span>' :
           i.state === "overdue" ? '<span class="badge badge--red">Overdue</span>' :
+          i.state === "awaiting" ? '<span class="badge">Awaiting payment</span><small class="inv-days">by bank transfer</small>' :
           '<span class="badge">Due ' + fmtDate(i.due, { short: true }) + '</span><small class="inv-days">' + (days === 0 ? "today" : "in " + BS.plural(days, "day")) + "</small>";
         return "<tr>" +
           '<td><span class="mono inv-no">' + esc(i.no) + '</span><span class="inv-date">' + fmtDate(i.date) + "</span></td>" +
@@ -765,7 +744,7 @@
     var pcs = lines.reduce(function (s, x) { return s + x.qty; }, 0);
     return '<article class="nlist' + (fresh ? " is-fresh" : "") + '" data-list="' + esc(l.id) + '" aria-labelledby="nl-' + esc(l.id) + '">' +
       '<header class="nlist__head"><div><h4 class="nlist__t" id="nl-' + esc(l.id) + '">' + esc(l.name) + "</h4>" +
-        '<p class="small muted">' + BS.plural(lines.length, "part") + " · " + pcs + " pieces" + (l.updated ? " · updated " + fmtDate(l.updated, { short: true }) : "") + "</p></div>" +
+        '<p class="small muted">' + BS.plural(lines.length, "part") + " · " + BS.plural(pcs, "piece") + (l.updated ? " · updated " + fmtDate(l.updated, { short: true }) : "") + "</p></div>" +
         (l.sample ? "" : '<button class="textlink small" type="button" data-del-list="' + esc(l.id) + '" aria-label="Delete list ' + esc(l.name) + '">Delete</button>') + "</header>" +
       '<ul class="nlist__lines">' + lines.map(function (x) {
         return '<li><span class="nlist__img">' + thumb(x.p, 40) + '</span><span class="nlist__name"><a href="' + BS.url(x.p) + '">' + esc(x.brand + " " + x.pn) + "</a><small>" + esc(x.p.title) + '</small></span><span class="nlist__qty num">× ' + x.qty + "</span></li>";
@@ -777,9 +756,9 @@
   function renderLists() {
     var box = $("[data-nlists]");
     var t = BS.cart.totals();
-    var form = '<form class="nlist nlist--new" novalidate data-newlist aria-labelledby="newlist-title">' +
+    var form = '<form class="nlist nlist--new" method="post" novalidate data-newlist aria-labelledby="newlist-title">' +
       '<div class="nlist__newhead">' + icon("list-checks") + '<h4 class="nlist__t" id="newlist-title">Save your bag as a list</h4></div>' +
-      (t.count ? '<p class="small muted" data-bag-summary>Your bag has ' + BS.plural(t.lines.length, "part") + ", " + t.count + " pieces. Name the list to save it.</p>" :
+      (t.count ? '<p class="small muted" data-bag-summary>Your bag has ' + BS.plural(t.lines.length, "part") + ", " + BS.plural(t.count, "piece") + ". Name the list to save it.</p>" :
         '<p class="small muted" data-bag-summary>Your bag is empty. Add parts to your bag, then save them here as a named list for next time.</p>') +
       '<div class="field"><label for="nl-name">List name</label><input class="input" id="nl-name" name="name" maxlength="60" autocomplete="off" placeholder="For example, Carding monthly kit"' + (t.count ? "" : " disabled") + '><p class="error" id="nl-name-err"></p></div>' +
       (t.count ? '<button class="btn btn--sm" type="submit">Save list</button>' : '<a class="btn btn--sm btn--quiet" href="shop.html">Shop parts</a>') +
@@ -828,7 +807,7 @@
       var b = $('[data-add-list="' + id + '"]');
       if (b) { b.classList.remove("is-done"); b.innerHTML = icon("handbag") + "Add list to bag"; }
     }, 1600);
-    BS.toast("<strong>" + esc(l.name) + "</strong>: " + BS.plural(n, "part") + ", " + pcs + " pieces added to your bag.", { label: "View bag", onAction: BS.openCart });
+    BS.toast("<strong>" + esc(l.name) + "</strong>: " + BS.plural(n, "part") + ", " + BS.plural(pcs, "piece") + " added to your bag.", { label: "View bag", onAction: BS.openCart });
   }
   function deleteList(id) {
     var ls = userLists();
@@ -859,6 +838,18 @@
     if (left >= 2 * 3600e3) return new Date(d.getTime() + 2 * 3600e3);
     return new Date(at(nextWork(d), 9, 30).getTime() + (2 * 3600e3 - left));
   }
+  /* A typed part only becomes a catalogue product when exactly one product matches it, by part
+     number ("6205-2RS1") or by brand and part number ("Timken 6205-2RS"). Several brands share
+     most numbers, so a guess would show the wrong brand; otherwise the typed text stays. */
+  function exactPart(text) {
+    var n = BS.norm(text);
+    if (!n) return null;
+    var same = BS.products.filter(function (p) {
+      var b = BS.brand(p.brand).name;
+      return BS.norm(p.pn) === n || BS.norm(b + " " + p.pn) === n || BS.norm(b.replace(/\s*\(.*\)$/, "") + " " + p.pn) === n;
+    });
+    return same.length === 1 ? same[0].id : null;
+  }
   function userQuotes() {
     var r = BS.store.get("rfqs", []);
     return (Array.isArray(r) ? r : []).map(function (q) {
@@ -871,7 +862,7 @@
         if (!l || typeof l !== "object") return { text: "", qty: 1 };
         var id = l.id && BS.byId(l.id) ? l.id : null;
         var pn = l.pn || l.part;
-        if (!id && pn) { var m = BS.search(String(pn), 1)[0]; if (m && m.score >= 84) id = m.p.id; }
+        if (!id && pn) id = exactPart(pn);
         return { id: id, text: l.pn || l.part || l.text || l.desc || l.description || l.name || "", qty: parseInt(l.qty || l.quantity, 10) || 1, target: num(l.target || l.targetPrice) };
       }).filter(function (l) { return l.id || l.text; });
       return { ref: String(q.ref || q.id || q.reference || "RFQ"), sent: valid(sent) ? sent : new Date(), status: "progress", lines: lines, user: true, needBy: q.needBy || q.date_needed || "", note: "" };
@@ -927,7 +918,7 @@
     var pcs = 0;
     q.lines.forEach(function (l) { if (l.id) { BS.cart.add(l.id, l.qty); pcs += l.qty; } });
     renderQuotes();
-    BS.toast("Quote <strong>" + esc(ref) + "</strong> accepted. " + BS.plural(q.lines.length, "line") + ", " + pcs + " pieces added to your bag.", { label: "View bag", onAction: BS.openCart });
+    BS.toast("Quote <strong>" + esc(ref) + "</strong> accepted. " + BS.plural(q.lines.length, "line") + ", " + BS.plural(pcs, "piece") + " added to your bag.", { label: "View bag", onAction: BS.openCart });
     var done = $('[data-quote="' + ref + '"] .qcard__done button');
     if (done) done.focus();
   }
@@ -942,7 +933,7 @@
     function f(name, label, val, extra, span) {
       return '<div class="field' + (span ? " span-2" : "") + '"><label for="ad-' + k + "-" + name + '">' + label + "</label><input class=\"input\" id=\"ad-" + k + "-" + name + '" name="' + name + '" value="' + esc(val || "") + '"' + (extra || "") + '><p class="error" id="ad-' + k + "-" + name + '-err"></p></div>';
     }
-    return '<form class="addr addr--form" novalidate data-addr-form="' + esc(k) + '" aria-labelledby="ad-' + k + '-title">' +
+    return '<form class="addr addr--form" method="post" novalidate data-addr-form="' + esc(k) + '" aria-labelledby="ad-' + k + '-title">' +
       '<h3 class="addr__t" id="ad-' + k + '-title">' + (isNew ? "Add an address" : "Edit " + esc(a.label)) + "</h3>" +
       '<div class="form-grid">' +
         f("label", "Address name", a.label, ' autocomplete="off" placeholder="For example, Palladam unit"') +
@@ -1006,10 +997,17 @@
   /* =================================================== team */
   var TEAM = [
     { id: "ln", name: "Lakshmi Narayanan", title: "Maintenance Purchase", role: "Admin", limit: "₹2,00,000", note: "Approves orders above team limits", you: true, last: "Active now" },
-    { id: "sk", name: "R. Senthil Kumar", title: "Maintenance Engineer, ring frames", role: "Buyer", limit: "₹25,000", note: "Orders above this come to you", last: "Last order 13 Nov" },
+    { id: "sk", name: "R. Senthil Kumar", title: "Maintenance Engineer, ring frames", role: "Buyer", limit: "₹25,000", note: "Orders above this come to you", addr: "tpr" },
     { id: "pr", name: "Priya Raghavan", title: "Accounts", role: "Accounts", limit: "No ordering", note: "Sees invoices and statements", last: "Signed in 10 Nov" }
   ];
-  var ROLE_LIMIT = { Buyer: "₹25,000", Requester: "Needs approval", Accounts: "No ordering" };
+  var ROLE_LIMIT = { Admin: "₹2,00,000", Buyer: "₹25,000", Requester: "Needs approval", Accounts: "No ordering" };
+  // A buyer's "Last order" comes from the newest order to their site that the clock allows,
+  // so it never names a date the Orders list does not show.
+  function lastSeen(m) {
+    if (!m.addr) return m.last || "";
+    var o = orders().filter(function (x) { return x.sample && x.addr && x.addr.id === m.addr; })[0];
+    return o ? "Last order " + fmtDate(o.date, { short: true }) : "Active";
+  }
   function initials(n) { return n.replace(/^[A-Z]\.\s*/, "").split(/\s+/).map(function (w) { return w.charAt(0); }).join("").slice(0, 2).toUpperCase(); }
   function invites() { var v = BS.store.get("acctInvites", []); return Array.isArray(v) ? v.filter(function (m) { return m && typeof m.email === "string" && m.email; }) : []; }
   function renderTeam() {
@@ -1020,7 +1018,7 @@
         '<span class="member__who"><strong>' + esc(m.name) + (m.you ? ' <span class="muted">(you)</span>' : "") + "</strong><small>" + esc(m.title) + "</small></span>" +
         '<span class="member__role"><span class="member__k">Role</span>' + esc(m.role) + "</span>" +
         '<span class="member__limit"><span class="member__k">Approval limit</span><span class="num">' + esc(m.limit) + "</span><small>" + esc(m.note) + "</small></span>" +
-        '<span class="member__st"><span class="badge badge--green">Active</span><small>' + esc(m.last) + "</small></span></li>";
+        '<span class="member__st"><span class="badge badge--green">Active</span><small>' + esc(lastSeen(m)) + "</small></span></li>";
     }).join("") + inv.map(function (m) {
       return '<li class="member is-pending"><span class="avatar avatar--sm avatar--pending" aria-hidden="true">' + icon("user-plus") + "</span>" +
         '<span class="member__who"><strong class="member__email">' + esc(m.email) + "</strong><small>Invited " + fmtDate(m.at, { short: true }) + "</small></span>" +
@@ -1101,7 +1099,8 @@
     links.forEach(function (a) {
       var on = a.getAttribute("data-spy") === id;
       if (on) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current");
-      if (on && bar && bar.scrollWidth > bar.clientWidth + 4) {
+      // Re-centre the phone tab strip on the section in view, unless a tab has keyboard focus.
+      if (on && bar && bar.scrollWidth > bar.clientWidth + 4 && !bar.contains(document.activeElement)) {
         var left = a.parentNode.offsetLeft - (bar.clientWidth - a.parentNode.offsetWidth) / 2;
         bar.scrollTo({ left: Math.max(0, left), behavior: BS.reduceMotion ? "auto" : "smooth" });
       }
@@ -1125,6 +1124,11 @@
   window.addEventListener("resize", BS.debounce(spy, 120));
   links.forEach(function (a) {
     a.addEventListener("click", function () { setActive(a.getAttribute("data-spy")); lockUntil = Date.now() + 900; });
+  });
+  // Tabbing along the phone tab strip: keep the focused tab inside the visible part of the strip.
+  if (bar) bar.addEventListener("focusin", function (e) {
+    var a = e.target.closest && e.target.closest("a");
+    if (a && bar.scrollWidth > bar.clientWidth + 4) a.scrollIntoView({ inline: "nearest", block: "nearest", behavior: "auto" });
   });
 
   var userMoved = false;
@@ -1162,7 +1166,7 @@
     }
     if ((el = e.target.closest("[data-ord-clear]"))) { ordState = { status: "all", q: "" }; $("[data-ord-q]").value = ""; renderOrders(); $("[data-ord-q]").focus(); return; }
     if ((el = e.target.closest("[data-reorder]"))) { reorder(el.getAttribute("data-reorder"), el); return; }
-    if ((el = e.target.closest("[data-invoice]"))) { var o = find(el.getAttribute("data-invoice")); if (o) openInvoice(o); return; }
+    if ((el = e.target.closest("[data-invoice]"))) { var o = find(el.getAttribute("data-invoice")); if (o) openInvoice(o, el); return; }
     if ((el = e.target.closest("[data-unwish]"))) {
       var id = el.getAttribute("data-unwish"), p = BS.byId(id);
       BS.wish.toggle(id);

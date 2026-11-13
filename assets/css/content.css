@@ -11,6 +11,9 @@
 .ahero{padding:clamp(56px,7vw,96px) 0 0;text-align:center;overflow:hidden}
 .ahero__lede{max-width:660px;margin:22px auto 0;text-wrap:balance}
 .ahero__stage{position:relative;width:min(1180px,calc(100% - 2*var(--gutter)));margin:clamp(40px,5vw,64px) auto 0;aspect-ratio:21/9;border-radius:var(--r-xl);overflow:hidden;background:#dedfe1;isolation:isolate}
+/* The hero is above the fold, so it is never hidden waiting for a script: the photo is painted at once and only rises into place. */
+.ahero__stage{animation:ahero-rise 1.6s var(--ease) .15s both}
+@keyframes ahero-rise{from{transform:translateY(40px)}}
 .ahero__stage img{width:100%;height:100%;object-fit:cover;object-position:50% 55%}
 .ahero__stage::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,12,28,0) 45%,rgba(8,12,28,.6) 100%);z-index:0}
 .ahero__cap{position:absolute;left:0;right:0;bottom:clamp(20px,3.4vw,40px);z-index:1;display:flex;justify-content:center;gap:clamp(12px,2vw,24px);color:#fff;font-size:clamp(24px,3.6vw,48px);font-weight:700;letter-spacing:-.035em}
@@ -55,6 +58,7 @@
 .taxdemo dd span.is-wide{background:var(--mist);color:var(--ink)}
 .stockdemo li{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 18px;border-radius:var(--r-md);background:var(--mist);font-size:15px;font-weight:600}
 .stockdemo .stock{font-size:13px}
+.stockdemo .mono{white-space:nowrap}
 
 .agrid{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:clamp(200px,20vw,260px);gap:12px}
 .agrid li:first-child{grid-column:span 2;grid-row:span 2}
@@ -103,7 +107,7 @@
 .pick:hover span{border-color:var(--ink)}
 .pick input:checked+span{background:var(--ink);border-color:var(--ink);color:#fff}
 .pick input:checked+span .i{display:inline-block}
-.pick input:focus-visible+span{outline:3px solid rgba(31,79,209,.55);outline-offset:2px}
+.pick input:focus-visible+span{outline:2px solid var(--focus);outline-offset:2px}
 .lines[aria-invalid="true"] .pick span{border-color:var(--red)}
 .sell__foot{display:grid;gap:12px;margin-top:24px}
 .sell__foot .btn{justify-self:start}
@@ -197,8 +201,9 @@
 .nf{padding:clamp(48px,7vw,96px) 0 clamp(64px,8vw,112px);text-align:center}
 .nf__art{width:clamp(132px,16vw,180px);margin:0 auto 28px}
 .nf__art svg{width:100%;height:auto;overflow:visible}
-.nf__balls{transform-origin:120px 120px;animation:nf-turn 36s linear infinite}
-@keyframes nf-turn{to{transform:rotate(360deg)}}
+/* One short turn that settles with the gap at the top, then stops (under 5 s, so it needs no pause control). */
+.nf__balls{transform-origin:120px 120px;animation:nf-turn 3.6s var(--ease) .2s both}
+@keyframes nf-turn{from{transform:rotate(-120deg)}}
 .nf__ball{fill:#c9ced6;stroke:#8e949e;stroke-width:.8}
 .nf__shine{fill:#fff;opacity:.85}
 .nf__gap{fill:none;stroke:var(--orange);stroke-width:1.5;stroke-dasharray:3 3}
@@ -233,6 +238,8 @@
   /* tablet: an even 2 by 2 grid of promises */
   .promise,.promise--stock,.promise--photo,.promise:nth-child(3),.promise--people{grid-column:span 6;min-height:0}
   .promise--photo{min-height:360px}
+  /* half-width tiles: put the stock label under the part number so neither wraps mid-code */
+  .stockdemo li{flex-direction:column;align-items:flex-start;gap:4px;padding:12px 14px}
   .pol{grid-template-columns:minmax(0,1fr);gap:8px}
   .toc{position:static;background:var(--mist);border-radius:var(--r-lg);padding:18px 18px 12px}
   .toc__list{grid-template-columns:repeat(2,minmax(0,1fr));border-left:0;gap:0 12px}
@@ -246,7 +253,6 @@
   .ahero__cap{font-size:24px}
   .pillar{grid-template-columns:minmax(0,1fr);padding:22px 0}
   .promise{padding:24px 20px;border-radius:24px}
-  .stockdemo li{flex-direction:column;align-items:flex-start;gap:4px;padding:12px 14px}
   .agrid{gap:8px;grid-auto-rows:170px}
   .agrid li:first-child{grid-row:span 1;grid-column:span 2}
   .aind__in{padding:14px}

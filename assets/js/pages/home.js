@@ -4,9 +4,7 @@
   var BS = window.BS, $ = BS.$, $$ = BS.$$, esc = BS.esc, inr = BS.inr, icon = BS.icon;
   var P = BS.products;
 
-  /* hero: entrance, then the photo settles from 1.12x to 1x as the stage scrolls into view */
-  var hero = $(".hero");
-  requestAnimationFrame(function () { hero.classList.add("is-ready"); });
+  /* hero: the stage rises in with CSS alone (no script needed to show it), then the photo settles from 1.12x to 1x as it scrolls into view */
   var stage = $("[data-hero-stage]"), himg = $("[data-hero-img]");
   if (stage && himg) {
     if (BS.reduceMotion) himg.style.setProperty("--zoom", "1");
@@ -197,9 +195,9 @@
     ["ind-cement", "Cement and mining", "Spherical rollers, plummer blocks and adapter sleeves.", "shop.html?cat=roller-bearings&sub=spherical"],
     ["ind-automotive", "Automotive and tractors", "Tapered rollers, needle bearings and oil seals.", "shop.html?cat=roller-bearings&sub=tapered"],
     ["ind-agriculture", "Agriculture", "Pillow blocks, flange units and V-belts for farm machines.", "shop.html?cat=housed-units"],
-    ["ind-pumps", "Pumps and motors", "C3 deep groove bearings, mechanical seals and couplings.", "shop.html?q=C3"],
+    ["ind-pumps", "Pumps and motors", "C3 deep groove bearings and couplings.", "shop.html?q=C3"],
     ["ind-steel", "Steel and rolling mills", "Cylindrical rollers and high-temperature greases.", "shop.html?cat=roller-bearings&sub=cylindrical"],
-    ["ind-food", "Food processing", "Linear motion parts, chains and food-safe lubricants.", "shop.html?cat=power-transmission"],
+    ["ind-food", "Food processing", "Chains, linear motion parts and lubricants.", "shop.html?cat=power-transmission"],
     ["ind-paper", "Sugar and paper", "Chains, sprockets, couplings and heavy greases.", "shop.html?cat=power-transmission&sub=roller-chains"]
   ];
   $("[data-inds]").innerHTML = INDS.map(function (d, i) {
@@ -211,6 +209,17 @@
   var bl = BS.catalog.brands.map(function (b) { return "<li>" + esc(b.name.replace(/\s*\(.*\)$/, "")) + "</li>"; }).join("");
   var track = $("[data-brands]");
   track.innerHTML = bl + bl.replace(/<li>/g, '<li aria-hidden="true">');
+  // The list moves on its own, so offer a way to stop it (it also pauses on hover). With reduced motion it does not move at all.
+  var marquee = $("[data-marquee]"), mToggle = $("[data-marquee-toggle]");
+  if (marquee && mToggle && !BS.reduceMotion) {
+    mToggle.hidden = false;
+    mToggle.addEventListener("click", function () {
+      var paused = marquee.classList.toggle("is-paused");
+      var word = paused ? "Play" : "Pause";
+      mToggle.textContent = word;
+      mToggle.setAttribute("aria-label", word + " the moving brand list");
+    });
+  }
 
   /* testimonials */
   var R = BS.catalog.reviews || {};

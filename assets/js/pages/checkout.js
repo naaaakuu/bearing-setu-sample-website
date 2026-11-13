@@ -1,9 +1,13 @@
 /* Checkout: contact, delivery and payment steps, a live order summary with
    the CGST/SGST or IGST split, and the confirmation view with a GST invoice.
-   Uses BS.bag from cart.js (loaded first). Sample store: nothing is charged. */
+   Uses BS.bag from cart.js and window.BSA from account.js (both loaded first): the credit
+   balance, payment state and invoice come from the same order data as account.html and
+   support.html, so every page shows the same figures. Sample store: nothing is charged. */
 (function () {
   "use strict";
-  var BS = window.BS, bag = BS.bag, $ = BS.$, $$ = BS.$$, esc = BS.esc, inr = BS.inr, icon = BS.icon;
+  var BS = window.BS;
+  if (!BS) return; // site.js did not load: leave the static page as it is
+  var bag = BS.bag, $ = BS.$, $$ = BS.$$, esc = BS.esc, inr = BS.inr, icon = BS.icon;
   var doc = document;
   var root = $("[data-co]");
   if (!root || !bag) return;
@@ -42,7 +46,6 @@
 
   /* ------------------------------------------------------------ elements */
   var STEPS = ["contact", "delivery", "payment"];
-  var CREDIT = { limit: 200000, used: 53680, avail: 146320 };
   var PAY = { upi: "UPI", card: "Card or netbanking", credit: "30-day credit", neft: "Bank transfer (NEFT/RTGS)" };
   var els = {
     top: $("[data-co-top]"), flow: $("[data-co-flow]"), empty: $("[data-co-empty]"), done: $("[data-co-done]"),
@@ -82,14 +85,36 @@
   function fmtMobile(m) { return m.length === 10 ? m.slice(0, 5) + " " + m.slice(5) : m; }
   function gstinState(g) { return g && g.length >= 2 ? BY_CODE[g.slice(0, 2)] || "" : ""; }
   function totals(d) { d = d || data(); return bag.totals({ delivery: d.ship, state: d.state }); }
+  // "Tue 17 Nov", or "Mon 16 Nov to Fri 20 Nov" when the zone gives a window.
+  function span(a, b) { return BS.sameDay(a, b) ? bag.day(b) : bag.day(a) + " to " + bag.day(b); }
+  // Express only helps where standard delivery takes more than one working day.
+  function expressOK(pin) { var z = BS.transitDays(pin); return !z || z.days > 1; }
+  // How long delivery takes after dispatch, in the words of policies.html#shipping.
+  function transitText(pin, method) {
+    if (method === "express") return "The next working day after dispatch.";
+    var z = BS.transitDays(pin);
+    if (!z) return "1 to 5 working days after dispatch, depending on the pincode.";
+    var where = z.zone === "pune" ? " in the Pune region" : z.zone === "maharashtra" ? " within Maharashtra" : z.zone === "metro" ? " to " + z.city : "";
+    return (z.days === z.max ? BS.plural(z.days, "working day") : z.days + " to " + z.max + " working days") + " after dispatch" + where + ".";
+  }
+  /* 30-day credit: the same balance account.html shows (sample dues plus credit orders placed
+     on this device), in whole rupees as the account's credit tile shows it. */
+  function creditNow() {
+    var c = window.BSA ? BSA.credit() : { limit: BS.ACCOUNT.limit, used: BS.ACCOUNT.used };
+    var used = Math.round(c.used);
+    return { limit: c.limit, used: used, avail: Math.max(0, c.limit - used) };
+  }
 
   /* ---------------------------------------------------------- validation */
   var RULES = { contact: ["email", "mobile", "company", "gstin"], delivery: ["name", "line1", "pincode", "city", "state"], payment: ["pay", "upi", "terms"] };
   function credit(d, t) {
-    if (!d.business) return { ok: false, why: "For business purchases. Turn on ‘This is a business purchase’ and add your GSTIN." };
-    if (!GSTIN_RE.test(d.gstin) || !BY_CODE[d.gstin.slice(0, 2)]) return { ok: false, why: "Add a valid GSTIN in Contact to pay on credit." };
-    if (t.total > CREDIT.avail) return { ok: false, why: "This order is more than your available credit of " + inr(CREDIT.avail) + "." };
-    return { ok: true, why: "Sample limit " + inr(CREDIT.limit) + ". Available " + inr(CREDIT.avail) + "." };
+    if (!d.business) return { ok: false, fix: "gstin", why: "For verified business accounts. Turn on ‘This is a business purchase’ and add your GSTIN." };
+    if (!GSTIN_RE.test(d.gstin) || !BY_CODE[d.gstin.slice(0, 2)]) return { ok: false, fix: "gstin", why: "Add a valid GSTIN in Contact to pay on credit." };
+    // A valid GSTIN is not enough: credit needs a verified business account.
+    if (!BS.creditOK(d.gstin)) return { ok: false, fix: "apply", why: "30-day credit is for verified business accounts. This GSTIN does not have one with us yet." };
+    var c = creditNow();
+    if (t.total > c.avail) return { ok: false, why: "This order is more than your available credit of " + inr(c.avail) + "." };
+    return { ok: true, why: "Verified business account. Available " + inr(c.avail) + " of " + inr(c.limit) + "." };
   }
   function check(name, d) {
     var x = d[name];
@@ -128,7 +153,7 @@
         if (!x) return "Enter your UPI ID, or choose Any UPI app.";
         return /^[a-z0-9][a-z0-9._-]{1,255}@[a-z][a-z0-9]{1,63}$/i.test(x) ? "" : "Enter a UPI ID like ravi.kulkarni@okhdfcbank.";
       case "terms":
-        return d.terms ? "" : "Tick the box to agree to the terms of sale and return policy.";
+        return d.terms ? "" : "Tick the box to agree to the terms of use and the return policy.";
     }
     return "";
   }
@@ -176,9 +201,9 @@
       return esc(d.email) + '<span class="cstep__sep"> · </span><span class="nowrap">+91 ' + esc(fmtMobile(d.mobile)) + "</span>" + (d.business ? "<br>" + esc(d.company) + '<span class="cstep__sep"> · </span><span class="nowrap">GSTIN ' + esc(d.gstin) + "</span>" : "");
     }
     if (step === "delivery") {
-      var s = bag.schedule(totals(d).lines);
+      var s = bag.schedule(totals(d).lines, null, d.pincode);
       var when = d.ship === "pickup" ? "Pick up " + bag.day(s.pickup.ready) + " from " + bag.time(s.pickup.ready) :
-        d.ship === "express" ? "Express, arrives " + bag.day(s.express.on) : "Standard, arrives by " + bag.day(s.standard.to);
+        d.ship === "express" ? "Express, arrives " + bag.day(s.express.on) : "Standard, arrives " + span(s.standard.from, s.standard.to);
       return esc(d.name) + ", " + esc(d.city) + ', <span class="nowrap">' + esc(d.state) + " " + esc(d.pincode) + "</span><br>" + esc(when);
     }
     return "";
@@ -264,7 +289,15 @@
   }
   function renderSummary() {
     if (S.placed) return;
-    var d = data(), t = totals(d);
+    var d = data(), note = "";
+    // Express adds nothing in the Pune region, where standard already arrives the next working day.
+    if (d.ship === "express" && !expressOK(d.pincode)) {
+      $('input[name="ship"][value="standard"]').checked = true;
+      d = data();
+      note = "Standard delivery already arrives the next working day in the Pune region, so Express is not needed.";
+      saveDraft();
+    }
+    var t = totals(d);
     if (!t.lines.length) { showEmpty(); return; }
     els.lines.innerHTML = t.lines.map(oline).join("");
     var shipLabel = d.ship === "express" ? "Express delivery" : d.ship === "pickup" ? "Pick up in Pune" : "Standard delivery";
@@ -286,13 +319,18 @@
     if (std) std.innerHTML = t.sub >= BS.FREE_SHIP ? "Free" : inr(BS.SHIP_FEE) + "<small>Free above " + inr(BS.FREE_SHIP) + "</small>";
     renderShipDates(t);
     refreshPayment(d, t);
-    if (S.lastTotal != null && S.lastTotal !== t.total) say("Order total " + inr(t.total) + " including GST.");
+    // One announcement, so the Express note is not cut off by the new total.
+    var totalMsg = S.lastTotal != null && S.lastTotal !== t.total ? "Order total " + inr(t.total) + " including GST." : "";
+    if (note || totalMsg) say([note, totalMsg].filter(Boolean).join(" "));
     S.lastTotal = t.total;
   }
   function renderShipDates(t) {
-    var s = bag.schedule(t.lines);
-    $('[data-ship-date="standard"]').textContent = "Arrives " + bag.day(s.standard.from) + " to " + bag.day(s.standard.to);
-    $('[data-ship-date="express"]').textContent = "Arrives " + bag.day(s.express.on) + " in metro cities";
+    var s = bag.schedule(t.lines, null, data().pincode);
+    $('[data-ship-date="standard"]').textContent = "Arrives " + span(s.standard.from, s.standard.to) + (s.standard.known ? "" : ", depending on the pincode");
+    var ex = $('input[name="ship"][value="express"]');
+    ex.disabled = !s.express.useful;
+    $('[data-ship-date="express"]').textContent = s.express.useful ? "Arrives " + bag.day(s.express.on) :
+      "Not needed in the Pune region. Standard arrives " + bag.day(s.standard.to) + ".";
     var r = s.pickup.ready, today = r.toDateString() === new Date().toDateString();
     $('[data-ship-date="pickup"]').textContent = "Ready " + (today ? "today" : bag.day(r)) + " from " + bag.time(r) + ", Bhosari MIDC";
     $("[data-ship-promise]").innerHTML = icon("truck") + "<span>" + esc(bag.promise(s)) + "</span>";
@@ -308,12 +346,25 @@
     $("[data-credit-why]").textContent = c.why;
     var popt = radio.closest(".popt");
     popt.classList.toggle("is-disabled", !c.ok);
+    // One way forward under a disabled credit option: add a GSTIN, or apply for a business account.
+    var want = c.ok ? "" : c.fix || "";
     var fix = $("[data-credit-fix]", popt);
-    if (!c.ok && (!d.business || !GSTIN_RE.test(d.gstin))) {
-      if (!fix) popt.insertAdjacentHTML("beforeend", '<button class="popt__fix textlink small" type="button" data-credit-fix>Add GSTIN in Contact</button>');
-    } else if (fix) fix.remove();
+    if (fix && fix.getAttribute("data-credit-fix") !== want) { fix.remove(); fix = null; }
+    if (want && !fix) popt.insertAdjacentHTML("beforeend", want === "gstin" ?
+      '<button class="popt__fix textlink small" type="button" data-credit-fix="gstin">Add GSTIN in Contact</button>' :
+      '<a class="popt__fix textlink small" href="business.html#apply" data-credit-fix="apply">Open a business account</a>');
+    // The credit panel shows the live balance, the same figures as account.html.
+    var cn = creditNow(), pct = cn.limit ? Math.min(100, (cn.used / cn.limit) * 100) : 0;
+    $("[data-credit-limit]").textContent = inr(cn.limit);
+    $("[data-credit-used]").textContent = inr(cn.used);
+    $("[data-credit-avail]").textContent = inr(cn.avail);
+    var bar = $("[data-credit-bar]");
+    bar.setAttribute("aria-valuemax", String(cn.limit));
+    bar.setAttribute("aria-valuenow", String(cn.used));
+    bar.setAttribute("aria-valuetext", inr(cn.used) + " used of " + inr(cn.limit));
+    $("span", bar).style.width = pct.toFixed(2) + "%";
     var due = new Date(); due.setDate(due.getDate() + 30);
-    $("[data-credit-due]").textContent = "Pay by " + bag.date(due) + ". Available after this order: " + inr(Math.max(0, CREDIT.avail - t.total)) + ".";
+    $("[data-credit-due]").textContent = "Pay by " + bag.date(due) + ". Available after this order: " + inr(Math.max(0, cn.avail - t.total)) + ".";
   }
   function showPayBody() {
     var cur = $('input[name="pay"]:checked');
@@ -334,7 +385,7 @@
     var links = [];
     links.push(saved ? '<a class="more" href="cart.html#saved">' + BS.plural(saved, "part") + " saved for later</a>" : '<a class="more" href="cart.html">Back to your bag</a>');
     if (last) links.push('<a class="more" href="checkout.html?order=' + encodeURIComponent(last.id) + '">Your last order, ' + esc(last.id) + "</a>");
-    els.empty.innerHTML = '<div class="empty">' + icon("handbag") + '<h2 class="h3">Your bag is empty.</h2><p>Add the parts you need, then come back here to check out. Your contact and delivery details stay saved in this browser.</p>' +
+    els.empty.innerHTML = (BS.storageOK ? "" : bag.storageNote()) + '<div class="empty">' + icon("handbag") + '<h2 class="h3">Your bag is empty.</h2><p>Add the parts you need, then come back here to check out.' + (BS.storageOK ? " Your contact and delivery details stay saved in this browser." : "") + "</p>" +
       '<div class="co-empty__ctas"><a class="btn" href="shop.html">Shop parts</a><a class="btn btn--quiet" href="quick-order.html">Quick order</a></div>' +
       (links.length ? '<div class="co-empty__links">' + links.join("") + "</div>" : "") + "</div>";
   }
@@ -362,6 +413,7 @@
     if (r) r.checked = true;
     updateGstinHint();
     updatePinHint();
+    S.pinFull = digits(els.pin.value).length === 6;
   }
 
   /* ---------------------------------------------------------- field UX */
@@ -385,11 +437,17 @@
     var pin = digits(els.pin.value);
     if (els.pin.value !== pin) els.pin.value = pin;
     updatePinHint();
-    if (pin.length !== 6) return;
-    var st = stateFromPin(pin), city = CITY[pin.slice(0, 3)];
-    // A state we guessed (from the GSTIN or an earlier pincode) gives way to the pincode; one the buyer chose does not.
-    if (st && (!els.state.value || (S.stateAuto && els.state.value !== st))) { els.state.value = st; S.stateAuto = true; if (S.tried.delivery) setError("state", ""); renderSummary(); }
-    if (city && (!els.city.value.trim() || els.city.value === S.cityAuto)) { els.city.value = city; S.cityAuto = city; if (S.tried.delivery) setError("city", ""); }
+    var full = pin.length === 6;
+    if (full) {
+      var st = stateFromPin(pin), city = CITY[pin.slice(0, 3)];
+      // A state we guessed (from the GSTIN or an earlier pincode) gives way to the pincode; one the buyer chose does not.
+      if (st && (!els.state.value || (S.stateAuto && els.state.value !== st))) { els.state.value = st; S.stateAuto = true; if (S.tried.delivery) setError("state", ""); }
+      if (city && (!els.city.value.trim() || els.city.value === S.cityAuto)) { els.city.value = city; S.cityAuto = city; if (S.tried.delivery) setError("city", ""); }
+    }
+    // Delivery dates and Express follow the pincode's zone, even when the state stays the same
+    // (411001 to 400001, or a state already set from the GSTIN).
+    if (full || S.pinFull) renderSummary();
+    S.pinFull = full;
   }
 
   /* --------------------------------------------------------- place order */
@@ -434,7 +492,7 @@
     }, 1200);
   }
   function buildOrder() {
-    var d = data(), t = totals(d), now = new Date(), s = bag.schedule(t.lines, now);
+    var d = data(), t = totals(d), now = new Date(), s = bag.schedule(t.lines, now, d.pincode);
     var orders = bag.arr("orders");
     var id;
     do { id = "BS-" + bag.yymm(now) + "-" + bag.rand4(); } while (orders.some(function (o) { return o && o.id === id; }));
@@ -449,7 +507,8 @@
       address: { name: d.name, line1: d.line1, line2: d.line2, city: d.city, state: d.state, stateCode: CODE_OF[d.state], pincode: d.pincode },
       pincode: d.pincode,
       delivery: { method: d.ship, label: bag.SHIP[d.ship].label, fee: t.ship, dispatch: s.dispatch.toISOString(), from: d.ship === "standard" ? s.standard.from.toISOString() : eta.toISOString(), eta: eta.toISOString() },
-      payment: { method: d.pay, label: PAY[d.pay], mode: d.pay === "upi" ? d.upiMode : null, upi: d.pay === "upi" && d.upiMode === "id" ? d.upi : null },
+      // status: paid (UPI, card), credit (due in 30 days) or awaiting (a bank transfer not yet received)
+      payment: { method: d.pay, label: PAY[d.pay], status: d.pay === "neft" ? "awaiting" : d.pay === "credit" ? "credit" : "paid", mode: d.pay === "upi" ? d.upiMode : null, upi: d.pay === "upi" && d.upiMode === "id" ? d.upi : null },
       invoice: "INV/" + pad(fy % 100) + "-" + pad((fy + 1) % 100) + "/0" + id.slice(-4),
       placeOfSupply: d.state + " (" + CODE_OF[d.state] + ")"
     };
@@ -510,7 +569,7 @@
         ["Packed and dispatched", (dispatch > bag.addWorking(placed, 1) ?
           "From " + bag.dayLong(dispatch) + ", once every part is ready and the transfer has arrived." :
           "The same day if the transfer arrives by 4&nbsp;pm, Monday to Saturday.") + " Tracking by SMS and email.", false],
-        ["Delivered", dl.method === "express" ? "Next working day after dispatch in metro cities." : "2 to 4 working days after dispatch.", false]
+        ["Delivered", transitText(o.address.pincode || o.pincode, dl.method), false]
       ];
     } else if (dl.method === "pickup") {
       steps = [
@@ -569,7 +628,7 @@
             "<div><dt>Invoice</dt><dd class=\"mono\">" + esc(o.invoice) + "</dd></div>" +
             "<div><dt>" + (o.delivery.method === "pickup" ? "Billing address" : "Deliver to") + "</dt><dd>" + addrHTML(a) + "</dd></div>" +
             "<div><dt>Delivery</dt><dd>" + esc(o.delivery.label) + (o.delivery.fee ? ", " + inr(o.delivery.fee) : ", free") + "</dd></div>" +
-            "<div><dt>Payment</dt><dd>" + esc(o.payment.label) + "</dd></div>" +
+            "<div><dt>Payment</dt><dd>" + esc(payLine(o)) + "</dd></div>" +
             (c.business ? "<div><dt>Billed to</dt><dd>" + esc(c.company) + '<br><span class="mono">' + esc(c.gstin) + "</span>" + (c.po ? "<br>PO " + esc(c.po) : "") + "</dd></div>" : "") +
             "<div><dt>GST</dt><dd>" + tax + "<br><span class=\"muted\">Place of supply " + esc(o.placeOfSupply) + "</span></dd></div>" +
           "</dl>" +
@@ -585,25 +644,10 @@
       "</div>" +
     "</div></section>";
   }
-  function invoiceHTML(o) {
-    var c = o.contact, a = o.address, t = o.totals, placed = new Date(o.date);
-    var billTo = (c.business ? "<strong>" + esc(c.company) + "</strong><br>GSTIN " + esc(c.gstin) + "<br>" : "<strong>" + esc(a.name) + "</strong><br>Unregistered buyer<br>") + esc(a.line1) + (a.line2 ? "<br>" + esc(a.line2) : "") + "<br>" + esc(a.city) + ", " + esc(a.state) + " " + esc(a.pincode) + "<br>" + esc(c.email);
-    var shipTo = o.delivery.method === "pickup" ? "<strong>Collect from Bearingsetu</strong><br>Bhosari MIDC, Pune 411026<br>Maharashtra" : "<strong>" + esc(a.name) + "</strong><br>" + esc(a.line1) + (a.line2 ? "<br>" + esc(a.line2) : "") + "<br>" + esc(a.city) + ", " + esc(a.state) + " " + esc(a.pincode) + "<br>+91 " + esc(fmtMobile(c.mobile));
-    var meta = [["Invoice date", bag.date(placed)], ["Order", '<span class="mono">' + esc(o.id) + "</span>"]];
-    if (c.po) meta.push(["PO number", esc(c.po)]);
-    meta.push(["Place of supply", esc(o.placeOfSupply)], ["Payment", esc(o.payment.label)], ["Reverse charge", "No"]);
-    return bag.docHTML({
-      kind: "invoice", no: o.invoice, meta: meta,
-      parties: [{ h: "Bill to", html: billTo }, { h: "Ship to", html: shipTo }],
-      lines: bag.docLines(o.lines),
-      totals: Object.assign({}, t, { coupon: t.coupon ? { code: t.coupon } : null, shipLabel: o.delivery.label }),
-      terms: [
-        "GST is charged at 18% on all items. " + (t.intra ? "Intra-state supply: CGST 9% and SGST 9%." : "Inter-state supply: IGST 18%."),
-        "Unused parts in their original packing can be returned within 7 days of delivery.",
-        "Certified that the particulars given above are true and correct. This is a computer-generated invoice and needs no signature."
-      ],
-      note: "Sample document from the Bearingsetu demo store. Not a valid tax invoice. Questions: orders@bearingsetu.com"
-    });
+  // Payment state in the words account.html and tracking use: "UPI · paid", "… · awaiting transfer".
+  function payLine(o) {
+    var n = window.BSA && BSA.find(o.id);
+    return n ? BSA.payText(n) : (o.payment && o.payment.label) || "";
   }
   function showDone(o, fresh) {
     S.placed = o;
@@ -636,7 +680,7 @@
       return;
     }
     if ((el = e.target.closest("[data-step-edit]"))) { goTo(el.getAttribute("data-step-edit")); return; }
-    if (e.target.closest("[data-credit-fix]")) {
+    if (e.target.closest('[data-credit-fix="gstin"]')) {
       if (!els.biz.checked) { els.biz.checked = true; $("[data-biz]").hidden = false; }
       goTo("contact");
       setTimeout(function () { ($("#co-company").value.trim() ? els.gstin : $("#co-company")).focus(); }, 30);
@@ -672,7 +716,10 @@
       return;
     }
     if ((el = e.target.closest("[data-invoice]")) && S.placed) {
-      bag.openDoc({ kicker: "Tax invoice", title: S.placed.invoice, file: S.placed.invoice.replace(/\//g, "-"), html: invoiceHTML(S.placed), trigger: el });
+      // The account's invoice template, filled from the same saved order: one document everywhere.
+      var n = window.BSA && BSA.find(S.placed.id);
+      if (n) BSA.openInvoice(n, el);
+      else BS.toast("We couldn’t open the invoice in this browser. Check that site storage is allowed.", { icon: "warning-circle" });
       return;
     }
     if ((el = e.target.closest("[data-copy]"))) {

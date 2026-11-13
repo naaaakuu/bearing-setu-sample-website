@@ -32,23 +32,23 @@
     { id: "payments", name: "Payments and credit", items: [
       ["methods", "Which payment methods do you accept?", "UPI, cards and netbanking on Razorpay’s secure payment page, NEFT or RTGS bank transfer, and 30-day credit for verified business accounts. We never ask for card numbers, OTPs or bank passwords by phone, email or WhatsApp."],
       ["credit", "How does 30-day credit work?", 'Open a <a href="business.html">business account</a> with your GSTIN. Once it is verified, you pay each invoice 30 days from the invoice date. Your credit limit depends on your GST returns and trade references. See what is used and what is due under <a href="account.html#invoices">Invoices in your account</a>.'],
-      ["invoice", "Will I get a GST invoice?", "Yes, with every order. Add your GSTIN at checkout and the invoice carries both GSTINs, HSN codes and the tax split, so you can claim input tax credit. Invoices can be downloaded from your account at any time."],
+      ["invoice", "Will I get a GST invoice?", "Yes, with every order. Add your GSTIN at checkout and the invoice carries both GSTINs, HSN codes, batch numbers and the tax split, so you can claim input tax credit. Invoices can be downloaded from your account at any time."],
       ["igst", "Why do some invoices show IGST and others CGST and SGST?", "We ship from Pune, Maharashtra. Deliveries within Maharashtra carry CGST 9% plus SGST 9%. Deliveries to any other state carry IGST 18%. The total tax is 18% either way."],
       ["incgst", "Can I see prices including GST?", 'Prices show before GST by default, because most of our buyers claim input tax credit. Switch to prices including GST in <a href="account.html#settings">account settings</a>.']
     ] },
     { id: "shipping", name: "Shipping and delivery", items: [
       ["dispatch", "When will my order be dispatched?", "Order by 4 pm, Monday to Saturday, and in-stock parts are dispatched the same day. Orders placed after 4 pm or on a Sunday go out on the next working day. Made-to-order items show their lead time on the product page."],
       ["cost", "How much does dispatch cost?", "Dispatch is free on orders of ₹5,000 or more before GST. Below that, it costs ₹120 per order."],
-      ["time", "How long does delivery take?", "Standard delivery takes 2 to 4 working days after dispatch to most pincodes. Express delivers the next working day in metro cities for ₹350. You can also pick up from our Pune warehouse, ready in 4 hours."],
+      ["time", "How long does delivery take?", 'Standard delivery takes 1 working day after dispatch in the Pune region, 2 working days to the rest of Maharashtra, Delhi, Bengaluru, Chennai, Hyderabad and Kolkata, and 4 to 5 working days elsewhere. Express, for ₹350, arrives the next working day after dispatch outside the Pune region. You can also pick up from our Pune warehouse, usually ready in about 4 hours. See the <a href="policies.html#shipping">delivery table</a>.'],
       ["tracking", "How do I track my order?", 'Use <a href="#track" data-jump="track">Track an order</a> on this page with your order number and delivery pincode. Once the order is dispatched you see the courier and AWB number. Email and WhatsApp updates can be switched on in <a href="account.html#settings">account settings</a>.'],
       ["air", "Do you send greases and oils by air?", "No. Greases and oils travel by road, which can add a day in some regions. Aerosol sprays are never sent by air."]
     ] },
     { id: "returns", name: "Returns", items: [
-      ["what", "What can I return?", "Unused parts in their original packing, within 7 days of delivery. Seals, labels and boxes should be intact so the part can go back on the shelf."],
-      ["not", "What cannot be returned?", "Parts that have been fitted or run, opened tins, pails or drums of grease and oil, belts and chains cut to length, and items made to order or sourced specially on a quote."],
+      ["what", "What can I return?", "Unused parts in their original packing, within 7 days of delivery. Seals, labels and boxes should be intact so the part can go back on the shelf. A damaged or wrong part must be reported within 48 hours of delivery."],
+      ["not", "What cannot be returned?", "Parts that have been fitted, run, greased or heated, or damaged after delivery. Greases and oils once the tin, pail or drum is opened. Chains and belts cut or made to length, and seals made to drawing. Items made to order or sourced specially on a quote."],
       ["start", "How do I start a return?", 'Fill in the <a href="#returns" data-jump="returns">return request</a> on this page with your order number and the item. You get a reference straight away, and we email pickup details within one working day.'],
       ["refund", "When do I get my money back?", "After the part reaches our Pune warehouse and passes inspection, we refund your original payment method within 5 working days. For orders on credit, we issue a credit note against your account."],
-      ["damaged", "What if a part arrives damaged, or I received a different part?", "Tell us within 7 days of delivery, with photos of the part and the box. We replace it or refund it in full, including any dispatch charge."]
+      ["damaged", "What if a part arrives damaged, or I received a different part?", "Tell us within 48 hours of delivery, with photos of the part, its label and the box. We replace it or refund it in full, including any dispatch charge, and we pay for the return."]
     ] },
     { id: "technical", name: "Parts and technical", items: [
       ["c3", "What does C3 clearance mean, and do I need it?", 'C3 means the bearing has more internal radial clearance than normal (CN). The extra room allows for heat and a tight fit on the shaft, so C3 is common in electric motors, pumps, fans and vibrating screens. Replace like for like: if the old bearing says C3, order C3. The same bearing is written <span class="mono">6205-2RS1/C3</span> by SKF, <span class="mono">6205-2RSR-C3</span> by FAG and <span class="mono">6205DDUC3</span> by NSK.'],
@@ -210,7 +210,7 @@
     return { ok: okId && okPin, order: o, focus: !okId ? tId : !okPin ? tPin : null };
   }
   function stepHTML(s) {
-    var when = s.at ? fmt.dt(s.at) : s.expected ? "Expected " + fmt.rel(s.expected) + (/packed|dispatched/.test(s.key) && /today|tomorrow/.test(fmt.rel(s.expected)) ? ", by " + fmt.time(s.expected) : "") : s.state === "void" ? "Did not happen" : "Not yet";
+    var when = s.at ? fmt.dt(s.at) : s.expected ? "Expected " + fmt.rel(s.expected) + (/packed|dispatched/.test(s.key) && /today|tomorrow/.test(fmt.rel(s.expected)) ? ", by " + fmt.time(s.expected) : "") : s.state === "void" ? "Did not happen" : s.wait || "Not yet";
     var cls = "tl__step is-" + s.state + (s.key === "delivered" && s.state !== "next" && s.state !== "void" && s.at ? " is-final" : "");
     return '<li class="' + cls + '"' + (s.state === "current" ? ' aria-current="step"' : "") + ">" +
       '<span class="tl__dot" aria-hidden="true">' + (s.state === "done" || (s.state === "current" && s.key === "delivered") ? icon("check") : "") + "</span>" +
@@ -237,7 +237,7 @@
         '<span class="badge ' + (B[o.status] || "") + '">' + esc(o.status) + "</span></header>" +
       (tl.cancelled ? '<p class="notice notice--warm trk-card__note">' + icon("info") + "<span>" + esc(o.note || "This order was cancelled.") + "</span></p>" : "") +
       '<ol class="tl' + (tl.cancelled ? " tl--void" : "") + '">' + tl.steps.map(stepHTML).join("") + "</ol>" +
-      '<div class="trk-items"><h4 class="trk-items__t">' + BS.plural(o.lines.length, "part") + ", " + pcs + " pieces</h4><ul>" +
+      '<div class="trk-items"><h4 class="trk-items__t">' + BS.plural(o.lines.length, "part") + ", " + BS.plural(pcs, "piece") + "</h4><ul>" +
         o.lines.map(function (l) {
           return '<li><span class="trk-items__img">' + (l.p ? BS.imgTag(l.p.img, { alt: "", sizes: "44px" }) : icon("cube")) + '</span><span class="trk-items__n">' +
             (l.p ? '<a href="' + BS.url(l.p) + '">' + esc(l.brand + " " + l.pn) + "</a>" : "<strong>" + esc(l.pn) + "</strong>") + "<small>" + esc(l.title) + '</small></span><span class="trk-items__q num">× ' + l.qty + "</span></li>";
@@ -330,6 +330,12 @@
   rOrder.addEventListener("change", lookupReturnOrder);
   rOrder.addEventListener("input", BS.debounce(function () { if (ID_RE.test(normId(rOrder.value))) lookupReturnOrder(); }, 250));
   function needsPhoto() { return /Damaged|different/i.test(rReason.value); }
+  // Damage in transit or a wrong part must be reported within 48 hours of delivery
+  // (policies.html#returns); other returns have 7 days.
+  var REPORT_MS = 48 * 3600e3;
+  function lateReport(reason) {
+    return !!(rFound && rFound.ev.delivered && /Damaged|different/i.test(reason) && Date.now() - rFound.ev.delivered.getTime() > REPORT_MS);
+  }
   function renderFiles() {
     var fs = Array.prototype.slice.call(rPhotos.files || []);
     rFiles.innerHTML = fs.map(function (f) { return "<li>" + icon("upload-simple") + "<span>" + esc(f.name) + "</span><small>" + (f.size > 1048576 ? (f.size / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(f.size / 1024)) + " KB") + "</small></li>"; }).join("");
@@ -365,7 +371,11 @@
       if (rFound && rItemSel.value !== "") { var l = rFound.lines[+rItemSel.value]; if (l && n > l.qty) return "You ordered " + l.qty + " of these. Enter " + l.qty + " or fewer."; }
       return "";
     },
-    reason: function (v) { return v ? "" : "Choose a reason for the return."; },
+    reason: function (v) {
+      if (!v) return "Choose a reason for the return.";
+      if (lateReport(v)) return "A damaged or wrong part must be reported within 48 hours of delivery, and order " + rFound.id + " was delivered on " + fmt.date(rFound.ev.delivered) + ". Request a call back below and a specialist will look into it.";
+      return "";
+    },
     cond: function (v, el) { return el.checked ? "" : "Returns are accepted only for unused parts in original packing. For a fitted part that failed, request a call back."; },
     photos: function () { return photoRule(); }
   };
@@ -395,7 +405,7 @@
     }, 900);
   });
   rForm.addEventListener("submit", function () { rTried = true; }, true);
-  rReason.addEventListener("change", function () { if (rTried) F.setErr(rPhotos, photoRule()); });
+  rReason.addEventListener("change", function () { if (rTried) { F.setErr(rPhotos, photoRule()); F.setErr(rReason, rRules.reason(rReason.value)); } });
   rItemSel.addEventListener("change", function () {
     var l = rFound && rItemSel.value !== "" ? rFound.lines[+rItemSel.value] : null;
     if (l) { rQty.max = l.qty; if (+rQty.value > l.qty) rQty.value = l.qty; }

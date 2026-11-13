@@ -4,7 +4,9 @@
    print-ready documents); the second half runs only on cart.html. */
 (function () {
   "use strict";
-  var BS = window.BS, $ = BS.$, $$ = BS.$$, esc = BS.esc, inr = BS.inr, icon = BS.icon;
+  var BS = window.BS;
+  if (!BS) return; // site.js did not load: leave the static page as it is
+  var $ = BS.$, $$ = BS.$$, esc = BS.esc, inr = BS.inr, icon = BS.icon;
   var doc = document;
   var bag = (BS.bag = {});
 
@@ -15,6 +17,11 @@
   function arr(key) { var v = BS.store.get(key, []); return Array.isArray(v) ? v : []; }
   bag.arr = arr;
   bag.r2 = r2;
+  // With site storage blocked, the bag lives only until the page changes. The bag and checkout
+  // empty states say so, since that is where a buyer lands after the bag was lost.
+  bag.storageNote = function () {
+    return '<p class="notice notice--warm bag-storage" role="status">' + icon("warning-circle") + "<span>Your browser is blocking storage for this site, so the bag empties each time you change page. Allow site data for this site in your browser settings to keep your bag.</span></p>";
+  };
 
   /* Heal storage written by older versions or edited by hand, before the shared
      cart code reads it: non-arrays, nulls, unknown ids, string or negative
@@ -114,14 +121,10 @@
   var DAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   var DAYL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   var MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  function working(d) { return d.getDay() !== 0; }
   function startOf(d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
   function sameDay(a, b) { return startOf(a).getTime() === startOf(b).getTime(); }
-  bag.addWorking = function (d, n) {
-    var x = startOf(d);
-    while (n > 0) { x.setDate(x.getDate() + 1); if (working(x)) n--; }
-    return x;
-  };
+  // Working-day maths and the dispatch schedule live in site.js (BS.addWorking, BS.schedule).
+  bag.addWorking = BS.addWorking;
   bag.day = function (d) { return DAY[d.getDay()] + " " + d.getDate() + " " + MON[d.getMonth()]; };
   bag.dayLong = function (d) { return DAYL[d.getDay()] + ", " + d.getDate() + " " + MON[d.getMonth()]; };
   bag.date = function (d) { return d.getDate() + " " + MON[d.getMonth()] + " " + d.getFullYear(); };
@@ -137,35 +140,8 @@
     if (sameDay(d, t)) return "tomorrow, " + bag.day(d);
     return bag.dayLong(d);
   };
-  // Dispatch and delivery dates for a set of cart lines. Sundays are not working days.
-  bag.schedule = function (lines, now) {
-    now = now || new Date();
-    var cutoff = new Date(now); cutoff.setHours(16, 0, 0, 0);
-    var beforeCutoff = working(now) && now < cutoff;
-    var base = beforeCutoff ? startOf(now) : bag.addWorking(now, 1);
-    var lead = 0, waiting = 0;
-    (lines || []).forEach(function (l) {
-      var p = l.p, days = p.stock >= l.qty ? (p.ship || 0) : Math.max(p.ship || 0, 7);
-      if (days > 0) waiting++;
-      lead = Math.max(lead, days);
-    });
-    var dispatch = lead ? bag.addWorking(base, lead) : base;
-    var open = new Date(now); open.setHours(9, 30, 0, 0);
-    var close = new Date(now); close.setHours(19, 0, 0, 0);
-    var ready;
-    if (!lead && working(now) && now < open) ready = new Date(open.getTime() + 4 * 3600e3);
-    else if (!lead && working(now) && now.getTime() + 4 * 3600e3 <= close.getTime()) {
-      ready = new Date(now.getTime() + 4 * 3600e3);
-      ready.setMinutes(Math.ceil(ready.getMinutes() / 30) * 30, 0, 0);
-    } else { ready = lead ? new Date(dispatch) : bag.addWorking(now, 1); ready.setHours(13, 30, 0, 0); }
-    return {
-      now: now, cutoff: cutoff, beforeCutoff: beforeCutoff, lead: lead, waiting: waiting, dispatch: dispatch,
-      sameDay: sameDay(dispatch, now),
-      standard: { from: bag.addWorking(dispatch, 2), to: bag.addWorking(dispatch, 4) },
-      express: { on: bag.addWorking(dispatch, 1) },
-      pickup: { ready: ready }
-    };
-  };
+  // Dispatch and delivery dates for a set of cart lines: bag.schedule(lines, now, pincode).
+  bag.schedule = BS.schedule;
   // One line about when the order leaves the warehouse.
   bag.promise = function (s) {
     if (s.lead) {
@@ -182,72 +158,61 @@
   };
 
   /* ------------------------------------------------------- amount in words */
-  var ONES = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
-  var TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
-  function w99(n) { return n < 20 ? ONES[n] : TENS[Math.floor(n / 10)] + (n % 10 ? "-" + ONES[n % 10] : ""); }
-  function w999(n) { var h = Math.floor(n / 100), r = n % 100; return (h ? ONES[h] + " hundred" + (r ? " " : "") : "") + (r ? w99(r) : ""); }
-  function words(n) {
-    if (!n) return "zero";
-    var out = [], cr = Math.floor(n / 1e7); n %= 1e7;
-    var lk = Math.floor(n / 1e5); n %= 1e5;
-    var th = Math.floor(n / 1000); n %= 1000;
-    if (cr) out.push(words(cr) + " crore");
-    if (lk) out.push(w99(lk) + " lakh");
-    if (th) out.push(w99(th) + " thousand");
-    if (n) out.push(w999(n));
-    return out.join(" ");
-  }
-  bag.inWords = function (x) {
-    var rs = Math.floor(x + 1e-9), ps = Math.round((x - rs) * 100);
-    var s = words(rs);
-    return "Rupees " + s.charAt(0).toUpperCase() + s.slice(1) + (ps ? " and " + words(ps) + " paise" : "") + " only";
-  };
+  bag.inWords = BS.inWords; // shared with account.html, in site.js
 
   /* ------------------------------------------------------------ documents */
-  bag.SELLER = { name: "Bearingsetu", lines: ["Bhosari MIDC", "Pune 411026, Maharashtra"], gstin: "27AAACB0000A1Z5", state: "Maharashtra (27)", email: "orders@bearingsetu.com" };
+  bag.SELLER = BS.SELLER; // one seller identity for every document, in site.js
   var LOGO = '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="none" stroke="#16255c" stroke-width="10" stroke-dasharray="9 8.28"/><circle cx="50" cy="50" r="38" fill="#16255c"/><circle cx="50" cy="50" r="29" fill="#fff"/><g fill="#16255c"><circle cx="71" cy="50" r="5"/><circle cx="64.85" cy="64.85" r="5"/><circle cx="50" cy="71" r="5"/><circle cx="35.15" cy="64.85" r="5"/><circle cx="29" cy="50" r="5"/><circle cx="35.15" cy="35.15" r="5"/><circle cx="50" cy="29" r="5"/><circle cx="64.85" cy="35.15" r="5"/></g><circle cx="50" cy="50" r="11" fill="#16255c"/><path d="M6 74 Q50 50 98 60" fill="none" stroke="#f29a0e" stroke-width="7" stroke-linecap="round"/></svg>';
 
   function money(n) { return inr(n, 2); }
   function docRow(label, value, cls) { return '<div class="' + (cls || "") + '"><dt>' + label + "</dt><dd>" + value + "</dd></div>"; }
 
-  /* data: { kind: "quote"|"invoice", no, date, meta: [[label, value]], parties: [{h, html}],
-             lines: [{name, desc, hsn, qty, unit, rate, amount}], totals, terms: [], note } */
+  /* The one template for every quotation and tax invoice. account.js fills it for invoices
+     (BSA.invoiceHTML), so checkout and the account always print the same document.
+     data: { kind: "quote"|"invoice", no, date, meta: [[label, value]], parties: [{h, html}],
+             lines: [{name, desc, hsn, qty, unit, rate, amount, batch?}], totals, terms: [], note }
+     totals may carry roundOff (whole-rupee invoices) and coupon.code. */
   bag.docHTML = function (d) {
     var t = d.totals;
+    var batched = d.lines.some(function (l) { return l.batch; });
     var rows = d.lines.map(function (l, i) {
-      return "<tr><td>" + (i + 1) + '</td><td><strong>' + esc(l.name) + "</strong><span>" + esc(l.desc) + '</span></td><td class="mono">' + esc(l.hsn) + '</td><td class="r">' + l.qty + " " + esc(l.unit) + '</td><td class="r">' + money(l.rate) + '</td><td class="r">' + money(l.amount) + "</td></tr>";
+      return "<tr><td>" + (i + 1) + '</td><td><strong>' + esc(l.name) + "</strong><span>" + esc(l.desc) + "</span>" + (l.batch ? '<span class="doc__batch">Batch ' + esc(l.batch) + "</span>" : "") + '</td><td class="mono">' + esc(l.hsn) + '</td><td class="r">' + l.qty + " " + esc(l.unit) + '</td><td class="r">' + money(l.rate) + '</td><td class="r">' + money(l.amount) + "</td></tr>";
     }).join("");
     if (t.ship) rows += '<tr><td></td><td><strong>Dispatch charges</strong><span>' + esc(t.shipLabel || "Standard delivery") + '</span></td><td class="mono">9965</td><td class="r">1</td><td class="r">' + money(t.ship) + '</td><td class="r">' + money(t.ship) + "</td></tr>";
     var tax = t.intra ? docRow("CGST 9%", money(t.cgst)) + docRow("SGST 9%", money(t.sgst)) :
       t.intra === false ? docRow("IGST 18%", money(t.igst)) : docRow("GST 18%", money(t.gst));
+    var round = t.roundOff ? Math.round(t.roundOff * 100) / 100 : 0;
     var tot =
       docRow("Total of items", money(t.sub)) +
-      (t.discount ? docRow("Less coupon " + esc(t.coupon.code), "−" + money(t.discount)) : "") +
+      (t.discount ? docRow(t.coupon && t.coupon.code ? "Less coupon " + esc(t.coupon.code) : "Less discount", "−" + money(t.discount)) : "") +
       (t.ship ? docRow("Dispatch charges", money(t.ship)) : docRow("Dispatch charges", "Free")) +
       docRow("Taxable value", money(t.taxable), "doc__strong") + tax +
+      (round ? docRow("Round off", (round < 0 ? "−" : "") + money(Math.abs(round))) : "") +
       docRow(d.kind === "invoice" ? "Invoice total" : "Total including GST", money(t.total), "doc__grand");
     return '<article class="doc">' +
       '<header class="doc__head"><div class="doc__brand">' + LOGO + "<span>Bearing<b>setu</b></span></div>" +
         '<div class="doc__title"><h2>' + (d.kind === "invoice" ? "Tax invoice" : "Quotation") + '</h2><p class="mono">' + esc(d.no) + "</p>" + (d.kind === "invoice" ? "<small>Original for recipient</small>" : "") + "</div></header>" +
       '<div class="doc__parties">' +
-        '<section><h3>From</h3><p><strong>' + bag.SELLER.name + "</strong><br>" + bag.SELLER.lines.join("<br>") + "<br>GSTIN " + bag.SELLER.gstin + "<br>" + bag.SELLER.email + "</p></section>" +
+        '<section><h3>From</h3><p><strong>' + esc(bag.SELLER.name) + "</strong><br>" + bag.SELLER.lines.map(esc).join("<br>") + "<br>GSTIN " + esc(bag.SELLER.gstin) + "<br>State code " + esc(bag.SELLER.code) + "<br>" + esc(bag.SELLER.email) + "</p></section>" +
         d.parties.map(function (p) { return "<section><h3>" + p.h + "</h3><p>" + p.html + "</p></section>"; }).join("") +
       "</div>" +
       '<dl class="doc__meta">' + d.meta.map(function (m) { return docRow(m[0], m[1]); }).join("") + "</dl>" +
-      '<table class="doc__table"><thead><tr><th>#</th><th>Item</th><th>HSN</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">Amount</th></tr></thead><tbody>' + rows + "</tbody></table>" +
+      '<table class="doc__table"><thead><tr><th>#</th><th>' + (batched ? "Item and batch" : "Item") + '</th><th>HSN</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">Amount</th></tr></thead><tbody>' + rows + "</tbody></table>" +
       '<div class="doc__sum"><p class="doc__words"><span>Amount in words</span>' + bag.inWords(t.total) + '</p><dl class="doc__totals">' + tot + "</dl></div>" +
       '<section class="doc__terms"><h3>' + (d.kind === "invoice" ? "Notes" : "Terms") + "</h3><ol>" + d.terms.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ol></section>" +
       '<footer class="doc__foot">' + (d.note || "") + "</footer>" +
     "</article>";
   };
+  // Lines from the bag ({p, qty, unit, total}), a stored order or account.js ({..., amount}).
   bag.docLines = function (lines) {
     return lines.map(function (l) {
       var p = l.p || BS.byId(l.id) || {};
-      var dims = BS.dims(p);
+      var dims = p.id ? BS.dims(p) : "";
+      var title = p.title || l.title || "";
       return {
         name: (l.brand || BS.brand(p.brand).name) + " " + (l.pn || p.pn),
-        desc: (p.title || "") + (dims && !/\d\s*(x\s*\d|mm\b)/i.test(p.title || "") ? ", " + dims : ""),
-        hsn: p.hsn || "8482", qty: l.qty, unit: BS.unitLabel(p), rate: l.unit, amount: l.total
+        desc: title + (dims && !/\d\s*(x\s*\d|mm\b)/i.test(title) ? ", " + dims : ""),
+        hsn: p.hsn || l.hsn || "8482", qty: l.qty, unit: BS.unitLabel(p), rate: l.unit, amount: l.total != null ? l.total : l.amount
       };
     });
   };
@@ -286,6 +251,8 @@
         if (e.target === dlg || e.target.closest("[data-doc-close]")) dlg.close();
         else if (e.target.closest("[data-doc-print]")) window.print();
       });
+      // Keep Tab and Shift+Tab inside the preview while it is open.
+      dlg.addEventListener("keydown", function (e) { BS.trap(dlg, e); });
       dlg.addEventListener("close", function () {
         doc.documentElement.classList.remove("is-printing");
         doc.body.classList.remove("is-locked");
@@ -369,12 +336,7 @@
     return '<strong class="num">' + inr(v) + '</strong><small><span class="nowrap">' + l.qty + " × " + inr(show(l.unit)) + '</span> <span class="nowrap">' + taxNote() + "</span></small>";
   }
   function stepper(l) {
-    var name = nameOf(l.p);
-    var min = Math.max(1, l.p.moq || 1);
-    return BS.stepperHTML(l.id, l.qty)
-      .replace('aria-label="Quantity"', 'aria-label="Quantity of ' + esc(name) + '"')
-      .replace('aria-label="Decrease quantity"' + (l.qty <= 1 ? " disabled" : ""), 'aria-label="Decrease quantity of ' + esc(name) + '"' + (l.qty <= min ? " disabled" : ""))
-      .replace('aria-label="Increase quantity"', 'aria-label="Increase quantity of ' + esc(name) + '"');
+    return BS.stepperHTML(l.id, l.qty, null, Math.max(1, l.p.moq || 1), nameOf(l.p));
   }
   function lineHTML(l) {
     var p = l.p, st = BS.stock(p), name = nameOf(p), url = BS.url(p);
@@ -433,7 +395,8 @@
         row("Total", inr(t.total), "is-total") +
       "</dl>" +
       '<p class="sum__note">' + (inc() ? "Line prices include GST. The summary shows it separately, as your invoice will." : "Prices exclude GST.") + " Your invoice shows CGST and SGST for Maharashtra, or IGST for other states.</p>";
-    els.rfq.href = "quick-order.html?lines=" + encodeURIComponent(t.lines.map(function (l) { return String(l.p.pn).replace(/[,:]/g, " ") + ":" + l.qty; }).join(",")) + "#rfq";
+    // Product ids, not bare part numbers: several brands share a number, and the quote must keep the brand.
+    els.rfq.href = "quick-order.html?lines=" + encodeURIComponent(t.lines.map(function (l) { return l.id + ":" + l.qty; }).join(",")) + "#rfq";
   }
   function renderCoupon() {
     var c = bag.coupon();
@@ -519,7 +482,7 @@
     var links = [];
     if (s) links.push('<a class="more" href="#saved">' + BS.plural(s, "part") + " saved for later</a>");
     if (w) links.push('<a class="more" href="account.html#lists">Your saved list (' + w + ")</a>");
-    els.empty.innerHTML = '<div class="empty bag-empty__box">' + icon("handbag") +
+    els.empty.innerHTML = (BS.storageOK ? "" : bag.storageNote()) + '<div class="empty bag-empty__box">' + icon("handbag") +
       '<h2 class="h3">Find the part you need.</h2>' +
       "<p>Search by part number or size, or paste a whole list into Quick order. We match every line and price it at your volume.</p>" +
       '<div class="bag-empty__ctas"><a class="btn" href="shop.html">Shop parts</a><a class="btn btn--quiet" href="quick-order.html">Quick order</a></div>' +

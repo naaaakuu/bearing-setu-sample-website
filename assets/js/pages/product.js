@@ -55,26 +55,16 @@
   function lcFirst(s) { s = String(s || ""); return /^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
 
   /* ================================================================ dates and delivery */
+  // Dates come from BS.schedule, the engine checkout and order tracking use: order by 4 pm,
+  // Monday to Saturday, for same-day dispatch from Pune, then the pincode's standard transit days.
   var DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   function dayLabel(d) { return DAYS[d.getDay()] + ", " + d.getDate() + " " + MONTHS[d.getMonth()]; }
   function longDate(d) { return d.getDate() + " " + MONTHS[d.getMonth()] + " " + d.getFullYear(); }
   function isoToDate(s) { var m = String(s).split("-"); return new Date(+m[0], +m[1] - 1, +m[2]); }
-  function addWorkDays(d, n) {
-    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    while (n > 0) { x.setDate(x.getDate() + 1); if (x.getDay() !== 0) n--; }
-    return x;
-  }
-  // Order by 4 pm, Monday to Saturday, for same-day dispatch.
-  function beforeCutoff(now) { return now.getDay() !== 0 && now.getHours() < 16; }
   function shipDays(p) { return p.stock > 0 ? p.ship || 0 : p.ship || 7; }
-  function dispatchDate(p) {
-    var now = new Date();
-    var base = beforeCutoff(now) ? new Date(now.getFullYear(), now.getMonth(), now.getDate()) : addWorkDays(now, 1);
-    return addWorkDays(base, shipDays(p));
-  }
-  var METRO = ["40", "42", "43", "44", "11", "56", "60", "50", "70"];
-  function transitDays(pin) { var t = pin.slice(0, 2); return t === "41" ? 1 : METRO.indexOf(t) !== -1 ? 2 : 4; }
+  // Dispatch and delivery for the quantity on screen (a quantity above the stock waits for sourcing).
+  function plan(p, pin) { return BS.schedule([{ p: p, qty: S.qty }], null, pin); }
   var CITY = {
     "411": "Pune", "412": "Pune", "410": "Raigad", "413": "Solapur", "414": "Ahilyanagar", "415": "Satara", "416": "Kolhapur",
     "400": "Mumbai", "401": "Thane", "403": "Goa", "422": "Nashik", "431": "Chhatrapati Sambhajinagar", "440": "Nagpur",
@@ -83,8 +73,7 @@
     "641": "Coimbatore", "302": "Jaipur", "452": "Indore", "160": "Chandigarh", "141": "Ludhiana", "226": "Lucknow",
     "208": "Kanpur", "751": "Bhubaneswar", "682": "Kochi", "530": "Visakhapatnam", "831": "Jamshedpur"
   };
-  function cityOf(pin) { return CITY[pin.slice(0, 3)] || ""; }
-  function deliveryDate(p, pin) { return addWorkDays(dispatchDate(p), transitDays(pin)); }
+  function cityOf(pin) { var z = BS.transitDays(pin); return CITY[pin.slice(0, 3)] || (z && z.city) || ""; }
   function savedPin() { var v = String(prefs().pin || safe(function () { return BS.store.get("pin", ""); }, "")); return /^[1-9]\d{5}$/.test(v) ? v : ""; }
   function savePin(v) {
     var pr = prefs();
@@ -93,14 +82,15 @@
     BS.store.set("pin", v);
   }
   function cutoffText(p) {
-    if (!(p.stock > 0) || p.ship !== 0) return "";
-    var now = new Date();
-    if (beforeCutoff(now)) {
-      var mins = 16 * 60 - (now.getHours() * 60 + now.getMinutes());
+    var sch = plan(p);
+    if (sch.lead) return "";
+    if (sch.beforeCutoff) {
+      var now = sch.now;
+      var mins = Math.max(1, 16 * 60 - (now.getHours() * 60 + now.getMinutes()));
       var h = Math.floor(mins / 60), m = mins % 60;
       return "Order within " + (h ? h + " h " : "") + (m || !h ? m + " min " : "") + "for dispatch today.";
     }
-    return "Order now for dispatch on " + dayLabel(dispatchDate(p)) + ".";
+    return "Order now for dispatch on " + dayLabel(sch.dispatch) + ".";
   }
 
   /* ================================================================ prices */
@@ -252,19 +242,45 @@
   function mm(n) { return fmtNum(n) + " mm"; }
 
   /* ================================================================ equivalents */
+  // A listed equivalent has the same size, sealing and internal clearance as this part: a C3
+  // bearing is never offered for a normal-clearance one, even when its number starts the same.
+  function sameVal(a, b) { return a == null ? b == null : b != null && Math.abs(a - b) < 0.01; }
+  function sameSpec(a, b) {
+    if ((a.d != null || b.d != null) && !(sameVal(a.d, b.d) && sameVal(a.D, b.D) && sameVal(a.B, b.B))) return false;
+    if ((a.seal || b.seal) && a.seal !== b.seal) return false;
+    if ((BEARING[a.cat] || BEARING[b.cat] || a.clr || b.clr) && (a.clr || "CN") !== (b.clr || "CN")) return false;
+    return true;
+  }
+  function brandIs(x, word) { return !!word && BS.brand(x.brand).name.toUpperCase().indexOf(word.toUpperCase()) === 0; }
+  var eqCache = { id: null, rows: null };
   function eqRows(p) {
-    return (p.eq || []).map(function (e) {
+    if (eqCache.id === p.id) return eqCache.rows;
+    var used = [p.id];
+    // 1. The cross-references in the catalogue, matched to a stocked part when one fits exactly.
+    var rows = (p.eq || []).map(function (e) {
       var m = String(e).match(/^(\S+)\s+(.+)$/);
       var bw = m ? m[1] : "", pn = m ? m[2] : String(e);
       var hit = null;
       BS.search(pn, 10).some(function (r) {
-        if (r.p.id === p.id) return false;
-        var bn = BS.brand(r.p.brand).name.toUpperCase();
-        if (bn.indexOf(bw.toUpperCase()) === 0 && (BS.norm(r.p.pn) === BS.norm(pn) || r.score >= 84)) { hit = r.p; return true; }
+        if (used.indexOf(r.p.id) !== -1 || !brandIs(r.p, bw) || !sameSpec(r.p, p)) return false;
+        if (BS.norm(r.p.pn) === BS.norm(pn) || r.score >= 84) { hit = r.p; return true; }
         return false;
       });
+      if (hit) used.push(hit.id);
       return { brand: bw, pn: pn, p: hit };
     });
+    // 2. Other brands' bearings of the same type, size, sealing and clearance, as the interchange finder lists them.
+    if (BEARING[p.cat] && p.d != null) {
+      BS.products.forEach(function (x) {
+        if (used.indexOf(x.id) !== -1 || x.brand === p.brand || x.cat !== p.cat || x.sub !== p.sub || !sameSpec(x, p)) return;
+        used.push(x.id);
+        var open = rows.filter(function (r) { return !r.p && brandIs(x, r.brand); })[0];
+        if (open) open.p = x;
+        else rows.push({ brand: brandShort(x), pn: x.pn, p: x });
+      });
+    }
+    eqCache = { id: p.id, rows: rows };
+    return rows;
   }
 
   /* ================================================================ reviews */
@@ -562,10 +578,15 @@
       }).join("") + "</dl>" +
       '<p class="speccard__foot">' + (p.d && p.D && p.B ? esc(BS.dims(p)) + " · " : "") + "HSN " + esc(p.hsn || "") + " · GST " + (p.gst || 18) + "%</p></div>";
   }
+  // A stand-in photo (images.js marks it with alias or standin) shows a related part, not this one.
+  function photo(p) { return BS.img(p.img) || {}; }
+  function isStandin(p) { var m = photo(p); return !!(m.alias || m.standin); }
+  function photoAlt(p) { return isStandin(p) ? titleMain(p) + ", illustrative photo. The part looks different." : photo(p).alt || titleMain(p); }
+  function photoNote(p) { return isStandin(p) ? "Illustrative photo. The part looks different." : "Photo shows the part type. Brand markings can differ."; }
   function slideInner(p, sl, large) {
     // Photos on white are fitted whole (the white melts into the mist tile); photos with their own
     // background fill the tile instead, so no lighter rectangle shows on a non-square stage.
-    if (sl.kind === "photo") return BS.imgTag(p.img, { large: true, eager: true, cls: "gal__img" + (BS.img(p.img).bg === "white" ? " gal__img--fit" : ""), sizes: large ? "100vw" : "(max-width: 834px) 92vw, 720px", alt: BS.img(p.img).alt || titleMain(p) });
+    if (sl.kind === "photo") return BS.imgTag(p.img, { large: true, eager: true, cls: "gal__img" + (photo(p).bg === "white" ? " gal__img--fit" : ""), sizes: large ? "100vw" : "(max-width: 834px) 92vw, 720px", alt: photoAlt(p) });
     if (sl.kind === "drawing") return '<div class="gal__dw">' + drawingSVG(p) + "</div>";
     return specCardHTML(p);
   }
@@ -594,7 +615,7 @@
       "</div>" +
       '<div class="gal__dots" role="group" aria-label="Choose image">' + dots + "</div>" +
       '<div class="gal__thumbs" role="group" aria-label="Choose image" data-gal-thumbs>' + thumbs + "</div>" +
-      '<p class="gal__cap">Photo shows the part type. Brand markings can differ.</p>' +
+      '<p class="gal__cap' + (isStandin(p) ? " is-standin" : "") + '">' + photoNote(p) + "</p>" +
       "</section>";
   }
 
@@ -664,11 +685,17 @@
       (qty > 1 ? ' <small class="num">· ' + qty + " × " + money(u) + "</small>" : "") + "</p>" +
       (nudge ? '<p class="qty__nudge' + (nt ? "" : " is-best") + '">' + (nt ? icon("tag") : icon("check-circle")) + "<span>" + nudge + "</span></p>" : "") + stockNote;
   }
+  // The standard delivery window for the saved pincode, as checkout prices it (Express is a checkout option).
+  function deliveryWhen(p, pin) {
+    var st = plan(p, pin).standard;
+    function day(d) { return '<strong class="nobr">' + dayLabel(d) + "</strong>"; }
+    return BS.sameDay(st.from, st.to) ? "arrives " + day(st.from) : "arrives between " + day(st.from) + " and " + day(st.to);
+  }
   function deliveryHTML(p) {
     var pin = savedPin();
     if (pin) {
-      var city = cityOf(pin);
-      return '<div class="del__res">' + icon("truck") + "<p>Delivers to <strong>" + (city ? esc(city) + " " : "") + pin + "</strong> by <strong>" + dayLabel(deliveryDate(p, pin)) + '</strong>. <button class="textlink" type="button" data-act="pin-edit" aria-label="Change delivery pincode">Change</button></p></div>';
+      var city = cityOf(pin), when = deliveryWhen(p, pin);
+      return '<div class="del__res" data-del-res data-when="' + esc(when) + '">' + icon("truck") + "<p>Standard delivery to <strong>" + (city ? esc(city) + " " : "") + pin + "</strong> " + when + '. <button class="textlink" type="button" data-act="pin-edit" aria-label="Change delivery pincode">Change</button></p></div>';
     }
     return pinFormHTML("");
   }
@@ -683,10 +710,12 @@
     var st = BS.stock(p);
     var cut = cutoffText(p);
     var out = !(p.stock > 0);
+    // Point to the equivalents only when one of them can ship sooner.
+    var hasEq = eqRows(p).some(function (r) { return r.p && r.p.stock > 0; });
     return '<div class="ship">' +
       '<p class="ship__stock"><span class="' + st.cls + '">' + esc(out ? "Not in stock · Ships in " + shipDays(p) + " working days" : st.text) + "</span></p>" +
-      (cut ? '<p class="ship__cut">' + icon("clock") + "<span data-cutoff>" + esc(cut) + "</span></p>" : "") +
-      (out ? '<div class="notice notice--warm ship__out">' + icon("info") + "<p>We order this part in for you and dispatch it in about " + shipDays(p) + " working days. Need it sooner? " + ((p.eq || []).length ? "Check the equivalents below or " : "") + '<a href="' + quoteHref(p) + '">' + ((p.eq || []).length ? "request a quote" : "Request a quote") + "</a> and we will confirm the fastest date.</p></div>" : "") +
+      '<p class="ship__cut" data-cut-row' + (cut ? "" : " hidden") + ">" + icon("clock") + "<span data-cutoff>" + esc(cut) + "</span></p>" +
+      (out ? '<div class="notice notice--warm ship__out">' + icon("info") + "<p>We order this part in for you and dispatch it in about " + shipDays(p) + " working days. Need it sooner? " + (hasEq ? "Check the in-stock equivalents below or " : "") + '<a href="' + quoteHref(p) + '" data-quote-link>' + (hasEq ? "request a quote" : "Request a quote") + "</a> and we will confirm the fastest date.</p></div>" : "") +
       '<div class="del" data-del aria-live="polite">' + deliveryHTML(p) + "</div>" +
       '<p class="ship__policy">Free dispatch on orders of ₹5,000 or more before GST, otherwise ₹120.</p></div>';
   }
@@ -694,7 +723,8 @@
     var n = safe(function () { return BS.cart.qtyOf(p.id); }, 0);
     return n ? icon("handbag") + "<span>" + n + " " + esc(unitsOf(p, n)) + ' in your bag. <button class="textlink" type="button" data-open-cart>View bag</button></span>' : "";
   }
-  function quoteHref(p) { return "quick-order.html?pn=" + encodeURIComponent(p.pn) + "&qty=" + S.qty + "#rfq"; }
+  // The product id keeps the brand: quick-order turns it into "Brand PN" (a bare 6205-2RS fits several brands).
+  function quoteHref(p) { return "quick-order.html?pn=" + encodeURIComponent(p.id) + "&qty=" + S.qty + "#rfq"; }
   function buyHTML(p) {
     var fav = safe(function () { return BS.wish.has(p.id); }, false);
     var stepper = BS.stepperHTML(p.id, S.qty, "").replace('data-stepper="', 'data-local data-qty-stepper data-stepper="').replace('aria-label="Quantity"', 'id="qty-input" aria-describedby="qty-hint"');
@@ -731,7 +761,7 @@
   /* ================================================================ HTML: sections */
   function sectionList(p) {
     var list = [{ id: "overview", label: "Overview" }, { id: "specs", label: "Specifications" }];
-    if ((p.eq || []).length) list.push({ id: "equivalents", label: "Equivalents" });
+    if (eqRows(p).length) list.push({ id: "equivalents", label: "Equivalents" });
     if ((p.rel || []).some(function (id) { return BS.byId(id); })) list.push({ id: "fits", label: "Fits with" });
     list.push({ id: "reviews", label: "Reviews" }, { id: "questions", label: "Questions" });
     return list;
@@ -776,7 +806,8 @@
     }).join("");
     return '<section class="section ' + cls + '" id="equivalents" data-sec aria-labelledby="eq-title"><div class="wrap eq">' +
       '<div class="eq__copy reveal"><h2 class="h2" id="eq-title">Equivalents</h2>' +
-      '<p class="sub">Equivalents match boundary dimensions and sealing. Check the suffixes for cage and clearance before you swap.</p>' +
+      '<p class="sub">' + (BEARING[p.cat] ? "Listed parts match this bearing’s size, sealing and internal clearance. Check the cage suffix before you swap." :
+        "Listed parts match the shaft size and housing type. Check the centre height and bolt holes before you swap.") + "</p>" +
       '<a class="more" href="tools.html#interchange">Open the interchange finder</a></div>' +
       '<div class="table-wrap eq__table reveal" style="--i:1"><table class="table"><caption class="sr-only">Equivalent part numbers from other brands</caption><thead><tr><th scope="col">Brand</th><th scope="col">Part number</th><th scope="col">Price ' + (isInc() ? "incl. GST" : "+ GST") + '</th><th scope="col">Stock</th><th scope="col" class="r"><span class="sr-only">Action</span></th></tr></thead><tbody data-eq-body>' + me + body + "</tbody></table></div>" +
       "</div></section>";
@@ -832,13 +863,20 @@
   function shelfCards(list) {
     return list.map(function (x) { var c = safe(function () { return BS.card(x, { sizes: "(max-width: 640px) 70vw, 300px" }); }, ""); return c ? '<div role="listitem">' + c + "</div>" : ""; }).join("");
   }
+  // Related parts that are not already in the "Bought together" box, so nothing shows twice.
+  function fitsShelf(p) {
+    var inBundle = bundleItems(p).slice(1);
+    return relOf(p).filter(function (x) { return inBundle.indexOf(x) === -1; });
+  }
   function fitsHTML(p, cls) {
-    var rel = relOf(p);
+    var shelf = fitsShelf(p), n = shelf.length;
+    // One or two extra parts sit beside the bundle on wide screens; more get a scrolling shelf below it.
     return '<section class="section ' + cls + '" id="fits" data-sec aria-labelledby="fits-title"><div class="wrap" data-shelf>' +
       '<div class="row-head"><h2 class="h2 reveal" id="fits-title">Fits with. <span class="tone">Parts often fitted alongside.</span></h2>' +
-      (rel.length > 4 ? '<div class="shelf-nav"><button type="button" data-shelf-prev aria-label="Previous parts">' + icon("caret-left") + '</button><button type="button" data-shelf-next aria-label="Next parts">' + icon("caret-right") + "</button></div>" : "") + "</div>" +
-      '<div class="shelf fits__shelf" role="list" data-fits-shelf>' + shelfCards(rel) + "</div>" +
-      bundleHTML(p) + "</div></section>";
+      (n > 4 ? '<div class="shelf-nav"><button type="button" data-shelf-prev aria-label="Previous parts">' + icon("caret-left") + '</button><button type="button" data-shelf-next aria-label="Next parts">' + icon("caret-right") + "</button></div>" : "") + "</div>" +
+      '<div class="fits fits--' + (n > 2 ? "many" : "n" + n) + '">' + bundleHTML(p) +
+      (n ? '<div class="shelf fits__shelf" role="list" aria-label="More parts that fit" data-fits-shelf>' + shelfCards(shelf) + "</div>" : "") +
+      "</div></div></section>";
   }
   function reviewCardHTML(r, opts) {
     opts = opts || {};
@@ -954,7 +992,9 @@
   var LOGO = '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="none" stroke="#16255c" stroke-width="10" stroke-dasharray="9 8.28"/><circle cx="50" cy="50" r="38" fill="#16255c"/><circle cx="50" cy="50" r="29" fill="#fff"/><g fill="#16255c"><circle cx="71" cy="50" r="5"/><circle cx="64.85" cy="64.85" r="5"/><circle cx="50" cy="71" r="5"/><circle cx="35.15" cy="64.85" r="5"/><circle cx="29" cy="50" r="5"/><circle cx="35.15" cy="35.15" r="5"/><circle cx="50" cy="29" r="5"/><circle cx="64.85" cy="35.15" r="5"/></g><circle cx="50" cy="50" r="11" fill="#16255c"/><path d="M6 74 Q50 50 98 60" fill="none" stroke="#f29a0e" stroke-width="7" stroke-linecap="round"/></svg>';
   function datasheetHTML(p) {
     var groups = specGroups(p);
-    var eq = (p.eq || []).length ? '<div class="ds__box"><h2>Equivalents</h2><p>' + p.eq.map(esc).join(" · ") + '</p><p class="ds__small">Equivalents match boundary dimensions and sealing. Check cage and clearance suffixes.</p></div>' : "";
+    var eqs = eqRows(p);
+    var eq = eqs.length ? '<div class="ds__box"><h2>Equivalents</h2><p>' + eqs.map(function (r) { return esc(r.brand + " " + (r.p ? r.p.pn : r.pn)); }).join(" · ") + '</p><p class="ds__small">' +
+      (BEARING[p.cat] ? "Same size, sealing and internal clearance. Check the cage suffix." : "Same shaft size and housing type. Check the centre height and bolt holes.") + "</p></div>" : "";
     var tiers = '<div class="ds__box"><h2>Prices per ' + esc(unitOf(p)) + ' (before GST)</h2><table><thead><tr><th>Quantity</th><th>Price</th><th>Saving</th></tr></thead><tbody>' +
       tierRows(p).map(function (r) { return "<tr><td>" + rangeLabel(r) + "</td><td>" + inr(r.price) + "</td><td>" + (r.price < p.price ? pctOff(r.price, p.price) + "%" : "List price") + "</td></tr>"; }).join("") +
       '</tbody></table><p class="ds__small">GST ' + (p.gst || 18) + "% extra. Prices on " + longDate(new Date()) + ", sample data.</p></div>";
@@ -966,7 +1006,7 @@
       '<div class="ds__cols">' + groups.map(function (g) {
         return '<div class="ds__box"><h2>' + esc(g[0]) + "</h2><table><tbody>" + g[1].map(function (a) { return "<tr><th>" + esc(a[0]) + "</th><td>" + (a[2] ? a[1] : esc(a[1])) + "</td></tr>"; }).join("") + "</tbody></table></div>";
       }).join("") + tiers + eq + "</div>" +
-      '<footer class="ds__foot"><p>Load ratings and speeds are typical catalogue values. Check the manufacturer’s datasheet for your application. Photo shows the part type; brand markings can differ.</p>' +
+      '<footer class="ds__foot"><p>Load ratings and speeds are typical catalogue values. Check the manufacturer’s datasheet for your application. ' + photoNote(p) + "</p>" +
       "<p>Bearingsetu · Pune, Maharashtra · orders@bearingsetu.com · " + esc(location.href.split("#")[0]) + "</p><p>Sample store. Prices, stock and data are sample content.</p></footer>";
   }
   function renderDatasheet() {
@@ -1010,6 +1050,8 @@
     setMeta("og:description", p.desc || p.title, true);
     // A list that cannot be read is started again rather than stopping the page.
     try { BS.recent.add(p.id); } catch (e) { BS.store.set("recent", [p.id]); }
+    // Header: highlight the section this part belongs to (Bearings, Seals and so on).
+    if (BS.setNav && BS.navKey) BS.setNav(BS.navKey(p.cat));
     updateBuy();
     wireGallery();
     BS.reveal(main);
@@ -1086,8 +1128,8 @@
     set("[data-qty-info]", qtyInfoHTML(p, S.qty));
     set("[data-mini-price]", priceNowHTML(p, S.qty));
     set("[data-bbar-price]", bbarPriceHTML(p));
-    var ql = $("[data-quote-link]", main);
-    if (ql) ql.setAttribute("href", quoteHref(p));
+    $$("[data-quote-link]", main).forEach(function (a) { a.setAttribute("href", quoteHref(p)); });
+    updateDelivery();
     var st = $("[data-qty-stepper]", main);
     if (st) {
       var inp = $("input", st);
@@ -1095,6 +1137,20 @@
       var minus = $('[data-step="-1"]', st);
       if (minus) minus.disabled = S.qty <= minQty(p);
     }
+  }
+  // The cut-off line and the delivery window follow the quantity (more than the stock waits for sourcing)
+  // and the clock. Each changes only when its text does, so the live region is not repeated.
+  function updateDelivery() {
+    var p = S.p;
+    if (!p) return;
+    var row = $("[data-cut-row]", main), cut = cutoffText(p);
+    if (row) {
+      row.hidden = !cut;
+      var c = $("[data-cutoff]", row);
+      if (c.textContent !== cut) c.textContent = cut;
+    }
+    var res = $("[data-del-res]", main), pin = savedPin();
+    if (res && pin && res.getAttribute("data-when") !== deliveryWhen(p, pin)) $("[data-del]", main).innerHTML = deliveryHTML(p);
   }
   function setQty(v, opts) {
     opts = opts || {};
@@ -1130,7 +1186,7 @@
       var th = $("thead th:nth-child(3)", sec);
       if (th) th.textContent = "Price " + (isInc() ? "incl. GST" : "+ GST");
     }
-    [["[data-fits-shelf]", relOf(S.p)], ["[data-recent-shelf]", S.recent]].forEach(function (x) {
+    [["[data-fits-shelf]", fitsShelf(S.p)], ["[data-recent-shelf]", S.recent]].forEach(function (x) {
       var el = $(x[0], main);
       if (el) { var left = el.scrollLeft; el.innerHTML = shelfCards(x[1]); el.scrollLeft = left; }
     });
@@ -1206,7 +1262,7 @@
       if (t.classList.contains("lb__stage") || t.classList.contains("lb__slide")) closeLb();
     });
     // Keys are taken at the document (capture phase) while the lightbox is open, so they work even when
-    // a click on the picture has left focus on <body>, and the site's own shortcuts ("/", Escape) stay out.
+    // a click on the picture has left focus on <body>, and the site's own shortcuts (search, Escape) stay out.
     doc.addEventListener("keydown", function (e) {
       if (!S.lbOpen) return;
       var k = e.key;
@@ -1216,7 +1272,7 @@
         lbGo(k === "Home" ? 0 : k === "End" ? S.slides.length - 1 : S.lbI + (k === "ArrowRight" ? 1 : -1));
         return;
       }
-      if (k === "/" || ((e.metaKey || e.ctrlKey) && String(k).toLowerCase() === "k")) { e.preventDefault(); e.stopPropagation(); return; }
+      if ((e.metaKey || e.ctrlKey) && String(k).toLowerCase() === "k") { e.preventDefault(); e.stopPropagation(); return; }
       if (k === "Tab") {
         var f = $$("button:not([disabled]),a[href],[tabindex]:not([tabindex='-1'])", lb).filter(function (x) { return x.offsetParent !== null; });
         if (!f.length) return;
@@ -1422,8 +1478,9 @@
       case "add": addMain(el, flyImg()); break;
       case "mini-add": addMain(el, isDesk() ? $(".minibar__img img", main) : null); break;
       case "buynow":
-        if (el.classList.contains("is-loading")) break; // a double click adds the quantity once
-        BS.addToBag(S.p.id, S.qty, null, { silent: true });
+        if (el.classList.contains("is-loading")) break;
+        // Checkout gets the quantity chosen here, whatever was already in the bag for this part.
+        BS.cart.set(S.p.id, Math.max(S.qty, minQty(S.p)));
         el.classList.add("is-loading");
         el.setAttribute("aria-busy", "true");
         location.href = "checkout.html";
@@ -1601,10 +1658,21 @@
     var desk = isDesk();
     var showMini = desk && pdp.getBoundingClientRect().bottom < NAV_H + 8;
     var showB = !desk && act.getBoundingClientRect().bottom < NAV_H + 4;
+    var wasB = doc.body.classList.contains("pdp-bbar-on");
     if (mini) mini.classList.toggle("is-on", showMini);
     if (bbar) bbar.classList.toggle("is-on", showB);
     doc.body.classList.toggle("pdp-mini-on", showMini);
     doc.body.classList.toggle("pdp-bbar-on", showB);
+    if (showB && !wasB && bbar) clearOfBar(bbar);
+  }
+  // The bottom bar can rise over the control that keyboard focus has just scrolled to the
+  // bottom edge (the scroll itself brings the bar in). Lift that control above the bar.
+  function clearOfBar(bar) {
+    var a = doc.activeElement;
+    if (!a || a === doc.body || bar.contains(a) || doc.body.classList.contains("pdp-typing")) return;
+    if (!safe(function () { return a.matches(":focus-visible"); }, false)) return;
+    var r = a.getBoundingClientRect(), limit = window.innerHeight - (bar.offsetHeight || 72) - 16;
+    if (r.bottom > limit && r.top < window.innerHeight) window.scrollBy({ top: r.bottom - limit, behavior: smooth() });
   }
   function spy() {
     if (!S.p) return;
@@ -1629,11 +1697,8 @@
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", BS.debounce(function () { onScroll(); var tr = $("[data-gal-track]", main); if (tr) tr.scrollLeft = S.slide * tr.clientWidth; }, 120));
   window.addEventListener("beforeprint", renderDatasheet);
-  // The 4 pm cut-off line counts down while the page stays open.
-  setInterval(function () {
-    var c = S.p && $("[data-cutoff]", main);
-    if (c) { var txt = cutoffText(S.p); if (txt && txt !== c.textContent) c.textContent = txt; }
-  }, 30000);
+  // The 4 pm cut-off line counts down while the page stays open, and the delivery window moves on after it.
+  setInterval(updateDelivery, 30000);
   // Coming back from checkout with the Back button shows the page as it was left: clear busy buttons.
   window.addEventListener("pageshow", function (e) {
     if (e.persisted) $$(".is-loading", main).forEach(function (b) { b.classList.remove("is-loading"); b.removeAttribute("aria-busy"); });

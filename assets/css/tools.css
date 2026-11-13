@@ -186,18 +186,20 @@ html{scroll-padding-top:calc(var(--nav-h) + 76px)}
 .bp__rim{fill:#26272c;stroke:#4a4b52;stroke-width:1.5}
 .bp__web{fill:#1c1d21;stroke:#34353b;stroke-width:1}
 .bp__spin line{stroke:#5f6068;stroke-width:3;stroke-linecap:round}
-.bp__spin{animation:spin var(--dur,4s) linear infinite}
+.bp__spin{animation:spin var(--dur,4s) linear infinite;animation-play-state:paused}
 .bp__hub{fill:#3c3d44;stroke:#62636b;stroke-width:1}
 .bp__bore{fill:#111214}
 .bp__lbl{fill:#a1a1a6;font-family:var(--font);font-size:12px;font-weight:600}
 .bp__dim{fill:#f5f5f7;font-family:var(--mono);font-size:13px;font-weight:600}
 .bd__belt{fill:none;stroke:#2c4fb7;stroke-linejoin:round}
-.bd__run{fill:none;stroke:#9dbcff;stroke-linejoin:round;stroke-dasharray:3 23;stroke-linecap:round;animation:beltrun var(--beltdur,1s) linear infinite}
+.bd__run{fill:none;stroke:#9dbcff;stroke-linejoin:round;stroke-dasharray:3 23;stroke-linecap:round;animation:beltrun var(--beltdur,1s) linear infinite;animation-play-state:paused}
 @keyframes beltrun{to{stroke-dashoffset:-26}}
 .bd__dim line,.bd__dim path{stroke:#6e6e73;stroke-width:1.2;fill:none}
 .bd__dim text{fill:#c7c7cc;font-family:var(--mono);font-size:12px}
 [data-belt-draw]{transition:opacity .4s var(--ease-out)}
 [data-belt-draw].is-ghost{opacity:.3}
+/* The drive rests by default and turns only while tools.js marks it running (4 s after a change). */
+[data-belt-draw].is-running .bp__spin,[data-belt-draw].is-running .bd__run{animation-play-state:running}
 [data-belt-draw].is-ghost .bp__spin,[data-belt-draw].is-ghost .bd__run{animation-play-state:paused}
 .stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));margin:20px 0 0;border-radius:var(--r-lg);background:var(--mist)}
 .stats:empty{display:none}
@@ -356,6 +358,7 @@ html{scroll-padding-top:calc(var(--nav-h) + 76px)}
   .examples .chip,.secpick__seg button,.gr__mode button,.sx__g,.cvt .btn,.tool .btn--sm{min-height:44px}
   .belt__foot .textlink{display:inline-flex;align-items:center;min-height:44px;padding:0 4px}
   .prow__t,.xt__link,.xt__ask,.tool .more{position:relative}
+  .xt__link{display:inline-flex;align-items:center;min-height:44px}
   .prow__t{display:inline-block}
   .prow__t::before,.xt__link::before,.xt__ask::before,.tool .more::before{content:"";position:absolute;left:-6px;right:-6px;top:50%;height:100%;min-height:44px;transform:translateY(-50%)}
   .thero__title{max-width:12ch}

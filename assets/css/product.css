@@ -1,5 +1,7 @@
 /* Product page */
 html{scroll-padding-top:calc(var(--nav-h) + 84px)}
+/* Without JavaScript the header notice explains; the loading skeleton would never resolve. */
+html:not(.js) [data-pdp]>.pdp-top{display:none}
 .nobr{white-space:nowrap}
 .section--mist .btn--quiet{--bbg:#fff;--bbd:#fff}
 .section--mist .btn--quiet:hover{--bbg:#e8e8ed;--bbd:#e8e8ed}
@@ -118,7 +120,7 @@ html{scroll-padding-top:calc(var(--nav-h) + 84px)}
 .tiers__t tbody tr{position:relative}
 .tiers__t tbody th button::after{content:"";position:absolute;inset:0;border-radius:12px}
 .tiers__t tbody th button:focus-visible{outline:none}
-.tiers__t tbody th button:focus-visible::after{outline:3px solid rgba(31,79,209,.55);outline-offset:-3px}
+.tiers__t tbody th button:focus-visible::after{outline:2px solid var(--focus);outline-offset:-3px}
 .tiers__t tbody tr:not(.is-on):hover th,.tiers__t tbody tr:not(.is-on):hover td{background:rgba(255,255,255,.55)}
 .tiers__t tbody tr:not(.is-on):hover th{border-radius:12px 0 0 12px}
 .tiers__t tbody tr:not(.is-on):hover td:last-child{border-radius:0 12px 12px 0}
@@ -264,7 +266,8 @@ html{scroll-padding-top:calc(var(--nav-h) + 84px)}
 .eq__table .more{padding:10px 0 10px 6px;margin:-10px 0}
 
 /* ---------- fits with ---------- */
-.fits__shelf{margin-bottom:24px}
+.fits__shelf{margin-top:24px}
+/* With one or two extra parts the cards share the row with the bundle on wide screens (see responsive). */
 .bundle{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:center;padding:clamp(24px,3.4vw,44px);border-radius:var(--r-xl);background:#fff}
 .section:not(.section--mist) .bundle{background:var(--mist)}
 .bundle__pics{display:flex;align-items:center;justify-content:center;gap:8px}
@@ -353,7 +356,7 @@ html{scroll-padding-top:calc(var(--nav-h) + 84px)}
 .rate__stars label{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;color:#d2d2d7;cursor:pointer;transition:color .15s,transform .2s var(--ease)}
 .rate__stars label .i{width:30px;height:30px}
 .rate__stars label:hover{transform:scale(1.1)}
-.rate__in:focus-visible+label{outline:3px solid rgba(31,79,209,.55);outline-offset:0}
+.rate__in:focus-visible+label{outline:2px solid var(--focus);outline-offset:2px}
 .rate__word{margin-left:10px;font-size:14px;color:var(--muted)}
 .rate.is-invalid .rate__stars label{color:#e9b6b2}
 .rate__stars[data-v="1"] label:nth-of-type(-n+1),.rate__stars[data-v="2"] label:nth-of-type(-n+2),.rate__stars[data-v="3"] label:nth-of-type(-n+3),.rate__stars[data-v="4"] label:nth-of-type(-n+4),.rate__stars[data-v="5"] label:nth-of-type(-n+5){color:#f29a0e}
@@ -484,6 +487,13 @@ html{scroll-padding-top:calc(var(--nav-h) + 84px)}
 @media (min-width:835px){
   body.pdp-mini-on .secnav{visibility:hidden}
 }
+@media (min-width:1069px){
+  .fits--n1,.fits--n2{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;align-items:stretch}
+  .fits--n1 .bundle{grid-column:span 3}
+  .fits--n2 .bundle{grid-column:span 2;grid-template-columns:minmax(0,1fr);align-content:center;gap:24px}
+  .fits--n1 .fits__shelf,.fits--n2 .fits__shelf{grid-column:span 1;grid-auto-columns:minmax(0,1fr);overflow:visible;margin:0;padding:0}
+  .fits--n2 .fits__shelf{grid-column:span 2}
+}
 @media (max-width:834px){
   html{scroll-padding-top:calc(var(--nav-h) + 72px)}
   .pdp{grid-template-columns:minmax(0,1fr);grid-template-rows:auto;grid-template-areas:"head" "gal" "buy";gap:22px}
@@ -511,6 +521,8 @@ html{scroll-padding-top:calc(var(--nav-h) + 84px)}
   .bbar__price small{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .bbar .btn{flex:none;min-width:148px}
   body.pdp-bbar-on{padding-bottom:72px}
+  /* keyboard focus stops above the bottom buy bar */
+  html:has(body.pdp-bbar-on:not(.pdp-typing)){scroll-padding-bottom:88px}
   .wa-float{transition:bottom .45s var(--ease),transform .3s var(--ease),box-shadow .3s}
   body.pdp-bbar-on:not(.pdp-typing) .wa-float{bottom:calc(14px + 72px)}
   body.pdp-bbar-on:not(.pdp-typing) .toasts{bottom:calc(16px + 72px)}
