@@ -18,9 +18,9 @@ html{scroll-padding-top:calc(var(--nav-h) + 76px)}
 @media (prefers-reduced-transparency:reduce){.lnav{background:#fff}}
 
 /* ---------- hero ---------- */
-.thero{padding:clamp(48px,7vw,96px) 0 clamp(28px,3.5vw,48px);text-align:center}
-.thero__title{font-size:clamp(40px,5.8vw,76px);line-height:1.04;letter-spacing:-.046em;font-weight:700;margin:0 auto;text-wrap:balance}
-.thero__lede{max-width:660px;margin:22px auto 0;text-wrap:balance}
+.thero{padding:24px 0 8px;text-align:left}
+.thero__title{font-size:clamp(26px,3vw,34px);line-height:1.15;letter-spacing:-.015em;font-weight:650;margin:0}
+.thero__lede{max-width:660px;margin:8px 0 0}
 
 /* ---------- shared tool section bits ---------- */
 .tool{padding:clamp(64px,8vw,104px) 0}
@@ -91,7 +91,7 @@ html{scroll-padding-top:calc(var(--nav-h) + 76px)}
 .tok__label{margin:16px 2px 0;font-size:13px;font-weight:600;color:var(--blue)}
 .tok__text{margin:4px 2px 0;padding-right:10px;font-size:14px;line-height:1.42;color:var(--ink-2)}
 .tok--unknown .tok__code{background:transparent;border:2px dashed #b8b8bf;color:var(--muted)}
-.tok--unknown .tok__label{color:var(--amber)}
+.tok--unknown .tok__label{color:var(--amber-ink)}
 .dsum{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;margin-top:32px}
 .dsum__main,.dsum__side{background:#fff;border-radius:var(--r-lg);padding:clamp(22px,2.6vw,32px);animation:tok-in .7s var(--ease) both;animation-delay:.2s}
 .dsum__h{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px}

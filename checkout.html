@@ -1,795 +1,171 @@
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="en">
 <head>
 <!-- @head -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#fbfbfd">
+<meta name="theme-color" content="#0f1c47">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/site.css">
 <script>document.documentElement.className+=" js";</script>
 <!-- /@head -->
-<title>Checkout · Bearingsetu</title>
-<meta name="description" content="Check out in three steps: contact, delivery and payment. GST invoice with CGST and SGST or IGST, dispatch dates and 30-day credit for verified business accounts.">
+<title>Request a quotation · Bearingsetu</title>
+<meta name="description" content="Send your parts list and company details and we will reply with a quotation: price, availability and freight.">
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="assets/css/checkout.css">
+<link rel="stylesheet" href="assets/css/quote.css">
 </head>
-<body data-nav="store" class="page-checkout">
+<body data-nav="none">
 <!-- @header -->
 <a class="skip" href="#main">Skip to content</a>
-<header class="gnav" id="gnav">
-  <div class="gnav__in">
+<div class="topbar" role="region" aria-label="Quick links">
+  <div class="wrap topbar__in">
+    <p class="topbar__msg">Bearings, V-belts and oil seals for businesses across India</p>
+    <ul class="topbar__links">
+      <li data-biz-show="phone" hidden><a href="#" data-biz-link="phone"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-phone"/></svg><span data-biz="phone"></span></a></li>
+      <li data-biz-show="whatsapp" hidden><a href="#" data-biz-link="whatsapp" rel="noopener"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-whatsapp-logo"/></svg>WhatsApp</a></li>
+      <li><a href="quick-order.html#rfq">Request a quote</a></li>
+      <li data-needs-api><a href="account.html" data-account-link>Sign in</a></li>
+    </ul>
+  </div>
+</div>
+<header class="hdr" id="gnav">
+  <div class="wrap hdr__in">
+    <button class="icon-btn only-m" type="button" data-open-menu aria-label="Open menu" aria-expanded="false" aria-controls="mmenu"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-list"/></svg></button>
     <a class="brand" href="index.html" aria-label="Bearingsetu home">
-      <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="none" stroke="#16255c" stroke-width="10" stroke-dasharray="9 8.28"/><circle cx="50" cy="50" r="38" fill="#16255c"/><circle cx="50" cy="50" r="29" fill="#fff"/><g fill="#16255c"><circle cx="71" cy="50" r="5"/><circle cx="64.85" cy="64.85" r="5"/><circle cx="50" cy="71" r="5"/><circle cx="35.15" cy="64.85" r="5"/><circle cx="29" cy="50" r="5"/><circle cx="35.15" cy="35.15" r="5"/><circle cx="50" cy="29" r="5"/><circle cx="64.85" cy="35.15" r="5"/></g><circle cx="50" cy="50" r="11" fill="#16255c"/><path d="M6 74 Q50 50 98 60" fill="none" stroke="#f29a0e" stroke-width="7" stroke-linecap="round"/></svg>
+      <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="none" stroke="#16255c" stroke-width="10" stroke-dasharray="9 8.28"/><circle cx="50" cy="50" r="38" fill="#16255c"/><circle cx="50" cy="50" r="29" fill="#fff"/><g fill="#f29a0e"><circle cx="50" cy="26" r="6"/><circle cx="71" cy="38" r="6"/><circle cx="71" cy="62" r="6"/><circle cx="50" cy="74" r="6"/><circle cx="29" cy="62" r="6"/><circle cx="29" cy="38" r="6"/></g><circle cx="50" cy="50" r="13" fill="#16255c"/><circle cx="50" cy="50" r="6" fill="#fff"/></svg>
       <span>Bearing<b>setu</b></span>
     </a>
-    <nav aria-label="Main" class="gnav__nav">
-      <ul class="gnav__links">
-        <li><a class="gnav__link" data-nav="store" aria-current="true" data-mega="m-store" href="shop.html">Store</a></li>
-        <li><a class="gnav__link" data-nav="bearings" data-mega="m-bearings" href="shop.html?cat=bearings">Bearings</a></li>
-        <li><a class="gnav__link" data-nav="transmission" data-mega="m-transmission" href="shop.html?cat=transmission">Transmission</a></li>
-        <li><a class="gnav__link" data-nav="seals" data-mega="m-seals" href="shop.html?cat=seals">Seals</a></li>
-        <li><a class="gnav__link" data-nav="lubrication" data-mega="m-lube" href="shop.html?cat=lubrication">Lubrication</a></li>
-        <li><a class="gnav__link" data-nav="tools" data-mega="m-tools" href="tools.html">Tools</a></li>
-        <li><a class="gnav__link" data-nav="quick-order" href="quick-order.html">Quick order</a></li>
-        <li><a class="gnav__link" data-nav="business" data-mega="m-business" href="business.html">Business</a></li>
-        <li><a class="gnav__link" data-nav="support" data-mega="m-support" href="support.html">Support</a></li>
+    <form class="hsearch" action="shop.html" role="search" data-search-form>
+      <label class="sr-only" for="hq">Search by part number, size or product name</label>
+      <input id="hq" name="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search part number, size or product: 6205 2RS, 25x52x15, SPA 1250" role="combobox" aria-expanded="false" aria-controls="hq-list" aria-autocomplete="list" data-search-input>
+      <button type="submit" aria-label="Search"><svg class="i" aria-hidden="true" style="width:22px;height:22px"><use href="assets/icons.svg#i-magnifying-glass"/></svg></button>
+      <div class="suggest" id="hq-list" role="listbox" aria-label="Search suggestions" hidden data-suggest></div>
+    </form>
+    <div class="hdr__actions">
+      <a class="hdr__act hide-s" data-needs-api href="account.html" data-nav="account" data-account-link-header><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-user"/></svg><span class="lbl" data-account-label>Account</span></a>
+      <button class="hdr__act" type="button" data-open-list aria-controls="list-drawer" aria-label="Quote list, 0 parts"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-clipboard-text"/></svg><span class="lbl">Quote list</span><span class="list-count" data-list-count data-n="0" aria-hidden="true">0</span></button>
+    </div>
+  </div>
+  <nav class="cnav" aria-label="Categories">
+    <div class="wrap cnav__in">
+      <button class="cnav__all" type="button" data-mega-toggle aria-expanded="false" aria-controls="mega"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-squares-four"/></svg>All categories</button>
+      <ul class="cnav__links">
+        <li><a data-nav="ball" href="shop.html?cat=ball-bearings">Ball bearings</a></li>
+        <li><a data-nav="roller" href="shop.html?cat=roller-bearings">Roller bearings</a></li>
+        <li><a data-nav="housed" href="shop.html?cat=housed-units">Housed units</a></li>
+        <li><a data-nav="belts" href="shop.html?cat=belts-pulleys">V-belts &amp; pulleys</a></li>
+        <li><a data-nav="seals" href="shop.html?cat=seals">Oil seals &amp; O-rings</a></li>
+        <li><a data-nav="more" href="shop.html">More supplies</a></li>
       </ul>
-    </nav>
-    <div class="gnav__icons">
-      <button class="icon-btn" type="button" data-open-search aria-label="Search products" aria-keyshortcuts="Meta+K Control+K" title="Search (Ctrl K or ⌘ K)"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-magnifying-glass"/></svg></button>
-      <a class="icon-btn hide-s" href="account.html" aria-label="Your account" data-nav="account"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-user"/></svg></a>
-      <button class="icon-btn cart-btn" type="button" data-open-cart aria-label="Bag, 0 items" aria-controls="cart-drawer"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-handbag"/></svg><span class="cart-count" data-cart-count aria-hidden="true">0</span></button>
-      <button class="icon-btn only-m" type="button" data-open-menu aria-label="Open menu" aria-expanded="false" aria-controls="mmenu"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-list"/></svg></button>
+      <ul class="cnav__tools">
+        <li><a data-nav="quick-order" href="quick-order.html">Quick order</a></li>
+        <li><a data-nav="tools" href="tools.html">Tools</a></li>
+        <li><a data-nav="business" href="business.html">For business</a></li>
+        <li><a data-nav="support" href="support.html">Help</a></li>
+      </ul>
     </div>
-  </div>
-
-  <div class="mega" id="m-store" data-mega-panel>
-    <div class="mega__in">
-      <div>
-        <p class="mega__h">Shop</p>
-        <ul class="mega__big">
-          <li><a href="shop.html">All products</a></li>
-          <li><a href="shop.html?cat=ball-bearings">Ball bearings</a></li>
-          <li><a href="shop.html?cat=roller-bearings">Roller bearings</a></li>
-          <li><a href="shop.html?cat=housed-units">Housed units</a></li>
-          <li><a href="shop.html?cat=linear-motion">Linear motion</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Quick links</p>
-        <ul class="mega__list">
-          <li><a href="index.html#finder">Find by size</a></li>
-          <li><a href="tools.html#interchange">Find an equivalent part</a></li>
-          <li><a href="shop.html?tag=bestseller">Bestsellers</a></li>
-          <li><a href="shop.html?tag=new">New in stock</a></li>
-          <li><a href="shop.html?tag=price-drop">Lower prices</a></li>
-          <li><a href="shop.html?stock=1&amp;ship=0">Ships today</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Ways to buy</p>
-        <ul class="mega__list">
-          <li><a href="quick-order.html">Quick order</a></li>
-          <li><a href="quick-order.html#bom">Upload a BOM</a></li>
-          <li><a href="quick-order.html#rfq">Request a quote</a></li>
-          <li><a href="business.html">Business account</a></li>
-          <li><a href="account.html#lists">Saved lists</a></li>
-        </ul>
-      </div>
-      <a class="mega__feature" href="shop.html?stock=1&amp;ship=0">
-        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/s/warehouse-sm.webp" alt="" decoding="async" width="900" height="563">
-        <span>Order by 4 pm, dispatched today<small>Thousands of parts ready on the shelf.</small></span>
-      </a>
-    </div>
-  </div>
-
-  <div class="mega" id="m-bearings" data-mega-panel>
-    <div class="mega__in">
-      <div>
-        <p class="mega__h">Bearings</p>
-        <ul class="mega__big">
-          <li><a href="shop.html?cat=bearings">All bearings</a></li>
-          <li><a href="shop.html?cat=ball-bearings">Ball bearings</a></li>
-          <li><a href="shop.html?cat=roller-bearings">Roller bearings</a></li>
-          <li><a href="shop.html?cat=housed-units">Housed units</a></li>
-          <li><a href="shop.html?cat=mounting-tools&amp;sub=sleeves-nuts">Sleeves &amp; locknuts</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Ball</p>
-        <ul class="mega__list">
-          <li><a href="shop.html?cat=ball-bearings&amp;sub=deep-groove">Deep groove</a></li>
-          <li><a href="shop.html?cat=ball-bearings&amp;sub=miniature">Miniature</a></li>
-          <li><a href="shop.html?cat=ball-bearings&amp;sub=angular-contact">Angular contact</a></li>
-          <li><a href="shop.html?cat=ball-bearings&amp;sub=self-aligning">Self-aligning</a></li>
-          <li><a href="shop.html?cat=ball-bearings&amp;sub=thrust-ball">Thrust ball</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Roller and housed</p>
-        <ul class="mega__list">
-          <li><a href="shop.html?cat=roller-bearings&amp;sub=tapered">Tapered roller</a></li>
-          <li><a href="shop.html?cat=roller-bearings&amp;sub=spherical">Spherical roller</a></li>
-          <li><a href="shop.html?cat=roller-bearings&amp;sub=cylindrical">Cylindrical roller</a></li>
-          <li><a href="shop.html?cat=roller-bearings&amp;sub=needle">Needle roller</a></li>
-          <li><a href="shop.html?cat=housed-units&amp;sub=pillow-block">Pillow blocks</a></li>
-          <li><a href="shop.html?cat=housed-units&amp;sub=plummer-block">Plummer blocks</a></li>
-        </ul>
-      </div>
-      <a class="mega__feature" href="tools.html#decoder">
-        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/p/dgbb-sealed-sm.webp" alt="" decoding="async" width="480" height="480">
-        <span>What does 6205-2RS1/C3 mean?<small>Decode any bearing number in seconds.</small></span>
-      </a>
-    </div>
-  </div>
-
-  <div class="mega" id="m-transmission" data-mega-panel>
-    <div class="mega__in">
-      <div>
-        <p class="mega__h">Transmission</p>
-        <ul class="mega__big">
-          <li><a href="shop.html?cat=transmission">All transmission parts</a></li>
-          <li><a href="shop.html?cat=belts-pulleys">Belts &amp; pulleys</a></li>
-          <li><a href="shop.html?cat=power-transmission">Chains &amp; couplings</a></li>
-          <li><a href="shop.html?cat=linear-motion">Linear motion</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Belts</p>
-        <ul class="mega__list">
-          <li><a href="shop.html?cat=belts-pulleys&amp;sub=classical-v">Classical V-belts</a></li>
-          <li><a href="shop.html?cat=belts-pulleys&amp;sub=wedge-v">Wedge belts</a></li>
-          <li><a href="shop.html?cat=belts-pulleys&amp;sub=timing">Timing belts</a></li>
-          <li><a href="shop.html?cat=belts-pulleys&amp;sub=poly-v">Poly-V belts</a></li>
-          <li><a href="shop.html?cat=belts-pulleys&amp;sub=pulleys">Pulleys &amp; bushes</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Chains and linear motion</p>
-        <ul class="mega__list">
-          <li><a href="shop.html?cat=power-transmission&amp;sub=roller-chains">Roller chains</a></li>
-          <li><a href="shop.html?cat=power-transmission&amp;sub=sprockets">Sprockets</a></li>
-          <li><a href="shop.html?cat=power-transmission&amp;sub=couplings">Couplings</a></li>
-          <li><a href="shop.html?cat=linear-motion&amp;sub=linear-bearings">Linear bearings</a></li>
-          <li><a href="shop.html?cat=linear-motion&amp;sub=linear-guides">Linear guides</a></li>
-          <li><a href="shop.html?cat=linear-motion&amp;sub=shafts">Shafts &amp; supports</a></li>
-        </ul>
-      </div>
-      <a class="mega__feature" href="tools.html#belt">
-        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/p/v-belt-sm.webp" alt="" decoding="async" width="480" height="480">
-        <span>Belt length calculator<small>Pulley sizes and centre distance in, belt number out.</small></span>
-      </a>
-    </div>
-  </div>
-
-  <div class="mega" id="m-seals" data-mega-panel>
-    <div class="mega__in">
-      <div>
-        <p class="mega__h">Seals &amp; O-rings</p>
-        <ul class="mega__big">
-          <li><a href="shop.html?cat=seals">All seals</a></li>
-          <li><a href="shop.html?cat=seals&amp;sub=oil-seals">Oil seals</a></li>
-          <li><a href="shop.html?cat=seals&amp;sub=o-rings">O-rings</a></li>
-          <li><a href="shop.html?cat=seals&amp;sub=v-rings">V-rings</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Find a seal</p>
-        <ul class="mega__list">
-          <li><a href="shop.html?cat=seals&amp;q=25x52">By shaft and bore size</a></li>
-          <li><a href="tools.html#convert">Inch to mm converter</a></li>
-          <li><a href="quick-order.html#rfq">Seals made to drawing</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Often bought together</p>
-        <ul class="mega__list">
-          <li><a href="shop.html?cat=lubrication&amp;sub=greases">Bearing greases</a></li>
-          <li><a href="shop.html?cat=mounting-tools&amp;sub=fitting-kits">Fitting kits</a></li>
-          <li><a href="shop.html?cat=mounting-tools&amp;sub=pullers">Pullers</a></li>
-        </ul>
-      </div>
-      <a class="mega__feature" href="shop.html?cat=seals">
-        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/p/oil-seal-sm.webp" alt="" decoding="async" width="480" height="480">
-        <span>Keep the grease in, grit out<small>Nitrile and Viton lip seals in common sizes.</small></span>
-      </a>
-    </div>
-  </div>
-
-  <div class="mega" id="m-lube" data-mega-panel>
-    <div class="mega__in">
-      <div>
-        <p class="mega__h">Lubrication</p>
-        <ul class="mega__big">
-          <li><a href="shop.html?cat=lubrication">All lubrication</a></li>
-          <li><a href="shop.html?cat=lubrication&amp;sub=greases">Greases</a></li>
-          <li><a href="shop.html?cat=lubrication&amp;sub=oils">Oils</a></li>
-          <li><a href="shop.html?cat=lubrication&amp;sub=grease-guns">Grease guns</a></li>
-          <li><a href="shop.html?cat=lubrication&amp;sub=auto-lubricators">Automatic lubricators</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Choose a grease</p>
-        <ul class="mega__list">
-          <li><a href="tools.html#grease">How much grease?</a></li>
-          <li><a href="support.html#faq">NLGI grades explained</a></li>
-          <li><a href="shop.html?cat=lubrication&amp;q=pail">Bulk pails and drums</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Shipping note</p>
-        <p class="small muted">Greases and oils travel by road. Aerosols are not sent by air.</p>
-      </div>
-      <a class="mega__feature" href="shop.html?cat=lubrication&amp;sub=greases">
-        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/p/grease-sm.webp" alt="" decoding="async" width="480" height="480">
-        <span>Greases for every bearing<small>Lithium, high-temperature and EP grades.</small></span>
-      </a>
-    </div>
-  </div>
-
-  <div class="mega" id="m-tools" data-mega-panel>
-    <div class="mega__in">
-      <div>
-        <p class="mega__h">Engineering tools</p>
-        <ul class="mega__big">
-          <li><a href="tools.html#decoder">Part number decoder</a></li>
-          <li><a href="tools.html#interchange">Interchange finder</a></li>
-          <li><a href="tools.html#belt">Belt length calculator</a></li>
-          <li><a href="tools.html#grease">Grease calculator</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Mounting tools</p>
-        <ul class="mega__list">
-          <li><a href="shop.html?cat=mounting-tools">All mounting tools</a></li>
-          <li><a href="shop.html?cat=mounting-tools&amp;sub=pullers">Pullers</a></li>
-          <li><a href="shop.html?cat=mounting-tools&amp;sub=heaters">Induction heaters</a></li>
-          <li><a href="shop.html?cat=mounting-tools&amp;sub=fitting-kits">Fitting kits</a></li>
-          <li><a href="shop.html?cat=mounting-tools&amp;sub=sleeves-nuts">Sleeves &amp; locknuts</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Reference</p>
-        <ul class="mega__list">
-          <li><a href="tools.html#convert">Inch and mm sizes</a></li>
-          <li><a href="tools.html#suffixes">Suffix glossary</a></li>
-          <li><a href="support.html#faq">Buying guide FAQs</a></li>
-        </ul>
-      </div>
-      <a class="mega__feature" href="shop.html?cat=mounting-tools">
-        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/p/bearing-puller-sm.webp" alt="" decoding="async" width="480" height="480">
-        <span>Fit it right the first time<small>Pullers, heaters and fitting kits.</small></span>
-      </a>
-    </div>
-  </div>
-
-  <div class="mega" id="m-business" data-mega-panel>
-    <div class="mega__in">
-      <div>
-        <p class="mega__h">Bearingsetu for Business</p>
-        <ul class="mega__big">
-          <li><a href="business.html">Open a business account</a></li>
-          <li><a href="business.html#credit">30-day credit</a></li>
-          <li><a href="quick-order.html">Quick order</a></li>
-          <li><a href="quick-order.html#rfq">Request a quote</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Your account</p>
-        <ul class="mega__list">
-          <li><a href="account.html">Dashboard</a></li>
-          <li><a href="account.html#orders">Orders and reorder</a></li>
-          <li><a href="account.html#invoices">GST invoices</a></li>
-          <li><a href="account.html#lists">Saved lists</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Industries</p>
-        <ul class="mega__list">
-          <li><a href="about.html#industries">Textile mills</a></li>
-          <li><a href="about.html#industries">Cement and mining</a></li>
-          <li><a href="about.html#industries">Automotive and tractors</a></li>
-          <li><a href="about.html#industries">Pumps and motors</a></li>
-        </ul>
-      </div>
-      <a class="mega__feature" href="business.html">
-        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/s/factory-sm.webp" alt="" decoding="async" width="900" height="563">
-        <span>Prices for your volumes<small>Tier pricing, GST invoices and credit.</small></span>
-      </a>
-    </div>
-  </div>
-
-  <div class="mega" id="m-support" data-mega-panel>
-    <div class="mega__in">
-      <div>
-        <p class="mega__h">Support</p>
-        <ul class="mega__big">
-          <li><a href="support.html#track">Track an order</a></li>
-          <li><a href="support.html#returns">Returns</a></li>
-          <li><a href="support.html#contact">Contact us</a></li>
-          <li><a href="support.html#faq">FAQs</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Orders</p>
-        <ul class="mega__list">
-          <li><a href="policies.html#shipping">Shipping and dispatch</a></li>
-          <li><a href="policies.html#payments">Payments</a></li>
-          <li><a href="policies.html#returns">Return policy</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="mega__h">Help with parts</p>
-        <ul class="mega__list">
-          <li><a href="tools.html#decoder">Read a part number</a></li>
-          <li><a href="tools.html#interchange">Find an equivalent</a></li>
-          <li><a href="support.html#genuine">Is my bearing genuine?</a></li>
-        </ul>
-      </div>
-      <a class="mega__feature" href="support.html#contact">
-        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="assets/img/s/conveyor-sm.webp" alt="" decoding="async" width="900" height="675">
-        <span>Talk to a parts specialist<small>Monday to Saturday, 9:30 am to 7 pm.</small></span>
-      </a>
-    </div>
-  </div>
-</header>
-<div class="page-dim" data-page-dim></div>
-
-<div class="mmenu" id="mmenu" hidden>
-  <nav aria-label="Mobile">
-    <ul class="mmenu__list">
-      <li><a class="mmenu__row" href="shop.html">Store</a></li>
-      <li>
-        <button class="mmenu__row" type="button" aria-expanded="false" aria-controls="mm-bearings">Bearings <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-caret-down"/></svg></button>
-        <ul class="mmenu__sub" id="mm-bearings" hidden>
-          <li><a href="shop.html?cat=bearings">All bearings</a></li>
-          <li><a href="shop.html?cat=ball-bearings">Ball bearings</a></li>
-          <li><a href="shop.html?cat=roller-bearings">Roller bearings</a></li>
-          <li><a href="shop.html?cat=housed-units">Housed units</a></li>
-          <li><a href="shop.html?cat=mounting-tools&amp;sub=sleeves-nuts">Sleeves &amp; locknuts</a></li>
-        </ul>
-      </li>
-      <li>
-        <button class="mmenu__row" type="button" aria-expanded="false" aria-controls="mm-trans">Transmission <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-caret-down"/></svg></button>
-        <ul class="mmenu__sub" id="mm-trans" hidden>
-          <li><a href="shop.html?cat=transmission">All transmission parts</a></li>
-          <li><a href="shop.html?cat=belts-pulleys">Belts &amp; pulleys</a></li>
-          <li><a href="shop.html?cat=power-transmission">Chains &amp; couplings</a></li>
-          <li><a href="shop.html?cat=linear-motion">Linear motion</a></li>
-        </ul>
-      </li>
-      <li>
-        <button class="mmenu__row" type="button" aria-expanded="false" aria-controls="mm-seals">Seals <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-caret-down"/></svg></button>
-        <ul class="mmenu__sub" id="mm-seals" hidden>
-          <li><a href="shop.html?cat=seals">All seals</a></li>
-          <li><a href="shop.html?cat=seals&amp;sub=oil-seals">Oil seals</a></li>
-          <li><a href="shop.html?cat=seals&amp;sub=o-rings">O-rings</a></li>
-          <li><a href="shop.html?cat=seals&amp;sub=v-rings">V-rings</a></li>
-        </ul>
-      </li>
-      <li>
-        <button class="mmenu__row" type="button" aria-expanded="false" aria-controls="mm-lube">Lubrication <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-caret-down"/></svg></button>
-        <ul class="mmenu__sub" id="mm-lube" hidden>
-          <li><a href="shop.html?cat=lubrication">All lubrication</a></li>
-          <li><a href="shop.html?cat=lubrication&amp;sub=greases">Greases</a></li>
-          <li><a href="shop.html?cat=lubrication&amp;sub=oils">Oils</a></li>
-          <li><a href="shop.html?cat=lubrication&amp;sub=grease-guns">Grease guns</a></li>
-          <li><a href="shop.html?cat=lubrication&amp;sub=auto-lubricators">Automatic lubricators</a></li>
-        </ul>
-      </li>
-      <li>
-        <button class="mmenu__row" type="button" aria-expanded="false" aria-controls="mm-tools">Tools <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-caret-down"/></svg></button>
-        <ul class="mmenu__sub" id="mm-tools" hidden>
-          <li><a href="tools.html">Engineering tools</a></li>
-          <li><a href="tools.html#decoder">Part number decoder</a></li>
-          <li><a href="tools.html#interchange">Interchange finder</a></li>
-          <li><a href="shop.html?cat=mounting-tools">Mounting tools</a></li>
-          <li><a href="shop.html?cat=mounting-tools&amp;sub=pullers">Pullers</a></li>
-          <li><a href="shop.html?cat=mounting-tools&amp;sub=heaters">Induction heaters</a></li>
-          <li><a href="shop.html?cat=mounting-tools&amp;sub=fitting-kits">Fitting kits</a></li>
-        </ul>
-      </li>
-      <li><a class="mmenu__row" href="quick-order.html">Quick order</a></li>
-      <li>
-        <button class="mmenu__row" type="button" aria-expanded="false" aria-controls="mm-business">Business <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-caret-down"/></svg></button>
-        <ul class="mmenu__sub" id="mm-business" hidden>
-          <li><a href="business.html">Business accounts</a></li>
-          <li><a href="business.html#credit">30-day credit</a></li>
-          <li><a href="quick-order.html#rfq">Request a quote</a></li>
-          <li><a href="account.html#orders">Orders and reorder</a></li>
-          <li><a href="account.html#invoices">GST invoices</a></li>
-        </ul>
-      </li>
-      <li>
-        <button class="mmenu__row" type="button" aria-expanded="false" aria-controls="mm-support">Support <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-caret-down"/></svg></button>
-        <ul class="mmenu__sub" id="mm-support" hidden>
-          <li><a href="support.html">Help centre</a></li>
-          <li><a href="support.html#track">Track an order</a></li>
-          <li><a href="support.html#returns">Returns</a></li>
-          <li><a href="support.html#contact">Contact us</a></li>
-          <li><a href="policies.html#shipping">Shipping and dispatch</a></li>
-        </ul>
-      </li>
-    </ul>
-    <div class="mmenu__foot">
-      <a class="btn btn--quiet btn--block" href="account.html"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-user"/></svg>Your account</a>
-      <a class="btn btn--block" href="business.html">Open a business account</a>
-    </div>
+    <div class="mega" id="mega" hidden data-mega></div>
   </nav>
-</div>
-<div class="ribbon" data-ribbon><p>GST invoice on every order. Free dispatch on orders of ₹5,000 or more before GST. <a class="more" href="business.html">30-day credit for business</a></p></div>
-<noscript><div class="nojs-note"><p class="notice notice--warm"><span>This store needs JavaScript to show prices, your bag and checkout. Turn it on in your browser, or email your parts list to <a href="mailto:orders@bearingsetu.com">orders@bearingsetu.com</a> and we will reply within 2 working hours, Monday to Saturday.</span></p></div></noscript>
+</header>
+<div class="mmenu" id="mmenu" role="dialog" aria-modal="true" aria-label="Menu" data-mmenu></div>
 <!-- /@header -->
 
-<main id="main" class="co" data-co>
-
-  <div class="wrap co__top" data-co-top>
-    <a class="co__back" href="cart.html"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-caret-left"/></svg>Back to bag</a>
-    <h1 class="h2 co__title" id="co-title" tabindex="-1">Checkout</h1>
-    <p class="co__lede"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-lock-simple"/></svg>Three short steps. Your details stay in this browser.</p>
-  </div>
-
-  <div class="wrap co__wrap" data-co-flow>
-    <button class="co__mtoggle" type="button" aria-expanded="false" aria-controls="co-sum-body" data-sum-toggle>
-      <span class="co__mtoggle-l"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-handbag"/></svg><span data-sum-toggle-label>Show order summary</span></span>
-      <strong class="num" data-sum-total-m></strong>
-      <svg class="i co__mtoggle-c" aria-hidden="true"><use href="assets/icons.svg#i-caret-down"/></svg>
-    </button>
-
-    <div class="co__grid">
-      <div class="co__steps">
-
-        <!-- Step 1: contact -->
-        <section class="cstep is-open" data-cstep="contact" aria-labelledby="cs-contact-h">
-          <div class="cstep__head">
-            <h2 class="cstep__h" id="cs-contact-h"><button class="cstep__btn" type="button" aria-expanded="true" aria-controls="cs-contact" data-step-toggle="contact"><span class="cstep__num" aria-hidden="true"><span>1</span><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-check"/></svg></span><span class="cstep__name">Contact</span></button></h2>
-            <p class="cstep__sum" data-step-sum="contact"></p>
-            <button class="cstep__edit" type="button" data-step-edit="contact" aria-label="Edit contact details" hidden>Edit</button>
-          </div>
-          <form class="cstep__body" id="cs-contact" method="post" novalidate data-step-form="contact">
-            <p class="cstep__intro">We send the order confirmation and GST invoice here.</p>
-            <div class="form-grid">
-              <div class="field">
-                <label for="co-email">Email</label>
-                <input class="input" id="co-email" name="email" type="email" autocomplete="email" inputmode="email" spellcheck="false" autocapitalize="off" data-f="email">
-                <p class="error" id="co-email-err" data-err="email"></p>
-              </div>
-              <div class="field">
-                <label for="co-mobile">Mobile number</label>
-                <div class="tel"><span class="tel__cc" aria-hidden="true">+91</span><input class="input tel__in num" id="co-mobile" name="mobile" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="17" aria-describedby="co-mobile-hint" data-f="mobile"></div>
-                <p class="hint" id="co-mobile-hint">10 digits. We text dispatch updates here.</p>
-                <p class="error" id="co-mobile-err" data-err="mobile"></p>
-              </div>
-              <div class="span-2 bizswitch">
-                <label class="switch" for="co-biz"><input type="checkbox" id="co-biz" role="switch" aria-controls="co-biz-fields" aria-describedby="co-biz-hint" data-f="business"><span>This is a business purchase</span></label>
-                <p class="hint" id="co-biz-hint">Add your GSTIN to claim input tax credit. Verified business accounts can also pay on 30-day credit.</p>
-              </div>
-              <div class="span-2 biz" id="co-biz-fields" data-biz hidden>
-                <div class="form-grid">
-                  <div class="field span-2">
-                    <label for="co-company">Company name</label>
-                    <input class="input" id="co-company" name="company" autocomplete="organization" data-f="company">
-                    <p class="error" id="co-company-err" data-err="company"></p>
-                  </div>
-                  <div class="field">
-                    <label for="co-gstin">GSTIN</label>
-                    <input class="input mono gstin" id="co-gstin" name="gstin" autocomplete="off" spellcheck="false" autocapitalize="characters" maxlength="15" aria-describedby="co-gstin-hint" data-f="gstin">
-                    <p class="hint" id="co-gstin-hint" data-gstin-hint>15 characters, for example 27AAPFU0939F1ZV.</p>
-                    <p class="error" id="co-gstin-err" data-err="gstin"></p>
-                  </div>
-                  <div class="field">
-                    <label for="co-po">PO number <small>Optional</small></label>
-                    <input class="input" id="co-po" name="po" autocomplete="off" maxlength="30" aria-describedby="co-po-hint" data-f="po">
-                    <p class="hint" id="co-po-hint">Printed on your invoice.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="cstep__foot">
-              <button class="btn btn--lg" type="submit">Continue to delivery</button>
-            </div>
-          </form>
-        </section>
-
-        <!-- Step 2: delivery -->
-        <section class="cstep" data-cstep="delivery" aria-labelledby="cs-delivery-h">
-          <div class="cstep__head">
-            <h2 class="cstep__h" id="cs-delivery-h"><button class="cstep__btn" type="button" aria-expanded="false" aria-controls="cs-delivery" aria-disabled="true" data-step-toggle="delivery"><span class="cstep__num" aria-hidden="true"><span>2</span><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-check"/></svg></span><span class="cstep__name">Delivery</span></button></h2>
-            <p class="cstep__sum" data-step-sum="delivery"></p>
-            <button class="cstep__edit" type="button" data-step-edit="delivery" aria-label="Edit delivery details" hidden>Edit</button>
-          </div>
-          <form class="cstep__body" id="cs-delivery" method="post" novalidate data-step-form="delivery" hidden>
-            <p class="cstep__intro" data-addr-intro>Where should we deliver? We print this address on your invoice.</p>
-            <div class="form-grid">
-              <div class="field span-2">
-                <label for="co-name">Full name</label>
-                <input class="input" id="co-name" name="name" autocomplete="name" data-f="name">
-                <p class="error" id="co-name-err" data-err="name"></p>
-              </div>
-              <div class="field span-2">
-                <label for="co-line1">Address line 1</label>
-                <input class="input" id="co-line1" name="line1" autocomplete="address-line1" aria-describedby="co-line1-hint" data-f="line1">
-                <p class="hint" id="co-line1-hint">Plot or building, street, industrial area.</p>
-                <p class="error" id="co-line1-err" data-err="line1"></p>
-              </div>
-              <div class="field span-2">
-                <label for="co-line2">Address line 2 <small>Optional</small></label>
-                <input class="input" id="co-line2" name="line2" autocomplete="address-line2" data-f="line2">
-              </div>
-              <div class="span-2 addr3">
-                <div class="field">
-                  <label for="co-pin">Pincode</label>
-                  <input class="input num" id="co-pin" name="pincode" inputmode="numeric" autocomplete="postal-code" maxlength="6" aria-describedby="co-pin-hint" data-f="pincode">
-                  <p class="hint" id="co-pin-hint" data-pin-hint>6 digits.</p>
-                  <p class="error" id="co-pin-err" data-err="pincode"></p>
-                </div>
-                <div class="field">
-                  <label for="co-city">City</label>
-                  <input class="input" id="co-city" name="city" autocomplete="address-level2" data-f="city">
-                  <p class="error" id="co-city-err" data-err="city"></p>
-                </div>
-                <div class="field">
-                  <label for="co-state">State</label>
-                  <select class="select" id="co-state" name="state" autocomplete="address-level1" data-f="state">
-                    <option value="">Choose a state</option>
-                  </select>
-                  <p class="error" id="co-state-err" data-err="state"></p>
-                </div>
-              </div>
-            </div>
-
-            <fieldset class="opts" aria-describedby="co-ship-promise">
-              <legend class="opts__legend">Delivery option</legend>
-              <div class="opts__list" data-ship-opts>
-                <label class="ropt">
-                  <input type="radio" name="ship" value="standard" checked data-f="ship">
-                  <span class="ropt__main"><span class="ropt__t">Standard delivery</span><span class="ropt__s" data-ship-date="standard">1 to 5 working days after dispatch, depending on the pincode</span></span>
-                  <span class="ropt__p num" data-ship-fee="standard">Free</span>
-                </label>
-                <label class="ropt">
-                  <input type="radio" name="ship" value="express" data-f="ship">
-                  <span class="ropt__main"><span class="ropt__t">Express delivery</span><span class="ropt__s" data-ship-date="express">The next working day after dispatch</span></span>
-                  <span class="ropt__p num">₹350</span>
-                </label>
-                <label class="ropt">
-                  <input type="radio" name="ship" value="pickup" data-f="ship">
-                  <span class="ropt__main"><span class="ropt__t">Pick up from our Pune warehouse</span><span class="ropt__s" data-ship-date="pickup">Ready in 4 hours</span></span>
-                  <span class="ropt__p num">Free</span>
-                </label>
-              </div>
-              <p class="promise" id="co-ship-promise" data-ship-promise></p>
-              <p class="notice pickup-note" data-pickup-note hidden><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-storefront"/></svg><span>Collect from Bearingsetu, Bhosari MIDC, Pune 411026, Monday to Saturday, 9:30 am to 7 pm. Bring your order number and a photo ID.</span></p>
-            </fieldset>
-
-            <div class="cstep__foot">
-              <button class="btn btn--lg" type="submit">Continue to payment</button>
-            </div>
-          </form>
-        </section>
-
-        <!-- Step 3: payment -->
-        <section class="cstep" data-cstep="payment" aria-labelledby="cs-payment-h">
-          <div class="cstep__head">
-            <h2 class="cstep__h" id="cs-payment-h"><button class="cstep__btn" type="button" aria-expanded="false" aria-controls="cs-payment" aria-disabled="true" data-step-toggle="payment"><span class="cstep__num" aria-hidden="true"><span>3</span><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-check"/></svg></span><span class="cstep__name">Payment</span></button></h2>
-            <p class="cstep__sum" data-step-sum="payment"></p>
-          </div>
-          <form class="cstep__body" id="cs-payment" method="post" novalidate data-step-form="payment" hidden>
-            <fieldset class="opts">
-              <legend class="opts__legend">How would you like to pay?</legend>
-              <p class="error opts__err" id="co-pay-err" data-err="pay"></p>
-              <div class="opts__list">
-
-                <div class="popt" data-popt="upi">
-                  <label class="popt__head">
-                    <input type="radio" name="pay" value="upi" data-f="pay" aria-describedby="co-pay-err">
-                    <svg class="i popt__icon" aria-hidden="true"><use href="assets/icons.svg#i-qr-code"/></svg>
-                    <span class="ropt__main"><span class="ropt__t">UPI</span><span class="ropt__s">Pay from any bank app.</span></span>
-                  </label>
-                  <div class="popt__body" data-popt-body="upi" hidden>
-                    <div class="seg upi-seg" role="group" aria-label="How to pay by UPI">
-                      <button type="button" data-upi-mode="id" aria-pressed="true">UPI ID</button>
-                      <button type="button" data-upi-mode="qr" aria-pressed="false">Any UPI app</button>
-                    </div>
-                    <div class="field" data-upi-id>
-                      <label for="co-upi">UPI ID</label>
-                      <input class="input" id="co-upi" name="upi" autocomplete="off" spellcheck="false" autocapitalize="off" inputmode="email" aria-describedby="co-upi-hint" data-f="upi">
-                      <p class="hint" id="co-upi-hint">For example ravi.kulkarni@okhdfcbank. You approve the request in your UPI app.</p>
-                      <p class="error" id="co-upi-err" data-err="upi"></p>
-                    </div>
-                    <p class="notice" data-upi-qr hidden><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-qr-code"/></svg><span>After you place the order, scan the QR code with GPay, PhonePe, Paytm or BHIM. The code stays valid for 10 minutes.</span></p>
-                  </div>
-                </div>
-
-                <div class="popt" data-popt="card">
-                  <label class="popt__head">
-                    <input type="radio" name="pay" value="card" data-f="pay">
-                    <svg class="i popt__icon" aria-hidden="true"><use href="assets/icons.svg#i-credit-card"/></svg>
-                    <span class="ropt__main"><span class="ropt__t">Card or netbanking</span><span class="ropt__s">Debit card, credit card or any Indian bank.</span></span>
-                  </label>
-                  <div class="popt__body" data-popt-body="card" hidden>
-                    <p class="notice"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-lock-simple"/></svg><span>You finish paying on Razorpay’s secure page. Bearingsetu never sees or stores your card or bank details.</span></p>
-                  </div>
-                </div>
-
-                <div class="popt" data-popt="credit">
-                  <label class="popt__head">
-                    <input type="radio" name="pay" value="credit" data-f="pay" aria-describedby="co-credit-why" disabled>
-                    <svg class="i popt__icon" aria-hidden="true"><use href="assets/icons.svg#i-hand-coins"/></svg>
-                    <span class="ropt__main"><span class="ropt__t">30-day credit</span><span class="ropt__s" id="co-credit-why" data-credit-why>For verified business accounts.</span></span>
-                  </label>
-                  <div class="popt__body" data-popt-body="credit" hidden>
-                    <div class="credit">
-                      <div class="credit__row"><span>Credit limit <small>(sample)</small></span><strong class="num" data-credit-limit>₹2,00,000</strong></div>
-                      <div class="progress" role="progressbar" aria-label="Credit used" aria-valuemin="0" aria-valuemax="200000" aria-valuenow="53680" data-credit-bar><span style="width:26.84%"></span></div>
-                      <div class="credit__row credit__row--sm"><span>Used <span class="num" data-credit-used>₹53,680</span></span><span>Available <strong class="num" data-credit-avail>₹1,46,320</strong></span></div>
-                      <p class="small muted" data-credit-due></p>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="popt" data-popt="neft">
-                  <label class="popt__head">
-                    <input type="radio" name="pay" value="neft" data-f="pay">
-                    <svg class="i popt__icon" aria-hidden="true"><use href="assets/icons.svg#i-bank"/></svg>
-                    <span class="ropt__main"><span class="ropt__t">Bank transfer, NEFT or RTGS</span><span class="ropt__s">Our bank details appear after you place the order.</span></span>
-                  </label>
-                  <div class="popt__body" data-popt-body="neft" hidden>
-                    <p class="notice"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-info"/></svg><span>Use your order number as the payment reference. We pack and dispatch once the transfer reaches our account.</span></p>
-                  </div>
-                </div>
-
-              </div>
-            </fieldset>
-
-            <div class="place">
-              <p class="notice notice--warm place__sample"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-info"/></svg><span><strong>This is a sample store.</strong> No payment is taken and no order is placed.</span></p>
-              <div class="field">
-                <label class="check" for="co-terms"><input type="checkbox" id="co-terms" name="terms" data-f="terms" aria-describedby="co-terms-err"><span>I agree to the <a href="policies.html#terms">terms of use</a> and the <a href="policies.html#returns">return policy</a>.</span></label>
-                <p class="error" id="co-terms-err" data-err="terms"></p>
-              </div>
-              <button class="btn btn--lg btn--block place__btn" type="submit" data-place>Place order</button>
-              <p class="place__total small muted" data-place-total></p>
-            </div>
-          </form>
-        </section>
-
+<main id="main">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="index.html">Home</a></li><li><a href="cart.html">Quote list</a></li><li aria-current="page">Request a quotation</li></ol></nav>
+    <div data-stage>
+      <header class="pagehead"><h1 class="h1">Request a quotation</h1><p class="muted">Tell us who you are and where the parts go. We reply with price, availability and freight.</p></header>
+      <div class="qlayout">
+        <div class="qform" data-forms></div>
+        <aside class="qside" aria-label="Your parts"><div class="qbox" data-summary></div></aside>
       </div>
-
-      <aside class="co__sum" aria-labelledby="co-sum-title" data-co-sum>
-        <div class="osum" id="co-sum-body">
-          <div class="osum__head">
-            <h2 class="osum__title" id="co-sum-title">Order summary</h2>
-            <a class="small" href="cart.html">Edit bag</a>
-          </div>
-          <ul class="osum__lines" data-sum-lines>
-            <li class="oline" aria-hidden="true"><span class="skeleton oline__img"></span><span class="oline__txt"><span class="skeleton sk-line" style="width:70%"></span><span class="skeleton sk-line" style="width:40%"></span></span></li>
-            <li class="oline" aria-hidden="true"><span class="skeleton oline__img"></span><span class="oline__txt"><span class="skeleton sk-line" style="width:60%"></span><span class="skeleton sk-line" style="width:36%"></span></span></li>
-          </ul>
-          <div class="osum__coupon" data-sum-coupon></div>
-          <dl class="osum__rows" data-sum-rows></dl>
-          <p class="osum__pos" data-sum-pos></p>
-        </div>
-      </aside>
     </div>
   </div>
-
-  <div class="wrap co-empty" data-co-empty hidden></div>
-  <div data-co-done hidden></div>
-  <p class="sr-only" aria-live="polite" data-co-live></p>
 </main>
 
 <!-- @footer -->
-<footer class="gfoot" id="footer">
+<footer class="foot" id="footer">
   <div class="wrap">
-    <div class="gfoot__note">
-      <p>Prices are per unit shown (piece, set, kit, box, tin or pail) and exclude GST unless stated. Free dispatch on orders of ₹5,000 or more before GST; otherwise ₹120. Delivery times are estimates from dispatch.</p>
-      <p>This is a sample store. Products, prices, stock levels, reviews and account data are sample content for design review. Product photos show the type of part; brand markings on the part you receive can differ. Brand names belong to their owners.</p>
-    </div>
-    <nav class="gfoot__grid" aria-label="Footer">
-      <div>
-        <h2><button class="gfoot__acc" type="button" aria-expanded="false">Shop <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-plus"/></svg></button><span class="gfoot__h">Shop</span></h2>
+    <div class="foot__grid">
+      <div class="foot__brand">
+        <a class="brand" href="index.html" aria-label="Bearingsetu home"><span>Bearing<b>setu</b></span></a>
+        <p>Bearings, V-belts, oil seals and related industrial components for businesses, workshops and factories.</p>
+        <div class="foot__contact" data-biz-contact></div>
+      </div>
+      <details open>
+        <summary>Shop</summary>
         <ul>
           <li><a href="shop.html?cat=ball-bearings">Ball bearings</a></li>
           <li><a href="shop.html?cat=roller-bearings">Roller bearings</a></li>
           <li><a href="shop.html?cat=housed-units">Housed units</a></li>
-          <li><a href="shop.html?cat=belts-pulleys">Belts &amp; pulleys</a></li>
-          <li><a href="shop.html?cat=seals">Seals &amp; O-rings</a></li>
-          <li><a href="shop.html?cat=lubrication">Lubrication</a></li>
-          <li><a href="shop.html?cat=power-transmission">Chains &amp; couplings</a></li>
-          <li><a href="shop.html?cat=linear-motion">Linear motion</a></li>
-          <li><a href="shop.html?cat=mounting-tools">Mounting tools</a></li>
+          <li><a href="shop.html?cat=belts-pulleys">V-belts &amp; pulleys</a></li>
+          <li><a href="shop.html?cat=seals">Oil seals &amp; O-rings</a></li>
+          <li><a href="shop.html">All products</a></li>
         </ul>
-      </div>
-      <div>
-        <h2><button class="gfoot__acc" type="button" aria-expanded="false">Business <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-plus"/></svg></button><span class="gfoot__h">Business</span></h2>
+      </details>
+      <details open>
+        <summary>Buy</summary>
         <ul>
-          <li><a href="business.html">Open an account</a></li>
-          <li><a href="business.html#credit">Credit terms</a></li>
-          <li><a href="quick-order.html">Quick order</a></li>
-          <li><a href="quick-order.html#bom">Upload a BOM</a></li>
-          <li><a href="quick-order.html#rfq">Request a quote</a></li>
-          <li><a href="account.html">Your account</a></li>
+          <li><a href="quick-order.html#rfq">Request a quotation</a></li>
+          <li><a href="quick-order.html">Quick order from a list</a></li>
+          <li><a href="quick-order.html#bom">Upload a parts list</a></li>
+          <li><a href="business.html">Business account</a></li>
+          <li data-needs-api><a href="support.html#track">Track an order</a></li>
         </ul>
-      </div>
-      <div>
-        <h2><button class="gfoot__acc" type="button" aria-expanded="false">Tools <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-plus"/></svg></button><span class="gfoot__h">Tools</span></h2>
+      </details>
+      <details open>
+        <summary>Find the right part</summary>
         <ul>
+          <li><a href="index.html#finder">Find by size</a></li>
+          <li><a href="tools.html#interchange">Equivalent parts</a></li>
           <li><a href="tools.html#decoder">Part number decoder</a></li>
-          <li><a href="tools.html#interchange">Interchange finder</a></li>
           <li><a href="tools.html#belt">Belt length calculator</a></li>
-          <li><a href="tools.html#grease">Grease calculator</a></li>
-          <li><a href="tools.html#convert">Inch and mm sizes</a></li>
+          <li><a href="support.html#faq">Questions</a></li>
         </ul>
-      </div>
-      <div>
-        <h2><button class="gfoot__acc" type="button" aria-expanded="false">Support <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-plus"/></svg></button><span class="gfoot__h">Support</span></h2>
+      </details>
+      <details open>
+        <summary>Company</summary>
         <ul>
-          <li><a href="support.html#track">Track an order</a></li>
-          <li><a href="support.html#returns">Returns</a></li>
-          <li><a href="policies.html#shipping">Shipping</a></li>
-          <li><a href="policies.html#payments">Payments</a></li>
-          <li><a href="support.html#faq">FAQs</a></li>
-          <li><a href="support.html#contact">Contact us</a></li>
+          <li><a href="about.html">About Bearingsetu</a></li>
+          <li><a href="support.html#contact">Contact</a></li>
+          <li><a href="policies.html#shipping">Shipping &amp; delivery</a></li>
+          <li><a href="policies.html#terms">Terms</a></li>
+          <li><a href="policies.html#privacy">Privacy</a></li>
+          <li><a href="sitemap.html">Site map</a></li>
         </ul>
-      </div>
-      <div>
-        <h2><button class="gfoot__acc" type="button" aria-expanded="false">Bearingsetu <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-plus"/></svg></button><span class="gfoot__h">Bearingsetu</span></h2>
-        <ul>
-          <li><a href="about.html">About us</a></li>
-          <li><a href="about.html#industries">Industries we serve</a></li>
-          <li><a href="support.html#genuine">Genuine parts</a></li>
-          <li><a href="about.html#sell">Supply with us</a></li>
-          <li><a href="policies.html#credits">Image credits</a></li>
-        </ul>
-      </div>
-    </nav>
-    <p class="gfoot__help">Need a part that is not listed? <a href="quick-order.html#rfq">Request a quote</a> and a specialist will reply within 2 working hours, Monday to Saturday.</p>
-    <div class="gfoot__bottom">
-      <p>© 2026 Bearingsetu. Source · Supply · Grow.</p>
-      <p class="gfoot__legal"><a href="policies.html#terms">Terms of use</a><a href="policies.html#privacy">Privacy</a><a href="policies.html#returns">Returns</a><a href="policies.html#shipping">Shipping</a><a href="sitemap.html">Site map</a></p>
-      <p>India · English · ₹ INR</p>
+      </details>
+    </div>
+    <div class="foot__note" data-foot-note>
+      <p>Prices and availability are confirmed in your quotation. GST is charged as applicable. Product photos show the type of part; the brand markings on the part you receive may differ.</p>
+    </div>
+    <div class="foot__bottom">
+      <p>&copy; 2026 <span data-biz="legalOrName">Bearingsetu</span><span data-biz-show="gstin" hidden> &middot; GSTIN <span data-biz="gstin"></span></span></p>
+      <p class="foot__legal"><a href="policies.html#terms">Terms</a><a href="policies.html#privacy">Privacy</a><a href="policies.html#shipping">Shipping</a><a href="policies.html#credits">Image credits</a></p>
     </div>
   </div>
 </footer>
 
-<a class="wa-float" href="support.html#contact" data-help-float aria-label="Talk to a specialist"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-chat-circle-dots"/></svg><span>Talk to a specialist</span></a>
-
-<div class="search" id="search" role="dialog" aria-modal="true" aria-label="Search products" hidden>
-  <div class="search__scrim" data-close-search></div>
-  <div class="search__panel">
-    <div class="search__in">
-      <form class="search__bar" action="shop.html" role="search" data-search-form>
-        <svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-magnifying-glass"/></svg>
-        <label class="sr-only" for="search-input">Search by part number, size or name</label>
-        <input class="search__input" id="search-input" name="q" type="search" autocomplete="off" spellcheck="false" placeholder="6205 2RS, 25x52x15, SPB 2240…" role="combobox" aria-expanded="false" aria-autocomplete="list">
-        <span class="search__kbd" aria-hidden="true">esc</span>
-        <button class="icon-btn" type="button" data-close-search aria-label="Close search"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button>
-      </form>
-      <div class="search__body" data-search-body></div>
-    </div>
-  </div>
-</div>
-
-<div class="scrim" data-cart-scrim></div>
-<aside class="drawer" id="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title" hidden>
+<div class="scrim" data-scrim></div>
+<aside class="drawer" id="list-drawer" role="dialog" aria-modal="true" aria-labelledby="list-drawer-title" hidden>
   <div class="drawer__head">
-    <h2 class="drawer__title" id="cart-drawer-title">Your bag</h2>
-    <button class="icon-btn" type="button" data-close-cart aria-label="Close bag"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button>
+    <h2 class="drawer__title" id="list-drawer-title">Quote list</h2>
+    <button class="icon-btn" type="button" data-close-list aria-label="Close quote list"><svg class="i" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button>
   </div>
-  <div class="drawer__body" data-cart-lines></div>
-  <div class="drawer__foot" data-cart-foot></div>
+  <div class="drawer__body" data-list-lines></div>
+  <div class="drawer__foot" data-list-foot></div>
 </aside>
 
 <div class="toasts" aria-live="polite" aria-atomic="false" data-toasts></div>
 
+<script src="assets/js/config.js"></script>
 <script src="assets/js/catalog.js"></script>
+<script src="assets/js/commercial.js"></script>
 <script src="assets/js/images.js"></script>
 <script src="assets/js/site.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/ui.js"></script>
 <!-- /@footer -->
-<script src="assets/js/pages/cart.js"></script>
-<script src="assets/js/pages/account.js"></script>
 <script src="assets/js/pages/checkout.js"></script>
 </body>
 </html>

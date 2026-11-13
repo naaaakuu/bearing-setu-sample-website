@@ -468,7 +468,7 @@
       var code = r.ok ? designation(mk[0], r) : null;
       var stocked = cat.filter(function (x) { return x.p.brand === mk[0] && sameVersion(x.d, r); }).map(function (x) { return x.p; });
       if (!stocked.length && code) stocked = BS.products.filter(function (p) { return p.brand === mk[0] && BS.norm(p.pn) === BS.norm(code); });
-      stocked.sort(function (a, b) { return (b.stock > 0) - (a.stock > 0) || a.price - b.price; });
+      stocked.sort(function (a, b) { return a.pn.localeCompare(b.pn, undefined, { numeric: true }); });
       var entered = r.brand ? r.brand.toLowerCase() === mk[0] || (r.brand === "INA" && mk[0] === "fag") : r.style === mk[1];
       return { id: mk[0], name: mk[1], code: code, p: stocked[0] || null, entered: !!entered };
     });
@@ -552,8 +552,8 @@
       '<div class="prow__body"><a class="prow__t" href="' + BS.url(p) + '">' + esc(b.name + " " + p.pn) + "</a>" +
       '<p class="prow__s">' + (opts.note ? '<span class="prow__note">' + opts.note + "</span> · " : "") + (opts.sub != null ? opts.sub : BS.subtitle(p)) + "</p>" +
       '<p class="' + st.cls + '">' + esc(st.text) + "</p></div>" +
-      '<div class="prow__buy"><p class="prow__p">' + BS.priceHTML(p.price, p) + "</p>" +
-      '<button class="btn btn--sm btn--add" type="button" data-add="' + esc(p.id) + '" aria-label="Add ' + esc(b.name + " " + p.pn) + ' to bag">Add to bag</button></div></div>';
+      '<div class="prow__buy"><p class="prow__p">' + BS.priceHTML(p) + "</p>" +
+      '<button class="btn btn--sm btn--add" type="button" data-add="' + esc(p.id) + '" aria-label="Add ' + esc(b.name + " " + p.pn) + ' to quote list">Add to quote</button></div></div>';
   }
   function sealLabel(d) {
     var bits = [];
@@ -652,7 +652,7 @@
     cat.forEach(function (p) { if (picks.indexOf(p) === -1) picks.push(p); });
     var shopHref = picks.length ? BS.url(picks[0]) : "shop.html?q=" + encodeURIComponent(r.raw);
     var side = '<div class="dsum__side"><div class="dsum__ctas"><a class="btn" href="' + shopHref + '">Shop this part</a><button class="btn btn--quiet" type="button" data-to-xch>See equivalents</button></div>' +
-      (picks.length ? '<p class="dsum__h">' + (picks.length === 1 ? "In stock here" : BS.plural(picks.length, "match", "matches") + " in our catalogue") + "</p>" + picks.slice(0, 3).map(function (p) { return catRow(p); }).join("") +
+      (picks.length ? '<p class="dsum__h">' + (picks.length === 1 ? "In our catalogue" : BS.plural(picks.length, "match", "matches") + " in our catalogue") + "</p>" + picks.slice(0, 3).map(function (p) { return catRow(p); }).join("") +
         (picks.length > 3 ? '<a class="more small" href="shop.html?q=' + encodeURIComponent(r.basic) + '">See all ' + picks.length + "</a>" : "") :
         '<p class="dsum__h">Not listed online yet</p><p class="small muted">We can source it. Ask for a price and a specialist replies within 2 working hours.</p><a class="more small" href="quick-order.html?pn=' + encodeURIComponent(r.raw) + '&amp;qty=1#rfq">Request a quote</a>') +
       "</div>";
@@ -755,20 +755,20 @@
     var stockedN = eq.filter(function (x) { return x.p; }).length;
     var rowsHTML = eq.map(function (x) {
       var codeCell = x.code ? '<span class="mono xt__code">' + esc(x.code) + "</span>" : '<span class="muted small">No standard equivalent</span>';
-      var buy = x.p ? '<div class="xt__buy" data-pid="' + esc(x.p.id) + '"><span class="xt__price">' + BS.priceHTML(x.p.price, x.p) + "</span>" +
+      var buy = x.p ? '<div class="xt__buy" data-pid="' + esc(x.p.id) + '"><span class="xt__price">' + BS.priceHTML(x.p) + "</span>" +
           '<a class="xt__link small" href="' + BS.url(x.p) + '">' + esc(BS.stock(x.p).short) + "</a>" +
-          '<button class="btn btn--sm btn--add" type="button" data-add="' + esc(x.p.id) + '" aria-label="Add ' + esc(x.name + " " + x.p.pn) + ' to bag">Add to bag</button></div>' :
+          '<button class="btn btn--sm btn--add" type="button" data-add="' + esc(x.p.id) + '" aria-label="Add ' + esc(x.name + " " + x.p.pn) + ' to quote list">Add to quote</button></div>' :
         x.code ? '<a class="xt__ask small" href="quick-order.html?pn=' + encodeURIComponent(x.name + " " + x.code) + '&amp;qty=1#rfq">Ask for a price</a>' : "";
       return '<tr class="' + (x.entered ? "is-entered" : "") + (x.p ? " is-stocked" : "") + '"><th scope="row"><span class="xt__brand">' + esc(x.name) + "</span>" + (x.entered ? '<span class="badge badge--blue">' + (r.brand ? "You entered" : "Your number’s style") + "</span>" : "") + "</th>" +
-        "<td>" + codeCell + (x.p && x.code && BS.norm(x.p.pn) !== BS.norm(x.code) ? '<span class="xt__also small muted">We stock it as ' + esc(x.p.pn) + "</span>" : "") + "</td><td>" + buy + "</td></tr>";
+        "<td>" + codeCell + (x.p && x.code && BS.norm(x.p.pn) !== BS.norm(x.code) ? '<span class="xt__also small muted">Listed as ' + esc(x.p.pn) + "</span>" : "") + "</td><td>" + buy + "</td></tr>";
     }).join("");
     var vars = variants(r);
-    var varHTML = vars.length ? '<div class="xch__vars"><p class="xch__h">Same size, other versions in stock</p><div class="xch__rows">' + vars.slice(0, 4).map(function (x) { return catRow(x.p, { note: esc(sealLabel(x.d)), sub: esc(BS.dims(x.p)) }); }).join("") + "</div></div>" : "";
-    setHTML(xchOut, '<div class="xch__tablehead"><p class="xch__h">Equivalent designations</p><p class="small muted">' + (stockedN ? BS.plural(stockedN, "brand") + " in stock here" : "None in stock yet, we can source them") + "</p></div>" +
+    var varHTML = vars.length ? '<div class="xch__vars"><p class="xch__h">Same size, other versions</p><div class="xch__rows">' + vars.slice(0, 4).map(function (x) { return catRow(x.p, { note: esc(sealLabel(x.d)), sub: esc(BS.dims(x.p)) }); }).join("") + "</div></div>" : "";
+    setHTML(xchOut, '<div class="xch__tablehead"><p class="xch__h">Equivalent designations</p><p class="small muted">' + (stockedN ? BS.plural(stockedN, "brand") + " in our catalogue" : "None in our catalogue yet, we can source them") + "</p></div>" +
       '<div class="xt-wrap" data-float-avoid><table class="xt"><thead><tr><th scope="col">Maker</th><th scope="col">Designation</th><th scope="col">At Bearingsetu</th></tr></thead><tbody>' + rowsHTML + "</tbody></table></div>" + varHTML +
       (r.unknown.length ? '<div class="notice notice--warm" style="margin-top:16px">' + icon("warning-circle") + "<p>We left out <strong class=\"mono\">" + r.unknown.map(esc).join(", ") + "</strong> because we could not read it. Check that code with us before you swap brands.</p></div>" : "") +
       (r.type === "srb" || r.type === "crb" || r.type === "ac" ? '<p class="tiny muted xch__fine">Cage and design letters differ most on roller and angular contact bearings. We show each maker’s standard current version.</p>' : ""));
-    say(xchLive, "Basic designation " + r.basic + ", " + r.name.toLowerCase() + ". " + (stockedN ? BS.plural(stockedN, "brand") + " in stock here." : "None in stock yet."));
+    say(xchLive, "Basic designation " + r.basic + ", " + r.name.toLowerCase() + ". " + (stockedN ? BS.plural(stockedN, "brand") + " in our catalogue." : "None in our catalogue yet."));
   }
   var renderXchSoon = BS.debounce(function () { renderXch(false); }, 160);
   xchIn.addEventListener("input", renderXchSoon);
@@ -987,7 +987,7 @@
       return;
     }
     var exact = list[0].Lp === std.Lp || (res.kind === "classical" && BS.norm(list[0].p.pn) === BS.norm(std.alt));
-    setHTML(beltMatch, '<div class="row-head belt__mh"><h3 class="h4">' + (exact ? "In stock in this section" : "Closest " + esc(beltSec) + " belts we stock") + '</h3><a class="more small" href="' + rfq + '">' + (exact ? "Need a matched set? Ask us" : "Request " + esc(std.code)) + "</a></div>" +
+    setHTML(beltMatch, '<div class="row-head belt__mh"><h3 class="h4">' + (exact ? "In this section" : "Closest " + esc(beltSec) + " belts in our catalogue") + '</h3><a class="more small" href="' + rfq + '">' + (exact ? "Need a matched set? Ask us" : "Request " + esc(std.code)) + "</a></div>" +
       '<div class="belt__rows">' + list.map(function (x) {
         var diff = x.Lp - res.L;
         var note = Math.abs(x.Lp - std.Lp) < 1 ? "Nearest standard size" : "Pitch length " + fmt(x.Lp, 0) + " mm, " + (diff > 0 ? "+" : "−") + fmt(Math.abs(diff), 0) + " mm";

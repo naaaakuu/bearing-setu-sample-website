@@ -1,75 +1,100 @@
-# Bearingsetu · Online store (Precision design)
+# Bearingsetu
 
-A complete sample e-commerce website for Bearingsetu: bearings, belts and pulleys, seals, lubrication, power transmission, linear motion and mounting tools for Indian industry. Apple-style "Precision" design: calm white space, real photography, one blue action colour.
+Online storefront for Bearingsetu, a B2B supplier of bearings, V-belts, oil seals and related industrial parts. It is built around finding the right part quickly (part number, size, brand, equivalents) and buying by quotation.
 
 **Live site:** https://naaaakuu.github.io/bearing-setu-sample-website/
 
-> Sample store. Products, prices, stock, reviews, orders and account data are sample content. No payment is taken and no order is placed. Cart, orders, saved lists and quotes are stored in the visitor's browser (localStorage) only.
+The site has two layers:
+
+| Layer | What it is | Needs hosting |
+|---|---|---|
+| **Storefront** (this folder) | Plain HTML, CSS and JavaScript. Search, catalogue, filters, product pages, quote list, quotation request, quick order, tools. | GitHub Pages is enough. |
+| **API and admin panel** (`server/`, `admin/`) | Business accounts, admin-approved credit, quotations, orders, email notifications, price and stock entry. | Any host that runs Node 22 or newer. See `server/README.md`. |
+
+Without the API the storefront still works fully as a catalogue and enquiry site. Accounts, credit and order tracking are simply not shown.
+
+## The rules this site follows
+
+* **Nothing invented.** There are no prices, stock levels, ratings, reviews, sales tags, delivery promises or credit offers in the code. A part with no price shows "Quote on request". Availability is shown only if someone entered it.
+* **Credit is not for everyone.** It is off for every account by default, only an administrator can switch it on (per account, with a limit and terms), the customer is told by email and in their account, and nobody else ever sees it. See "Credit" below.
+* **Freight is explicit and configurable.** The default is "freight is charged separately and confirmed in your quotation". Change it in `assets/js/config.js` or the admin panel.
+* **No banners.** The home page has no promotional strip. Search, categories and size finding come first.
 
 ## Pages
 
-| Page | What it does |
-|------|--------------|
-| `index.html` | Home: hero, category strip, live size finder with a drawn section view, bestsellers, category tiles, live quick-order demo, industries, brands |
-| `shop.html` | Catalogue with search, filters (type, brand, bore/OD/width, seal, clearance, stock, price), sort, grid/list and compare |
-| `product.html?id=…` | Product page: gallery with technical drawing, tier prices, variant picker (brand, seal, clearance), delivery estimate by pincode, equivalents, bought-together, reviews |
-| `cart.html` | Bag with tier pricing, save for later, coupon, free-dispatch meter, printable quotation |
-| `checkout.html` | Contact, delivery and payment steps, GSTIN check, CGST/SGST vs IGST, confirmation and printable invoice |
-| `quick-order.html` | Paste a parts list, upload a BOM (CSV or Excel), or request a quote |
-| `business.html` | Business account: tier pricing, 30-day credit, application form |
-| `account.html` | Sample business dashboard: orders and reorder, invoices, saved lists, quotes, team |
-| `support.html` | Order tracking, returns, FAQs, genuine-parts guide, call-back request |
-| `tools.html` | Part number decoder, interchange finder, belt length and grease calculators, inch/mm converter |
-| `about.html`, `policies.html`, `sitemap.html`, `404.html` | Company, policies and image credits, site map, not-found page |
+| Page | Purpose |
+|---|---|
+| `index.html` | Search-first home page, categories, size finder for bearings, oil seals and V-belts, ways to buy |
+| `shop.html` | Catalogue: search results and browsing with category-specific filters, sort, grid and list views. All state is in the URL |
+| `product.html?id=…` | Facts first: dimensions, specification, dimension drawing, equivalent designations, quote actions |
+| `cart.html` | The quote list (kept at the old URL) |
+| `checkout.html` | Request a quotation (kept at the old URL). Signed-in verified accounts can also order when prices and freight rules are published |
+| `quick-order.html` | Paste a list or upload CSV or Excel, review the matches, add to the quote list |
+| `business.html`, `account.html` | How businesses buy; registration, sign-in, quotations, orders and credit (API only) |
+| `tools.html` | Part number decoder, equivalent finder, belt length and grease calculators, inch and mm converter |
+| `support.html`, `about.html`, `policies.html`, `sitemap.html`, `404.html` | Help and contact, company, shipping, payments, terms, privacy, image credits |
 
-## How it is built
+## Configure it (no coding)
 
-Plain HTML, CSS and JavaScript. No framework and no runtime dependencies (SheetJS loads from cdnjs only when someone uploads an Excel file).
+Everything about the business lives in **`assets/js/config.js`**. Leave a value empty and the site hides that line. When the API is connected, the same settings are edited in the admin panel instead.
 
-```
-assets/css/site.css        Design system: tokens, components, header, footer
-assets/css/<page>.css      Page styles
-assets/js/catalog.js       Product catalogue (categories, brands, products, reviews)
-assets/js/images.js        Photo manifest with credits
-assets/js/site.js          Shared logic: search, cart, saved list, mega menu, drawer, toasts,
-                           seller details, dispatch dates and delivery zones, credit rule
-assets/js/pages/<page>.js  Page logic
-assets/img/p, assets/img/s Product and scene photos (WebP)
-assets/fonts               Geist and Geist Mono (SIL Open Font License)
-assets/icons.svg           Phosphor icons (MIT)
-partials/                  Shared head, header and footer
-tools/build.mjs            Copies the partials into every page
-```
+* `business`: name, GSTIN, address, phone, WhatsApp, email, hours. Phone and WhatsApp appear in the top bar, footer and product pages. Email and WhatsApp receive quotation requests when there is no API.
+* `pricing.mode`: `"quote"` (default, no prices shown) or `"list"` (prices you entered are shown; parts without a price still say Quote on request).
+* `shipping`: `mode` (`quoted`, `flat`, `free-over`), `flatFee`, `freeOver`, and the sentence shown to buyers.
+* `catalogue.showIndicativePerformance`: load ratings, limiting speeds and weights are kept in the data but hidden until you have checked them against datasheets.
 
-The header, footer and `<head>` basics live in `partials/`. Never edit the copies inside the pages: edit the partial, then run this from the site folder:
+Prices, stock and lead times live in **`assets/js/commercial.js`** (empty by default) or, with the API, in the admin panel's *Products and prices* with CSV import and export.
+
+## Catalogue data
+
+`assets/js/catalog.js` is the technical catalogue: categories, brands and 199 parts with sizes, construction, equivalent designations and descriptions. It contains no commercial data. To add or change parts, edit this file, or use *Products and prices* in the admin panel when the API is on. Search, filters, suggestions, tools and quick order all read from it.
+
+Replace the representative photos in `assets/img/p` with your own product photography when you can (`policies.html#credits` lists the current photo credits).
+
+## Credit
+
+1. A customer registers a business account (company, GSTIN, contact). Credit status is `none`.
+2. An administrator verifies the account in the admin panel.
+3. The administrator opens the account's Credit panel and approves a limit and payment terms. The panel asks for confirmation because it emails the customer.
+4. The customer receives an email and an in-app notification. Only now does the account see credit, and *Credit* appears as a payment option on its orders, enforced against the available limit.
+5. Changing the limit, suspending or withdrawing credit repeats the notification. Every change is in the audit log.
+
+## Build and preview
+
+The header, footer and `<head>` basics are shared partials. Never edit the copies inside the pages. Edit `partials/*.html`, then run:
 
 ```bash
-node tools/build.mjs                 # every page
+node tools/build.mjs                 # all pages
 node tools/build.mjs shop.html       # or only the pages you name
 ```
 
-It fills the `<!-- @header -->` style markers in every page, and marks the current header link with `aria-current` from each page's `<body data-nav="...">` (`"page"` when the link is that page, `"true"` for the section you are in, `none` for no section). Pages stay plain HTML that GitHub Pages serves as they are.
-
-To preview locally, serve the folder that contains the site, so paths match the live site (`/bearing-setu-sample-website/`). The 404 page uses that base path, so it only loads cleanly this way:
+Preview by serving the folder that contains the site, so paths match the live site (`/bearing-setu-sample-website/`):
 
 ```bash
-cd ..                                # the folder that contains bearing-setu-sample-website
+cd ..
 python3 -m http.server 4173
+# http://localhost:4173/bearing-setu-sample-website/
 ```
 
-Then open http://localhost:4173/bearing-setu-sample-website/ (and http://localhost:4173/bearing-setu-sample-website/404.html for the not-found page).
+## Structure
 
-## Editing products
-
-Products live in `assets/js/catalog.js`. Each product has a part number, brand, category, dimensions, price (ex-GST), tier prices, stock, dispatch days and an image key from `assets/js/images.js`. The shop, search, product pages, quick order and tools all read from this one file.
-
-## Before going live
-
-- Replace sample prices, stock and reviews with real data.
-- Add real contact details (phone, WhatsApp) to the support page and footer.
-- Connect checkout to a payment gateway and order system.
-- Photos are openly licensed (see `policies.html#credits`); swap in your own product photography when ready.
+```
+assets/js/config.js       Business settings (the one file the owner edits)
+assets/js/catalog.js      Technical catalogue
+assets/js/commercial.js   Prices, stock, lead times (empty by default)
+assets/js/site.js         Core: config, catalogue, price rules, search, quote list
+assets/js/api.js          Optional API client, sign-in session, live settings
+assets/js/ui.js           Header search and suggestions, menus, drawer, product card
+assets/js/pages/*.js      One script per page
+assets/css/site.css       Design system; one stylesheet per page group
+server/                   API (Node, no dependencies) and its tests
+admin/                    Admin panel for the business owner
+docs/API.md               The API contract
+docs/AUDIT.md             What was wrong, what changed, what is still open
+tools/build.mjs           Copies the partials into every page
+tools/fixtures/           Test-only sample prices, never published
+```
 
 ## Deploying
 
-GitHub Pages deploys from the `main` branch. Every push to `main` redeploys the site.
+The storefront deploys from `main` on GitHub Pages. The API runs anywhere Node 22 runs (see `server/README.md`). To connect them, set `apiBase` in `assets/js/config.js` to the API's address and add the storefront's address to `CORS_ORIGINS` on the server.
