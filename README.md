@@ -68,6 +68,13 @@ node tools/build.mjs                 # all pages
 node tools/build.mjs shop.html       # or only the pages you name
 ```
 
+After changing the catalogue, regenerate the sitemap and robots rules:
+
+```bash
+node tools/build-sitemap.mjs                     # uses the GitHub Pages address
+node tools/build-sitemap.mjs https://example.com/  # or your own domain
+```
+
 Preview by serving the folder that contains the site, so paths match the live site (`/bearing-setu-sample-website/`):
 
 ```bash
@@ -92,6 +99,7 @@ admin/                    Admin panel for the business owner
 docs/API.md               The API contract
 docs/AUDIT.md             What was wrong, what changed, what is still open
 tools/build.mjs           Copies the partials into every page
+tools/build-sitemap.mjs   Writes sitemap.xml and robots.txt
 tools/fixtures/           Test-only sample prices, never published
 ```
 

@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /server/
+Disallow: /cart.html
+Disallow: /checkout.html
+Disallow: /account.html
+Sitemap: https://naaaakuu.github.io/bearing-setu-sample-website/sitemap.xml

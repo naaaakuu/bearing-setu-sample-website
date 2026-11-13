@@ -54,7 +54,7 @@
       field("f-notes", "Notes", { full: 1, area: 1, ph: "Quantities per month, brand preference, application, anything we should know" }) +
       '<div class="field" style="position:absolute;left:-9999px" aria-hidden="true"><label for="f-web">Website</label><input id="f-web" name="website" tabindex="-1" autocomplete="off"></div>' +
       '</div><p class="small muted" style="margin-top:14px">We use these details only to reply to this request. See our <a href="policies.html#privacy">privacy notice</a>.</p>' +
-      '<p style="margin-top:16px"><button class="btn btn--lg" type="submit" data-submit>Send request</button></p><p class="error" id="f-form-e" role="alert" hidden></p></form>';
+      (BS.api.enabled ? "" : '<p class="small muted" style="margin-top:10px">Next you choose how to send it to us: email, WhatsApp or a download.</p>') + '<p style="margin-top:16px"><button class="btn btn--lg" type="submit" data-submit>' + (BS.api.enabled ? "Send request" : "Continue") + '</button></p><p class="error" id="f-form-e" role="alert" hidden></p></form>';
     if (canOrder(t)) {
       var cr = a.credit, creditOK = BS.creditApproved();
       html += '<form class="card" data-order novalidate><h2>Or place an order now</h2><p class="small muted" style="margin-bottom:12px">You are signed in as a verified account and every part on your list has a published price.</p>' +
