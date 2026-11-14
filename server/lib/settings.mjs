@@ -9,6 +9,8 @@ export const DEFAULT_SETTINGS = Object.freeze({
   pricing: { mode: 'quote', gstRate: 18, showGstToggle: true },
   shipping: { mode: 'quoted', flatFee: null, freeOver: null, note: '', leadTimeNote: '' },
   catalogue: { showIndicativePerformance: false },
+  // A slim notice at the top of the home page. Plain text and one optional link; no images, no HTML.
+  banner: { enabled: true, text: "Not sure of the part number? Send us the old part's number or its size.", linkText: 'Request a quotation', linkUrl: 'quick-order.html#rfq', endsOn: '' },
   email: { notifyTo: [], fromName: '' },
 });
 
@@ -33,6 +35,9 @@ const text = (max, multiline = false) => (val, f) => v.str(val, f, { max, multil
 const optEmail = (val, f) => v.email(val, f, { required: false });
 const optNum = (max) => (val, f) => (val === null ? null : v.num(val, f, { min: 0, max }));
 
+// A banner link may only be a page of this site, an in-page anchor, or an https address. Never javascript: or data:.
+const LINK_RE = /^(https:\/\/[^\s"'<>]+|[A-Za-z0-9_-]+\.html(?:[?#][^\s"'<>]*)?|#[A-Za-z0-9_-]+)$/;
+
 const SPEC = {
   business: {
     name: text(120), legalName: text(160),
@@ -54,6 +59,13 @@ const SPEC = {
     note: text(600, true), leadTimeNote: text(600, true),
   },
   catalogue: { showIndicativePerformance: (val, f) => v.bool(val, f) },
+  banner: {
+    enabled: (val, f) => v.bool(val, f),
+    text: text(160),
+    linkText: text(40),
+    linkUrl: (val, f) => v.str(val, f, { max: 300, pattern: LINK_RE }),
+    endsOn: (val, f) => (val === '' || val === null ? '' : v.date(val, f)),
+  },
   email: {
     notifyTo: (val, f) => v.arr(val, f, { max: 10 }).map((x, i) => v.email(x, `${f}[${i}]`)),
     fromName: text(80),

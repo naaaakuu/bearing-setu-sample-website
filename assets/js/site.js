@@ -58,7 +58,8 @@
     business: { name: "Bearingsetu", legalName: "", gstin: "", addressLines: [], city: "", state: "", stateCode: "", pin: "", phone: "", whatsapp: "", email: "", supportEmail: "", hours: "" },
     pricing: { mode: "quote", gstRate: 18, showGstToggle: true },
     shipping: { mode: "quoted", flatFee: null, freeOver: null, note: "", leadTimeNote: "" },
-    catalogue: { showIndicativePerformance: false }
+    catalogue: { showIndicativePerformance: false },
+    banner: { enabled: false, text: "", linkText: "", linkUrl: "", endsOn: "" }
   };
   BS.cfg = deepMerge(DEFAULTS, window.BS_CONFIG || {});
   BS.setConfig = function (remote) {

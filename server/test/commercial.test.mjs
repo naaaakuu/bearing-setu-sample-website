@@ -254,7 +254,7 @@ test('settings: validated, merged, audited and only the public part is exposed',
   const t = await makeApp();
   const adm = await t.admin();
   const before = (await adm.get('/api/admin/settings')).json;
-  assert.deepEqual(Object.keys(before).sort(), ['business', 'catalogue', 'email', 'pricing', 'shipping']);
+  assert.deepEqual(Object.keys(before).sort(), ['banner', 'business', 'catalogue', 'email', 'pricing', 'shipping']);
   assert.equal(before.pricing.mode, 'quote');
   assert.equal(before.shipping.mode, 'quoted');
   assert.equal(before.catalogue.showIndicativePerformance, false);

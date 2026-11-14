@@ -18,7 +18,7 @@ Without the API the storefront still works fully as a catalogue and enquiry site
 * **Nothing invented.** There are no prices, stock levels, ratings, reviews, sales tags, delivery promises or credit offers in the code. A part with no price shows "Quote on request". Availability is shown only if someone entered it.
 * **Credit is not for everyone.** It is off for every account by default, only an administrator can switch it on (per account, with a limit and terms), the customer is told by email and in their account, and nobody else ever sees it. See "Credit" below.
 * **Freight is explicit and configurable.** The default is "freight is charged separately and confirmed in your quotation". Change it in `assets/js/config.js` or the admin panel.
-* **No banners.** The home page has no promotional strip. Search, categories and size finding come first.
+* **Banners only when they have a purpose.** The home page has one optional text notice that you control (see `banner`). There are no sliders or promotional images. Search, categories and size finding come first.
 
 ## Pages
 
@@ -41,6 +41,7 @@ Everything about the business lives in **`assets/js/config.js`**. Leave a value 
 * `business`: name, GSTIN, address, phone, WhatsApp, email, hours. Phone and WhatsApp appear in the top bar, footer and product pages. Email and WhatsApp receive quotation requests when there is no API.
 * `pricing.mode`: `"quote"` (default, no prices shown) or `"list"` (prices you entered are shown; parts without a price still say Quote on request).
 * `shipping`: `mode` (`quoted`, `flat`, `free-over`), `flatFee`, `freeOver`, and the sentence shown to buyers.
+* `banner`: an optional slim notice on the home page (text, one link, an end date, and `enabled`). It is on by default with a neutral "send us the part number or size" message and can be switched off or changed at any time. Keep it true: no delivery times, discounts or credit offers unless they are real.
 * `catalogue.showIndicativePerformance`: load ratings, limiting speeds and weights are kept in the data but hidden until you have checked them against datasheets.
 
 Prices, stock and lead times live in **`assets/js/commercial.js`** (empty by default) or, with the API, in the admin panel's *Products and prices* with CSV import and export.

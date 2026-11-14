@@ -42,6 +42,17 @@ window.BS_CONFIG = {
     leadTimeNote: ""        // e.g. "Dispatch times are confirmed per order." Leave empty to say nothing.
   },
 
+  // A slim notice on the home page. Plain text and one optional link. Turn it off with enabled: false,
+  // or set endsOn ("YYYY-MM-DD") to retire it automatically. Do not use it for delivery, discount or credit promises
+  // unless they are real: credit in particular is only ever offered to approved accounts, never advertised.
+  banner: {
+    enabled: true,
+    text: "Not sure of the part number? Send us the old part's number or its size.",
+    linkText: "Request a quotation",
+    linkUrl: "quick-order.html#rfq",
+    endsOn: ""
+  },
+
   catalogue: {
     // Load ratings, limiting speeds and weights are hidden until you have checked them against datasheets.
     showIndicativePerformance: false

@@ -100,7 +100,28 @@
     if (location.hash === "#finder") { /* default tab already shown */ }
   }
 
-  function render() { renderCats(); renderShortcuts(); renderBrands(); renderContact(); }
+  /* Banner: plain text from the configuration. Built with textContent (no HTML), link limited to this site or https. */
+  var LINK_OK = /^(https:\/\/[^\s"'<>]+|[A-Za-z0-9_-]+\.html(?:[?#][^\s"'<>]*)?|#[A-Za-z0-9_-]+)$/;
+  function renderBanner() {
+    var el = $("[data-banner]"), b = BS.cfg.banner || {}, text = String(b.text || "").trim();
+    var today = new Date(), iso = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") + "-" + String(today.getDate()).padStart(2, "0");
+    var key = text.slice(0, 60);
+    var live = b.enabled && text && (!b.endsOn || iso <= b.endsOn) && BS.store.get("bannerOff", "") !== key;
+    el.hidden = !live; el.textContent = "";
+    if (!live) return;
+    var inner = document.createElement("div"); inner.className = "wrap banner__in";
+    var p = document.createElement("p"); p.textContent = text; inner.appendChild(p);
+    if (b.linkText && LINK_OK.test(String(b.linkUrl || ""))) {
+      var a = document.createElement("a"); a.href = b.linkUrl; a.textContent = b.linkText; a.className = "banner__link";
+      if (/^https:/.test(b.linkUrl)) a.rel = "noopener";
+      p.appendChild(document.createTextNode(" ")); p.appendChild(a);
+    }
+    var x = document.createElement("button"); x.type = "button"; x.className = "banner__x"; x.setAttribute("aria-label", "Dismiss this notice"); x.innerHTML = BS.icon("x");
+    x.addEventListener("click", function () { BS.store.set("bannerOff", key); el.hidden = true; });
+    inner.appendChild(x); el.appendChild(inner);
+  }
+
+  function render() { renderBanner(); renderCats(); renderShortcuts(); renderBrands(); renderContact(); }
   render();
   initFinder();
   BS.on("overlay", render);

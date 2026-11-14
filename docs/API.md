@@ -128,9 +128,14 @@ Valid order transitions: `placed → confirmed → dispatched → delivered`; `p
   "pricing": { "mode": "quote", "gstRate": 18, "showGstToggle": true },
   "shipping": { "mode": "quoted", "flatFee": null, "freeOver": null, "note": "", "leadTimeNote": "" },
   "catalogue": { "showIndicativePerformance": false },
+  "banner": { "enabled": true, "text": "", "linkText": "", "linkUrl": "", "endsOn": "" },
   "email": { "notifyTo": [], "fromName": "" }
 }
 ```
+
+`banner` is the slim notice on the home page: plain text up to 160 characters, an optional link
+(a page of the site, an in-page anchor, or an `https://` address; never `javascript:`), and an optional
+`endsOn` date (`YYYY-MM-DD`) after which it stops showing. It is public.
 
 `email.notifyTo` is private (omitted from `GET /api/config`). Blank values mean "not configured": the storefront hides
 those lines instead of showing placeholders. `pricing.mode` is `"quote"` (default, prices never shown, enquiry basket)

@@ -1052,6 +1052,8 @@
       flatFee: numInput(s.shipping.flatFee ?? '', {}), freeOver: numInput(s.shipping.freeOver ?? '', {}), shipNote: area(s.shipping.note, { rows: 2 }), leadNote: area(s.shipping.leadTimeNote, { rows: 2 }),
       notify: area(s.email.notifyTo.join('\n'), { rows: 3, placeholder: 'sales@example.com' }), fromName: t(s.email.fromName),
       indicative: h('input', { type: 'checkbox', checked: s.catalogue.showIndicativePerformance }),
+      bannerOn: h('input', { type: 'checkbox', checked: s.banner.enabled }), bannerText: t(s.banner.text, { maxlength: '160' }), bannerLinkText: t(s.banner.linkText, { maxlength: '40' }),
+      bannerUrl: t(s.banner.linkUrl, { maxlength: '300', placeholder: 'quick-order.html#rfq' }), bannerEnds: textInput(s.banner.endsOn, { type: 'date' }),
     };
     const pricingMode = (value, checked) => h('input', { type: 'radio', name: 'pricing-mode', value, checked });
     const pQuote = pricingMode('quote', s.pricing.mode === 'quote');
@@ -1070,6 +1072,7 @@
         pricing: { mode, gstRate: numberOrNull(f.gstRate.value, 'The GST rate') ?? 18, showGstToggle: f.showGst.checked },
         shipping: { mode: shipping, flatFee: numberOrNull(f.flatFee.value, 'The flat fee'), freeOver: numberOrNull(f.freeOver.value, 'Free shipping above'), note: f.shipNote.value.trim(), leadTimeNote: f.leadNote.value.trim() },
         catalogue: { showIndicativePerformance: f.indicative.checked },
+        banner: { enabled: f.bannerOn.checked, text: f.bannerText.value.trim(), linkText: f.bannerLinkText.value.trim(), linkUrl: f.bannerUrl.value.trim(), endsOn: f.bannerEnds.value.trim() },
         email: { notifyTo: f.notify.value.split(/[\n,;]/).map((x) => x.trim()).filter(Boolean), fromName: f.fromName.value.trim() },
       };
       await put('/api/admin/settings', body);
@@ -1098,6 +1101,12 @@
           h('div', { class: 'choice' }, h('label', { class: 'check' }, sFlat, h('span', null, h('strong', null, 'Flat fee'), ' per order, optionally free above an order value.')))),
         h('div', { class: 'row' }, field('Flat fee (₹)', f.flatFee, 'Used only with "Flat fee". 0 = free shipping.'), field('Free shipping above (₹)', f.freeOver, 'Empty = never free.')),
         field('Shipping note shown to customers', f.shipNote), field('Lead time note shown to customers', f.leadNote)),
+      h('div', { class: 'card' }, h('h2', null, 'Home page banner'),
+        h('p', { class: 'muted' }, 'A slim one-line notice at the top of the home page. Keep it short and true. Do not promise delivery times, discounts or credit unless they are real.'),
+        h('label', { class: 'check' }, f.bannerOn, h('span', null, 'Show the banner')),
+        field('Message (up to 160 characters)', f.bannerText),
+        h('div', { class: 'row' }, field('Link text', f.bannerLinkText, 'For example "Request a quotation".'), field('Link address', f.bannerUrl, 'A page of this site such as quick-order.html#rfq, or a full https:// address. Leave empty for no link.')),
+        field('Stop showing after (optional)', f.bannerEnds, 'The banner disappears after this date.')),
       h('div', { class: 'card' }, h('h2', null, 'Emails'),
         field('Tell these people about new registrations, quotes and orders (one email per line)', f.notify),
         field('Sender name on emails', f.fromName, 'For example "Bearingsetu Sales".')),

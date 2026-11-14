@@ -328,5 +328,5 @@ a.chip:hover,button.chip:hover{border-color:var(--blue);color:var(--blue);text-d
 .display{font-size:clamp(28px,3.4vw,40px);line-height:1.1;font-weight:700;letter-spacing:-.02em}
 
 /* Links inside running text are underlined, not only coloured (WCAG 1.4.1). */
-main p a:not(.btn):not(.chip),main li a:not(.btn):not(.chip),.notice a,.hint a,.foot__note a{text-decoration:underline;text-underline-offset:2px}
+main p a:not(.btn):not(.chip),.prose li a,.faq li a,.banner a,.notice a,.hint a,.foot__note a{text-decoration:underline;text-underline-offset:2px}
 .prose .toc a,.faq summary a{text-decoration:none}

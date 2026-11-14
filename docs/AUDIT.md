@@ -37,7 +37,7 @@ Preserved because they worked: part-number normalisation and size search logic, 
 **Discovery (the priority)**
 * Search is in the header on every page with suggestions (parts, categories, brands, size shortcut), keyboard support and recent searches. Part numbers match regardless of spaces, hyphens, slashes, underscores and case; brand prefixes ("SKF 6205 2RS1"); size queries ("25x52x15", "25 52 15", "25 x 52 x 15 mm"); equivalents ("NSK 6205DDU" finds the SKF 2RS1 equivalent group); synonyms ("v belt", "oil seal").
 * Listing filters are category-specific: bearings get bore, outside diameter, width, seal and clearance; V-belts get section, length and profile; oil seals get shaft, bore, width, type and material; greases get NLGI grade; chains get pitch. Counts update live, filters sit in the URL, and phones get a filter sheet.
-* Home page is search first, then categories, a size finder for bearings, seals and belts, shortcuts, ways to buy and brands. No banners, no sliders, no oversized headings.
+* Home page is search first (with one optional, owner-controlled text notice instead of promotional banners), then categories, a size finder for bearings, seals and belts, shortcuts, ways to buy and brands. No banners, no sliders, no oversized headings.
 * Product cards lead with brand, part number, size and key specifications; the product page adds a dimension drawing generated from the real sizes, a specification table, equivalent designations and related parts. Performance ratings are hidden until verified.
 
 **B2B commerce**
